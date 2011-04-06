@@ -25,6 +25,7 @@ setup(
         "Topic :: Text Processing :: Linguistic",
         ],
     install_requires=[
+        "mysql-python>=1.2",
         "SQLAlchemy>=0.6.0,<=0.6.99"
     ],
 

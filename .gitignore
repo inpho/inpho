@@ -1,0 +1,14 @@
+*.pyc
+*.egg/
+*.egg-info
+docs/build
+
+sandbox
+
+*.log
+
+cache
+corpus
+data
+*-graph.txt
+
