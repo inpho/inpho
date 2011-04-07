@@ -37,7 +37,7 @@ class Entity(object):
 
         return filename
     
-    # searchpatterns = association_proxy('spatterns', 'searchpattern')
+    searchpatterns = association_proxy('_spatterns', 'searchpattern')
     
     def pluralize(self):
         pluralpatterns = []

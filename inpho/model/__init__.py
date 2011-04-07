@@ -251,7 +251,7 @@ mapper(Entity, entity_table,
        properties={
            'alias':relation(Alias), 
            #'spatterns':relation(Searchpattern),
-           'spatterns':relation(Searchpattern, cascade="all,delete-orphan")
+           '_spatterns':relation(Searchpattern, cascade="all,delete-orphan")
       })
 mapper(Searchpattern, searchpatterns_table)
 mapper(Alias, alias_table)
