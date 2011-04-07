@@ -11,5 +11,7 @@ cache
 corpus
 data
 *-graph.txt
+*.o
+apriori
 
 sql.ini
