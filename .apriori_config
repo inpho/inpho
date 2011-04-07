@@ -1,0 +1,21 @@
+# This is a very simple and inflexible configuration file of apriori implementation!
+# Please modify only the integers in the beginning of the next three lines!
+0   # "1" if quiet mode is required
+1   # "0" if reduced baskets should not be stored in memory
+2   # "0" if no size threshold is given
+
+# This configuration file was created so that I can get rid of platform specific 
+# command line processing (getopt in the case of linux). This way this implementation contains only 
+# standard c++ command, hence it can be compiled on every platform.
+#
+#
+# Description of the values set by this script:
+# quiet mode     : if it is 1, than no system messages will be written out during the process.
+# reduced_basket : if it is 1, than reduced baskets (basket from infrequent item are deleted)
+#                              will not be sorted and stored in memory. This reduces memeory need,
+#                              but slows down the algorithm.
+# size threshold : The user can specify the maximum size of the itemsets that have to be mined. 
+#                  For example size if this threshold is 3, then only frequent items, itempairs, 
+#                  and itemsets of size 3 will be searched for.
+#                  If this value is 0, then no threshold is used, and all frequent itemsets
+#                  will be found.
