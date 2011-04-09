@@ -84,14 +84,15 @@ def process_articles(entity_type=Entity, output_filename='output-all.txt',
 
 import subprocess
 
-def complete_mining(entity_type=Idea, filename='graph.txt', root='./'):
+def complete_mining(entity_type=Idea, filename='graph.txt', root='./',
+                    corpus_root='corpus/'):
     occur_filename = os.path.abspath(root + "graph-" + filename)
     edge_filename = os.path.abspath(root + "edge-" + filename)
     sql_filename = os.path.abspath(root + "sql-" + filename)
 
 
     print "processing articles..."
-    process_articles(entity_type, occur_filename)
+    process_articles(entity_type, occur_filename, corpus_root=corpus_root)
 
     print "running apriori miner..."
     dm.apriori(occur_filename, edge_filename)
@@ -148,6 +149,11 @@ def complete_mining(entity_type=Idea, filename='graph.txt', root='./'):
 
 
 if __name__ == "__main__":
+    from ConfigParser import ConfigParser
+    config = ConfigParser()
+    config.read('sql.ini')
+    corpus_root = config.get('corpus', 'path') 
+
     from optparse import OptionParser
 
     usage = "usage: %prog [options] config_file"
@@ -165,11 +171,11 @@ if __name__ == "__main__":
     options, args = parser.parse_args()
 
     if options.mode == 'all':
-        complete_mining(Entity)
+        complete_mining(Entity, filename="all", corpus_root=corpus_root)
 
     elif options.mode == 'idea':
-        complete_mining(Idea)
+        complete_mining(Idea, filename="idea", corpus_root=corpus_root)
 
     elif options.mode == 'thinker':
-        complete_mining(Thinker)
+        complete_mining(Thinker, filename="thinker", corpus_root=corpus_root)
 

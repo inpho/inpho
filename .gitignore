@@ -8,7 +8,6 @@ sandbox
 *.log
 
 cache
-corpus
 data
 *-graph.txt
 *.o
