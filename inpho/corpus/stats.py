@@ -149,11 +149,14 @@ def calculate_node_entropy(edges):
 
 def calculate_edge_weight(edges, ents):
     weights = defaultdict(float)
-    max_entropy = max(ents.values())
-    for edge, properties in edges.iteritems():
-        ante,cons = edge
-        entropy_diff = ents[ante] - ents[cons]
-        entropy_norm = entropy_diff / max_entropy
-        properties['weight'] = properties['jweight'] * entropy_norm
+    if ents:
+        max_entropy = max(ents.values())
+        for edge, properties in edges.iteritems():
+            ante,cons = edge
+            entropy_diff = ents[ante] - ents[cons]
+            entropy_norm = entropy_diff / max_entropy
+            properties['weight'] = properties['jweight'] * entropy_norm
+    else:
+        print "ERROR PROCESSING EDGES. NO ENTROPY VALUES."
 
     return edges    
