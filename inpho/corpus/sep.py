@@ -73,7 +73,7 @@ def process_articles(entity_type=Entity, output_filename='output-all.txt',
    
     # parallel processing of articles
     p = Pool()
-    args = [(title, terms, entity_type) for title in articles]
+    args = [(title, terms, entity_type, None, corpus_root) for title in articles]
     doc_lines = p.map(process_wrapper, args)
     p.close()
 
