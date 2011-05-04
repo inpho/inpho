@@ -139,12 +139,12 @@ def complete_mining(entity_type=Idea, filename='graph.txt', root='./',
     
     print "inserting new graph information"
     connection.execute("""
-    
+    SET foreign_key_checks=0;
     LOAD DATA INFILE '%(filename)s'
     INTO TABLE %(table)s
     FIELDS TERMINATED BY '::'
     (ante_id, cons_id, confidence, jweight, weight);
-    
+    SET foreign_key_checks=1;
     """ % {'filename' : sql_filename, 'table' : table })
 
 
