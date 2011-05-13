@@ -38,7 +38,10 @@ def get_document_occurrences(document, terms, doc_term=None):
                             occurrences.add(term)
                             break
             except:
-                print "ERROR HANDLING:", term.ID, term.label, pattern
+                #TODO: Switch to logging module
+                # http://docs.python.org/howto/logging.html
+                #print "ERROR HANDLING:", term.ID, term.label, pattern
+                pass
 
     occurrences = list(occurrences)
 
@@ -75,9 +78,6 @@ def get_sentence_occurrences(document, terms, doc_term=None):
                     if term != inside and\
                         term.label.find(inside.label) != -1:
                         to_remove.add(inside)
-            
-            if to_remove:
-                print "removing", to_remove
 
             for term in to_remove:
                 sentence_occurrences.remove(term)
