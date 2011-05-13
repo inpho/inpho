@@ -9,7 +9,7 @@ from ConfigParser import ConfigParser
 config = ConfigParser()
 config.read('sql.ini')
 url = config.get('sqlalchemy', 'url') 
-engine = create_engine(url, echo=True)
+engine = create_engine(url, echo=False, pool_recycle=30) 
 
 # configure Session class with desired options.
 Session = scoped_session(sessionmaker())
