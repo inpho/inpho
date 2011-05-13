@@ -68,6 +68,7 @@ def process_articles(entity_type=Entity, output_filename='output-all.txt',
                      corpus_root='corpus/'):
     terms = select_terms(entity_type)
     Session.expunge_all()
+    Session.close()
     
     articles = Session.query(entity_type).filter(entity_type.sep_dir!='').all()
    
@@ -85,7 +86,7 @@ def process_articles(entity_type=Entity, output_filename='output-all.txt',
 import subprocess
 
 def complete_mining(entity_type=Idea, filename='graph.txt', root='./',
-                    corpus_root='corpus/'):
+                    corpus_root='corpus/', update_entropy=False):
     occur_filename = os.path.abspath(root + "graph-" + filename)
     edge_filename = os.path.abspath(root + "edge-" + filename)
     sql_filename = os.path.abspath(root + "sql-" + filename)
@@ -113,13 +114,15 @@ def complete_mining(entity_type=Idea, filename='graph.txt', root='./',
 
     print "updating term entropy..."
 
-    for term_id, entropy in ents.iteritems():
-        term = Session.query(Idea).get(term_id)
-        if term:
-            term.entropy = entropy
+    if update_entropy:
+        for term_id, entropy in ents.iteritems():
+            term = Session.query(Idea).get(term_id)
+            if term:
+                term.entropy = entropy
 
-    Session.flush()
-    Session.commit()
+        Session.flush()
+        Session.commit()
+        Session.close()
 
 
     # Import SQL statements
@@ -146,6 +149,7 @@ def complete_mining(entity_type=Idea, filename='graph.txt', root='./',
     (ante_id, cons_id, confidence, jweight, weight);
     SET foreign_key_checks=1;
     """ % {'filename' : sql_filename, 'table' : table })
+    Session.close()
 
 
 if __name__ == "__main__":
@@ -171,7 +175,8 @@ if __name__ == "__main__":
     options, args = parser.parse_args()
 
     if options.mode == 'all':
-        complete_mining(Entity, filename="all", corpus_root=corpus_root)
+        complete_mining(Entity, filename="all", corpus_root=corpus_root, 
+                        update_entropy=True)
 
     elif options.mode == 'idea':
         complete_mining(Idea, filename="idea", corpus_root=corpus_root)
