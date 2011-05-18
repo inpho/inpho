@@ -5,7 +5,9 @@ from sqlalchemy.orm import subqueryload
 from sqlalchemy import and_, or_, not_
 
 import inpho.corpus.stats as dm
+print "loading model"
 from inpho.model import Idea, Thinker, Entity, Session 
+print "done"
 
 def extract_article_body(filename):
     f=open(filename)
@@ -124,7 +126,9 @@ def complete_mining(entity_type=Idea, filename='graph.txt', root='./',
         Session.commit()
         Session.close()
 
+    update_graph(entity_type, sql_filename)
 
+def update_graph(entity_type, sql_filename):
     # Import SQL statements
     if entity_type == Idea:
         table = "idea_graph_edges"
@@ -162,25 +166,48 @@ if __name__ == "__main__":
 
     usage = "usage: %prog [options] config_file"
     parser = OptionParser(usage)
-    parser.set_defaults(mode='all')
+    parser.set_defaults(type='all', mode='complete', update_entropy=False)
     parser.add_option("-a", "--all", action="store_const",
-                      dest='mode', const='all',
+                      dest='type', const='all',
                       help="mine all edges [default]")
     parser.add_option("-i", "--idea", action="store_const",
-                      dest='mode', const='idea',
+                      dest='type', const='idea',
                       help="mine only idea-idea edges")
     parser.add_option("-t", "--thinker", action="store_const",
-                      dest='mode', const='thinker',
+                      dest='type', const='thinker',
                       help="mine only thinker-thinker edges")
+    parser.add_option("--complete", action="store_const",
+                      dest='mode', const='complete',
+                      help="complete data mining process [default]")
+    parser.add_option("--no-entropy", action="store_const",
+                      dest='mode', const='no_entropy',
+                      help="data mining, skipping update of entropy scores")
+    parser.add_option("--load", action="store_const",
+                      dest='mode', const='load',
+                      help="load data from sql files")
     options, args = parser.parse_args()
 
-    if options.mode == 'all':
-        complete_mining(Entity, filename="all", corpus_root=corpus_root, 
-                        update_entropy=True)
+    filename_root = options.type
 
-    elif options.mode == 'idea':
-        complete_mining(Idea, filename="idea", corpus_root=corpus_root)
+    entity_type = Entity
+    if options.type == 'all':
+        options.update_entropy = True
+    elif options.type == 'idea':
+        entity_type == Idea
+    elif options.type == 'thinker':
+        entity_type == Thinker
 
-    elif options.mode == 'thinker':
-        complete_mining(Thinker, filename="thinker", corpus_root=corpus_root)
+    if options.mode == 'complete':
+        complete_mining(entity_type, 
+                        filename=filename_root, 
+                        corpus_root=corpus_root, 
+                        update_entropy=options.update_entropy)
+    elif options.mode == 'no_entropy':
+        complete_mining(entity_type, 
+                        filename=filename_root, 
+                        corpus_root=corpus_root, 
+                        update_entropy=False)
+    elif options.mode == 'load':
+        sql_filename = os.path.abspath(corpus_root + "sql-" + filename_root)
+        update_graph(entity_type, sql_filename)
 
