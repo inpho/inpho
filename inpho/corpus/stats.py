@@ -65,8 +65,17 @@ def get_sentence_occurrences(document, terms, doc_terms=[]):
 
         for term in terms_present:
             if term not in doc_terms:
-                if re.search(' %s ' % term.label, sentence):
-                    sentence_occurrences.add(term)
+                try:
+                    if re.search('\b%s\b' % term.label, sentence,
+                                    flags=re.IGNORECASE):
+                        sentence_occurrences.add(term)
+                    else:
+                        for pattern in term.searchpatterns:
+                            if re.search(pattern, sentence, flags=re.IGNORECASE):
+                                sentence_occurrences.add(term)
+                                break
+                except:
+                    pass
         
 
         if len(sentence_occurrences) > 0:
