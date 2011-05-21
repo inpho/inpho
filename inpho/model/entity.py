@@ -12,6 +12,12 @@ class Entity(object):
         # TODO: Rewrite to remove dependency on pylons
         return url(controller='entity', action=action, id=self.ID, filetype=filetype)
 
+    def __repr__(self):
+        return '<Entity %d: %s>' % (self.ID, self.label.encode('utf-8'))
+
+    def __str__(self):
+        return self.label.encode('utf-8')
+
     def json_struct(self, sep_filter=True, limit=10, extended=True):
         """ Dictionary structure used with a :class:`JSONEncoder` """
         struct = { 'ID' : self.ID, 
