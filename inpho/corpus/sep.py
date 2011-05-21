@@ -7,6 +7,9 @@ from sqlalchemy import and_, or_, not_
 import inpho.corpus.stats as dm
 from inpho.model import Idea, Thinker, Entity, Session 
 
+from inpho.corpus.terms import *
+    
+
 def extract_article_body(filename):
     f=open(filename)
     doc=f.read()
@@ -24,20 +27,12 @@ def extract_article_body(filename):
     body=soup.find("div", id="aueditable")
 
     return body.text
-
-def select_terms(entity_type=Idea):
-    # process entities
-    ideas = Session.query(entity_type)
-    ideas = ideas.options(subqueryload('_spatterns'))
-    # do not process Nodes or Journals
-    ideas = ideas.filter(and_(Entity.typeID!=2, Entity.typeID!=4))
-    return ideas.all()
      
 
 def process_article(article, terms=None, entity_type=Idea, output_filename=None,
                     corpus_root='corpus/'):
     if terms is None:
-        terms = select_terms(entity_type)
+        terms = inpho_terms(entity_type)
     
 
     lines = []
@@ -69,9 +64,7 @@ def process_wrapper(args):
 
 def process_articles(entity_type=Entity, output_filename='output-all.txt',
                      corpus_root='corpus/'):
-    terms = select_terms(entity_type)
-    Session.expunge_all()
-    Session.close()
+    terms = inpho_terms(entity_type)
     
     articles = Session.query(Entity.sep_dir).filter(Entity.sep_dir!=None)
     articles = articles.filter(Entity.sep_dir!='')
@@ -105,9 +98,7 @@ def run_beagle(entity_type=Idea, filename='beagle.txt', root='./',
     output_filename = os.path.abspath(root + "beagle-" + filename)
    
     # select terms 
-    terms = select_terms(entity_type)
-    Session.expunge_all()
-    Session.close()
+    terms = inpho_terms(entity_type)
 
     # build environment vectors
     env = beagle.build_env_vectors(terms, d)
