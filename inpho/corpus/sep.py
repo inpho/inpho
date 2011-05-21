@@ -99,6 +99,50 @@ def process_articles(entity_type=Entity, output_filename='output-all.txt',
             f.writelines(lines)
 
 import subprocess
+import beagle
+def run_beagle(entity_type=Idea, filename='beagle.txt', root='./',
+                    corpus_root='corpus/', d=64):
+    output_filename = os.path.abspath(root + "beagle-" + filename)
+   
+    # select terms 
+    terms = select_terms(entity_type)
+    Session.expunge_all()
+    Session.close()
+
+    # build environment vectors
+    env = beagle.build_env_vectors(terms, d)
+
+    # process SEP articles for cooccurrence data
+    articles = Session.query(Entity.sep_dir).filter(Entity.sep_dir!=None)
+    articles = articles.filter(Entity.sep_dir!='')
+    articles = articles.distinct().limit(10).all()
+    articles = [a[0] for a in articles]
+
+    corpus = []
+    for article in articles:
+        filename = os.path.join(corpus_root, article, 'index.html')
+    
+        if filename and os.path.isfile(filename):
+            print "processing:", article, filename
+            try: 
+                doc = extract_article_body(filename)
+                corpus.extend(dm.get_sentence_occurrences(doc, terms))
+       
+            except:
+                print "ERROR PROCESSING:", filename
+    
+    # initialize context vector
+    # we actually don't do this because during the loop over the memory vector
+    
+    memory = env.copy()
+    #initialize memory vector with own environment vector
+    for sentence in corpus:
+        for word in sentence:
+            memory[word] += sum([env[id] for id in sentence if id != word])            
+            # add sentence vector
+
+    return memory
+
 
 def complete_mining(entity_type=Idea, filename='graph.txt', root='./',
                     corpus_root='corpus/', update_entropy=False):
@@ -198,6 +242,9 @@ if __name__ == "__main__":
     parser.add_option("--load", action="store_const",
                       dest='mode', const='load',
                       help="load data from sql files")
+    parser.add_option("-b", "--beagle", action="store_const",
+                      dest='mode', const='beagle',
+                      help="run the BEAGLE model")
     options, args = parser.parse_args()
 
     filename_root = options.type
@@ -221,3 +268,6 @@ if __name__ == "__main__":
     elif options.mode == 'load':
         sql_filename = os.path.abspath(corpus_root + "sql-" + filename_root)
         update_graph(entity_type, sql_filename)
+    elif options.mode == 'beagle':
+        env = run_beagle(entity_type, filename=filename_root, corpus_root=corpus_root)
+        print env
