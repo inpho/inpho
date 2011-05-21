@@ -62,9 +62,8 @@ from multiprocessing import Pool
 def process_wrapper(args):
     return process_article(*args)
 
-def process_articles(entity_type=Entity, output_filename='output-all.txt',
+def process_articles(terms, entity_type=Entity, output_filename='output-all.txt',
                      corpus_root='corpus/'):
-    terms = inpho_terms(entity_type)
     
     articles = Session.query(Entity.sep_dir).filter(Entity.sep_dir!=None)
     articles = articles.filter(Entity.sep_dir!='')
@@ -91,14 +90,29 @@ def process_articles(entity_type=Entity, output_filename='output-all.txt',
         for lines in doc_lines:
             f.writelines(lines)
 
+
+def process_sentences(article, terms, corpus_root='corpus/'):
+    filename = os.path.join(corpus_root, article, 'index.html')
+
+    if filename and os.path.isfile(filename):
+        print "processing:", article, filename
+        try: 
+            doc = extract_article_body(filename)
+            return dm.get_sentence_occurrences(doc, terms)
+   
+        except:
+            print "ERROR PROCESSING:", filename
+            return []
+
+def sentence_wrapper(args):
+    return process_sentences(*args)
+
 import subprocess
 import beagle
-def run_beagle(entity_type=Idea, filename='beagle.txt', root='./',
+import pickle
+def run_beagle(terms, filename='beagle.txt', root='./',
                     corpus_root='corpus/', d=64):
     output_filename = os.path.abspath(root + "beagle-" + filename)
-   
-    # select terms 
-    terms = inpho_terms(entity_type)
 
     # build environment vectors
     env = beagle.build_env_vectors(terms, d)
@@ -106,22 +120,26 @@ def run_beagle(entity_type=Idea, filename='beagle.txt', root='./',
     # process SEP articles for cooccurrence data
     articles = Session.query(Entity.sep_dir).filter(Entity.sep_dir!=None)
     articles = articles.filter(Entity.sep_dir!='')
-    articles = articles.distinct().limit(10).all()
+    articles = articles.distinct().all()
     articles = [a[0] for a in articles]
 
+    '''
     corpus = []
     for article in articles:
-        filename = os.path.join(corpus_root, article, 'index.html')
-    
-        if filename and os.path.isfile(filename):
-            print "processing:", article, filename
-            try: 
-                doc = extract_article_body(filename)
-                corpus.extend(dm.get_sentence_occurrences(doc, terms))
-       
-            except:
-                print "ERROR PROCESSING:", filename
-    
+        results = process_sentences(article, terms, corpus_root)
+        if results:
+            corpus.extend(results)
+    '''
+    p = Pool()
+    args = [(article, terms, corpus_root) for article in articles]
+    results = p.map(sentence_wrapper, args)
+    p.close()
+
+    corpus = []
+    for article in results:
+        if article:
+            corpus.extend(article)
+
     # initialize context vector
     # we actually don't do this because during the loop over the memory vector
     
@@ -131,6 +149,9 @@ def run_beagle(entity_type=Idea, filename='beagle.txt', root='./',
         for word in sentence:
             memory[word] += sum([env[id] for id in sentence if id != word])            
             # add sentence vector
+
+    with open(output_filename, 'wb') as f:
+        pickle.dump(memory, f)
 
     return memory
 
@@ -205,6 +226,7 @@ def update_graph(entity_type, sql_filename):
 
 
 if __name__ == "__main__":
+    import sys
     from ConfigParser import ConfigParser
     config = ConfigParser()
     config.read('sql.ini')
@@ -214,7 +236,8 @@ if __name__ == "__main__":
 
     usage = "usage: %prog [options] config_file"
     parser = OptionParser(usage)
-    parser.set_defaults(type='all', mode='complete', update_entropy=False)
+    parser.set_defaults(type='all', mode='complete', update_entropy=False,
+                        graphfile=None, terms='inpho')
     parser.add_option("-a", "--all", action="store_const",
                       dest='type', const='all',
                       help="mine all edges [default]")
@@ -236,23 +259,35 @@ if __name__ == "__main__":
     parser.add_option("-b", "--beagle", action="store_const",
                       dest='mode', const='beagle',
                       help="run the BEAGLE model")
+    parser.add_option("-g", "--graph", dest='graphfile',
+                      help="add terms specified in graph file")
     options, args = parser.parse_args()
 
     filename_root = options.type
 
+    
     entity_type = Entity
     if options.type == 'idea':
         entity_type = Idea
     elif options.type == 'thinker':
         entity_type = Thinker
+    
+    terms = inpho_terms(entity_type)
+    if options.graphfile:
+        try:
+            terms.extend(graph_terms(options.graphfile,
+                         source_name=os.path.basename(options.graphfile)))
+        except:
+            print "Invalid graph file: %s" % options.graphfile
+            sys.exit(1)
 
     if options.mode == 'complete':
-        complete_mining(entity_type, 
+        complete_mining(terms, entity_type, 
                         filename=filename_root, 
                         corpus_root=corpus_root, 
                         update_entropy=options.update_entropy)
     elif options.mode == 'no_entropy':
-        complete_mining(entity_type, 
+        complete_mining(terms, entity_type, 
                         filename=filename_root, 
                         corpus_root=corpus_root, 
                         update_entropy=False)
@@ -260,5 +295,4 @@ if __name__ == "__main__":
         sql_filename = os.path.abspath(corpus_root + "sql-" + filename_root)
         update_graph(entity_type, sql_filename)
     elif options.mode == 'beagle':
-        env = run_beagle(entity_type, filename=filename_root, corpus_root=corpus_root)
-        print env
+        env = run_beagle(terms, filename=filename_root, corpus_root=corpus_root)
