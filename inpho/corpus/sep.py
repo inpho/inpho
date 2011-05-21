@@ -110,6 +110,7 @@ def sentence_wrapper(args):
 import subprocess
 import beagle
 import pickle
+from copy import deepcopy
 def run_beagle(terms, filename='beagle.txt', root='./',
                     corpus_root='corpus/', d=64):
     output_filename = os.path.abspath(root + "beagle-" + filename)
@@ -130,6 +131,7 @@ def run_beagle(terms, filename='beagle.txt', root='./',
         if results:
             corpus.extend(results)
     '''
+
     p = Pool()
     args = [(article, terms, corpus_root) for article in articles]
     results = p.map(sentence_wrapper, args)
@@ -143,11 +145,11 @@ def run_beagle(terms, filename='beagle.txt', root='./',
     # initialize context vector
     # we actually don't do this because during the loop over the memory vector
     
-    memory = env.copy()
+    memory = deepcopy(env)
     #initialize memory vector with own environment vector
     for sentence in corpus:
         for word in sentence:
-            memory[word] += sum([env[id] for id in sentence if id != word])            
+            memory[word] += sum([env[id] for id in sentence if id != word])
             # add sentence vector
 
     with open(output_filename, 'wb') as f:

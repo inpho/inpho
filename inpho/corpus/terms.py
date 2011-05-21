@@ -7,7 +7,7 @@ from sqlalchemy import and_, or_, not_
 from inpho.model import Idea, Thinker, Entity, Session 
 
 class Term(object):
-    #__slots__ = ['label', 'searchpatterns', 'source', 'ID']
+    #__slots__ = ['label', 'searchpatterns', 'source', 'ID', '__weakref__']
         
     def __init__(self, label, searchpatterns=[], source=None, ID=None):
         self.label = label
@@ -24,6 +24,15 @@ class Term(object):
 
     def __str__(self):
         return self.label.encode('utf-8')
+
+    def __hash__(self):
+        return hash(self.ID) + hash(self.source)
+
+    def __eq__(self, other):
+        return hash(self) == hash(other)
+
+    def __ne__(self, other):
+        return hash(self) != hash(other)
 
 def inpho_terms(entity_type=Idea):
     # process entities
