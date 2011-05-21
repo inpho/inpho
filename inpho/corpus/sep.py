@@ -5,9 +5,7 @@ from sqlalchemy.orm import subqueryload
 from sqlalchemy import and_, or_, not_
 
 import inpho.corpus.stats as dm
-print "loading model"
 from inpho.model import Idea, Thinker, Entity, Session 
-print "done"
 
 def extract_article_body(filename):
     f=open(filename)
@@ -44,16 +42,19 @@ def process_article(article, terms=None, entity_type=Idea, output_filename=None,
 
     lines = []
 
-    filename = article.get_filename(corpus_root)
+    filename = os.path.join(corpus_root, article, 'index.html')
+    article_terms = Session.query(entity_type)
+    article_terms = article_terms.filter(entity_type.sep_dir==article)
+    article_terms = article_terms.all()
     if filename and os.path.isfile(filename):
-        print "processing:", article.sep_dir, filename
+        print "processing:", article, filename
         try: 
             doc = extract_article_body(filename)
-            lines = dm.prepare_apriori_input(doc, terms, article)
+            lines = dm.prepare_apriori_input(doc, terms, article_terms)
         except:
-            print "ERROR PROCESSING:", article.sep_dir, filename
+            print "ERROR PROCESSING:", article, filename
     else:
-        print "BAD SEP_DIR:", article.sep_dir
+        print "BAD SEP_DIR:", article
 
     if output_filename:
         with open(output_filename, 'w') as f:
@@ -72,7 +73,10 @@ def process_articles(entity_type=Entity, output_filename='output-all.txt',
     Session.expunge_all()
     Session.close()
     
-    articles = Session.query(entity_type).filter(entity_type.sep_dir!='').all()
+    articles = Session.query(Entity.sep_dir).filter(Entity.sep_dir!=None)
+    articles = articles.filter(Entity.sep_dir!='')
+    articles = articles.distinct().all()
+    articles = [a[0] for a in articles]
    
     # parallel processing of articles
     p = Pool()
@@ -80,7 +84,16 @@ def process_articles(entity_type=Entity, output_filename='output-all.txt',
     doc_lines = p.map(process_wrapper, args)
     p.close()
 
+    #serial processing for tests
+    '''
+    doc_lines = []
+    for title in articles:
+        lines = process_article(title, terms, entity_type, None, corpus_root)
+        doc_lines.append(lines)
+    '''
+
     # write graph output to file
+    print output_filename
     with open(output_filename, 'w') as f:
         for lines in doc_lines:
             f.writelines(lines)
@@ -190,12 +203,10 @@ if __name__ == "__main__":
     filename_root = options.type
 
     entity_type = Entity
-    if options.type == 'all':
-        options.update_entropy = True
-    elif options.type == 'idea':
-        entity_type == Idea
+    if options.type == 'idea':
+        entity_type = Idea
     elif options.type == 'thinker':
-        entity_type == Thinker
+        entity_type = Thinker
 
     if options.mode == 'complete':
         complete_mining(entity_type, 
@@ -210,4 +221,3 @@ if __name__ == "__main__":
     elif options.mode == 'load':
         sql_filename = os.path.abspath(corpus_root + "sql-" + filename_root)
         update_graph(entity_type, sql_filename)
-

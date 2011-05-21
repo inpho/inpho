@@ -21,12 +21,12 @@ from collections import defaultdict
 # http://nltk.googlecode.com/svn/trunk/doc/api/nltk.tokenize.punkt.PunktSentenceTokenizer-class.html
 from nltk.tokenize import PunktSentenceTokenizer as Tokenizer
 
-def get_document_occurrences(document, terms, doc_term=None):
+def get_document_occurrences(document, terms, doc_terms=[]):
     occurrences = set()
     
     # iterate over terms to be scanned
     for term in terms:
-        if term != doc_term:
+        if term not in doc_terms:
             pattern = ''
             try:
                 if re.search('\b%s\b' % term.label, document,
@@ -45,13 +45,13 @@ def get_document_occurrences(document, terms, doc_term=None):
 
     occurrences = list(occurrences)
 
-    if doc_term:
-        occurrences.append(doc_term)
+    if doc_terms:
+        occurrences.extend(doc_terms)
 
     return occurrences
 
-def get_sentence_occurrences(document, terms, doc_term=None):
-    terms_present = get_document_occurrences(document, terms)
+def get_sentence_occurrences(document, terms, doc_terms=[]):
+    terms_present = get_document_occurrences(document, terms, doc_terms)
 
     # Use a Tokenizer from NLTK to build a sentence list
     tokenizer = Tokenizer(document)
@@ -64,34 +64,36 @@ def get_sentence_occurrences(document, terms, doc_term=None):
         sentence_occurrences = set() 
 
         for term in terms_present:
-            if term != doc_term:
+            if term not in doc_terms:
                 if re.search(' %s ' % term.label, sentence):
                     sentence_occurrences.add(term)
         
 
         if len(sentence_occurrences) > 0:
             sentence_occurrences = list(sentence_occurrences)
+            '''
             to_remove = set()
-
+            
             for inside in sentence_occurrences:
                 for term in sentence_occurrences:
                     if term != inside and\
-                        term.label.find(inside.label) != -1:
-                        to_remove.add(inside)
+                        inside.label.find(term.label) != -1:
+                        to_remove.add(term)
 
             for term in to_remove:
                 sentence_occurrences.remove(term)
+            '''
 
-            if doc_term:
-                sentence_occurrences.append(doc_term)
+            if doc_terms:
+                sentence_occurrences.extend(doc_terms)
 
             occurrences.append(sentence_occurrences)
     
     return occurrences
 
-def prepare_apriori_input(document, terms, doc_term=None, add_newline=True): 
-    occurrences = get_document_occurrences(document, terms, doc_term)
-    sentence_occurrences = get_sentence_occurrences(document, terms, doc_term)
+def prepare_apriori_input(document, terms, doc_terms=None, add_newline=True): 
+    occurrences = get_document_occurrences(document, terms, doc_terms)
+    sentence_occurrences = get_sentence_occurrences(document, terms, doc_terms)
 
     lines = []
     lines.append(string.join([str(term.ID) for term in occurrences]))
