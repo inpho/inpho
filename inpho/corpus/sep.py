@@ -283,7 +283,7 @@ if __name__ == "__main__":
                       help="add terms specified in graph file")
     parser.add_option("--beaglefile", dest='beaglefile',
                       help="use specified pre-computed beagle results")
-    parser.add_option("-d", "--dim", dest='dimensions', type='int'
+    parser.add_option("-d", "--dim", dest='dimensions', type='int',
                       help="use d dimensions in the Beagle vectors")
     parser.add_option("--sim", action="store_const",
                       dest='mode', const='similarity',
