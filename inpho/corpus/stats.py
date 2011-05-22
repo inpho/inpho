@@ -71,7 +71,7 @@ def get_sentence_occurrences(document, terms, doc_terms=[]):
 
         if len(sentence_occurrences) > 0:
             sentence_occurrences = list(sentence_occurrences)
-            '''
+            
             to_remove = set()
             
             for inside in sentence_occurrences:
@@ -82,7 +82,6 @@ def get_sentence_occurrences(document, terms, doc_terms=[]):
 
             for term in to_remove:
                 sentence_occurrences.remove(term)
-            '''
 
             if doc_terms:
                 sentence_occurrences.extend(doc_terms)
