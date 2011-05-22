@@ -65,7 +65,7 @@ def get_sentence_occurrences(document, terms, doc_terms=[]):
 
         for term in terms_present:
             if term not in doc_terms:
-                if re.search(' %s ' % term.label, sentence):
+                if re.search(' %s ' % term.label, sentence, flags=re.IGNORECASE):
                     sentence_occurrences.add(term)
         
 

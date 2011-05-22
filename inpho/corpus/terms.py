@@ -10,7 +10,7 @@ class Term(object):
     #__slots__ = ['label', 'searchpatterns', 'source', 'ID', '__weakref__']
         
     def __init__(self, label, searchpatterns=[], source=None, ID=None):
-        self.label = label
+        self.label = label.lower()
         self.searchpatterns = searchpatterns
         
         self.source = source
