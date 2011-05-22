@@ -113,7 +113,7 @@ import pickle
 from copy import deepcopy
 def run_beagle(terms, filename='beagle.txt', root='./',
                     corpus_root='corpus/', d=64):
-    output_filename = os.path.abspath(root + "beagle-" + filename)
+    output_filename = os.path.abspath(root + "beagle-" + str(d) + '-' + filename)
 
     # build environment vectors
     env = beagle.build_env_vectors(terms, d)
@@ -149,7 +149,7 @@ def run_beagle(terms, filename='beagle.txt', root='./',
     #initialize memory vector with own environment vector
     for sentence in corpus:
         for word in sentence:
-            memory[word] += sum([env[id] for id in sentence if id != word])
+            memory[word] += sum([env[id] for id in sentence if id.label != word.label])
             # add sentence vector
 
     with open(output_filename, 'wb') as f:
@@ -157,6 +157,27 @@ def run_beagle(terms, filename='beagle.txt', root='./',
 
     return memory
 
+def load_beagle(filename='beagle.txt'):
+    with open(filename) as f:
+        return pickle.load(f)
+
+def similarity(term='metaphysics of mind', source='InPhO',
+               beagle_filename='beagle.txt'):
+    results = load_beagle(beagle_filename)
+
+    a = Term(term, source=source, ID=897)
+    print a
+    a = results[a]
+    sim = sorted(results.keys(), key=lambda x: beagle.cosine(a, results[x]),
+                 reverse=True)
+    print "most similar"
+    for s in sim[:50]:
+        print s.source, s.label, beagle.cosine(a, results[s])
+    print "most diff"
+    for s in sim[-50:]:
+        print s.source, s.label, beagle.cosine(a, results[s])
+        
+    return sim
 
 def complete_mining(entity_type=Idea, filename='graph.txt', root='./',
                     corpus_root='corpus/', update_entropy=False):
@@ -166,7 +187,7 @@ def complete_mining(entity_type=Idea, filename='graph.txt', root='./',
 
 
     print "processing articles..."
-    process_articles(entity_type, occur_filename, corpus_root=corpus_root)
+    #process_articles(entity_type, occur_filename, corpus_root=corpus_root)
 
     print "running apriori miner..."
     dm.apriori(occur_filename, edge_filename)
@@ -239,7 +260,7 @@ if __name__ == "__main__":
     usage = "usage: %prog [options] config_file"
     parser = OptionParser(usage)
     parser.set_defaults(type='all', mode='complete', update_entropy=False,
-                        graphfile=None, terms='inpho')
+                        graphfile=None, terms='inpho', dimensions=64)
     parser.add_option("-a", "--all", action="store_const",
                       dest='type', const='all',
                       help="mine all edges [default]")
@@ -263,6 +284,14 @@ if __name__ == "__main__":
                       help="run the BEAGLE model")
     parser.add_option("-g", "--graph", dest='graphfile',
                       help="add terms specified in graph file")
+    parser.add_option("--beaglefile", dest='beaglefile',
+                      help="use specified pre-computed beagle results")
+    parser.add_option("-d", "--dim", dest='dimensions', type='int'
+                      help="use d dimensions in the Beagle vectors")
+    parser.add_option("--sim", action="store_const",
+                      dest='mode', const='similarity',
+                      help="compute term similarity")
+
     options, args = parser.parse_args()
 
     filename_root = options.type
@@ -284,12 +313,12 @@ if __name__ == "__main__":
             sys.exit(1)
 
     if options.mode == 'complete':
-        complete_mining(terms, entity_type, 
+        complete_mining(terms, 
                         filename=filename_root, 
                         corpus_root=corpus_root, 
                         update_entropy=options.update_entropy)
     elif options.mode == 'no_entropy':
-        complete_mining(terms, entity_type, 
+        complete_mining(terms, 
                         filename=filename_root, 
                         corpus_root=corpus_root, 
                         update_entropy=False)
@@ -297,4 +326,7 @@ if __name__ == "__main__":
         sql_filename = os.path.abspath(corpus_root + "sql-" + filename_root)
         update_graph(entity_type, sql_filename)
     elif options.mode == 'beagle':
-        env = run_beagle(terms, filename=filename_root, corpus_root=corpus_root)
+        env = run_beagle(terms, filename=filename_root, corpus_root=corpus_root,
+                         d=options.dimensions)
+    elif options.mode == 'similarity':
+        similarity(beagle_filename=options.beaglefile)
