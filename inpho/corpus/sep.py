@@ -117,7 +117,7 @@ import subprocess
 def complete_mining(entity_type=Idea, filename='graph.txt', root='./',
                     corpus_root='corpus/', update_entropy=False,
                     update_occurrences=False): 
-    occur_filename = os.path.abspath(root + "occur-" + filename)
+    occur_filename = os.path.abspath(root + "occurrences.txt")
     graph_filename = os.path.abspath(root + "graph-" + filename)
     edge_filename = os.path.abspath(root + "edge-" + filename)
     sql_filename = os.path.abspath(root + "sql-" + filename)
