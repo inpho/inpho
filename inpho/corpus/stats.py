@@ -13,6 +13,7 @@
 # appearList is set of all terms which appear in the sentence
 # occurList is set of all terms occuring in the document
 
+import logging
 import re
 import string
 import subprocess
@@ -22,36 +23,30 @@ from collections import defaultdict
 from nltk.tokenize import PunktSentenceTokenizer as Tokenizer
 
 def get_document_occurrences(document, terms, doc_terms=[]):
-    occurrences = set()
+    occurrences = []
     
     # iterate over terms to be scanned
     for term in terms:
         if term not in doc_terms:
-            pattern = ''
-            try:
-                if re.search('\b%s\b' % term.label, document,
-                                flags=re.IGNORECASE):
-                    occurrences.add(term)
-                else:
-                    for pattern in term.searchpatterns:
-                        if re.search(pattern, document, flags=re.IGNORECASE):
-                            occurrences.add(term)
-                            break
-            except:
-                #TODO: Switch to logging module
-                # http://docs.python.org/howto/logging.html
-                #print "ERROR HANDLING:", term.ID, term.label, pattern
-                pass
-
-    occurrences = list(occurrences)
+            # build list of search patterns starting with label
+            pattern = ['\b%s\b' % term.label]
+            pattern.extend(term.searchpatterns)
+            for pattern in term.searchpatterns:
+                try:
+                    if re.search(pattern, document, flags=re.IGNORECASE):
+                        occurrences.append(term)
+                        break
+                except re.error:
+                    logging.warning('Term %d (%s) pattern "%s" failed' % 
+                                    (term.ID, term.label, pattern))
 
     if doc_terms:
         occurrences.extend(doc_terms)
 
     return occurrences
 
-def get_sentence_occurrences(document, terms, doc_terms=[]):
-    terms_present = get_document_occurrences(document, terms, doc_terms)
+def get_sentence_occurrences(document, terms, doc_terms=[], remove_overlap=False):
+    terms_present = set(get_document_occurrences(document, terms, doc_terms))
 
     # Use a Tokenizer from NLTK to build a sentence list
     tokenizer = Tokenizer(document)
@@ -61,37 +56,41 @@ def get_sentence_occurrences(document, terms, doc_terms=[]):
     # in a sentence
     occurrences = []
     for sentence in sentences:
-        sentence_occurrences = set() 
+        sentence_occurrences = [] 
 
         for term in terms_present:
             if term not in doc_terms:
-                try:
-                    if re.search('\b%s\b' % term.label, sentence,
-                                    flags=re.IGNORECASE):
-                        sentence_occurrences.add(term)
-                    else:
-                        for pattern in term.searchpatterns:
-                            if re.search(pattern, sentence, flags=re.IGNORECASE):
-                                sentence_occurrences.add(term)
-                                break
-                except:
-                    pass
-        
+                # build list of search patterns starting with label
+                pattern = ['\b%s\b' % term.label]
+                pattern.extend(term.searchpatterns)
 
-        if len(sentence_occurrences) > 0:
-            sentence_occurrences = list(sentence_occurrences)
-            
+                for pattern in term.searchpatterns:
+                    try:
+                        # search for any occurrence of term, stop when found
+                        if re.search(pattern, document, flags=re.IGNORECASE):
+                            occurrences.append(term)
+                            break
+                    except re.error:
+                        logging.warning('Term %d (%s) pattern "%s" failed' % 
+                                        (term.ID, term.label, pattern))
+
+        # remove overlapping elements
+        if remove_overlap:
             to_remove = set()
             
+            # build set of terms to remove
             for inside in sentence_occurrences:
                 for term in sentence_occurrences:
                     if term != inside and\
                         inside.label.find(term.label) != -1:
                         to_remove.add(term)
 
+            # remove terms
             for term in to_remove:
                 sentence_occurrences.remove(term)
 
+        # add to list of sentences if any terms are found
+        if sentence_occurrences:
             if doc_terms:
                 sentence_occurrences.extend(doc_terms)
 
