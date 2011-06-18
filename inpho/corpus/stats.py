@@ -174,7 +174,10 @@ def prepare_apriori_input_from_file(occurrence_filename, terms,
         lines = []
         for line in f:
             line = [term for term in line.split() if term in terms]
-            lines.append(' '.join(line))
+
+            # do not include blank lines
+            if line:
+                lines.append(' '.join(line))
     
     # add newlines (for file printing)
     if add_newline:
