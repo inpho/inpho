@@ -192,9 +192,9 @@ if __name__ == "__main__":
     parser.add_option("--complete", action="store_const",
                       dest='mode', const='complete',
                       help="complete data mining process [default]")
-    parser.add_option("--no-entropy", action="store_const",
-                      dest='mode', const='no_entropy',
-                      help="data mining, skipping update of entropy scores")
+    parser.add_option("--entropy", action="store_true",
+                      dest='update_entropy',
+                      help="data mining, with entropy updates")
     parser.add_option("--load", action="store_const",
                       dest='mode', const='load',
                       help="load data from sql files")
@@ -202,22 +202,18 @@ if __name__ == "__main__":
 
     filename_root = options.type
 
+
     entity_type = Entity
     if options.type == 'idea':
         entity_type = Idea
     elif options.type == 'thinker':
         entity_type = Thinker
-
+    
     if options.mode == 'complete':
         complete_mining(entity_type, 
                         filename=filename_root, 
                         corpus_root=corpus_root, 
                         update_entropy=options.update_entropy)
-    elif options.mode == 'no_entropy':
-        complete_mining(entity_type, 
-                        filename=filename_root, 
-                        corpus_root=corpus_root, 
-                        update_entropy=False)
     elif options.mode == 'load':
         sql_filename = os.path.abspath(corpus_root + "sql-" + filename_root)
         update_graph(entity_type, sql_filename)
