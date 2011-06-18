@@ -103,18 +103,18 @@ def process_articles(entity_type=Entity, output_filename='output-all.txt',
     articles = [a[0] for a in articles]
    
     # parallel processing of articles
-    '''
     p = Pool()
     args = [(title, terms, entity_type, None, corpus_root) for title in articles]
     doc_lines = p.map(process_wrapper, args)
     p.close()
-    '''
 
     #serial processing for tests
+    '''
     doc_lines = []
     for title in articles:
         lines = process_article(title, terms, entity_type, None, corpus_root)
         doc_lines.append(lines)
+    '''
 
     # write graph output to file
     print output_filename
