@@ -77,7 +77,7 @@ def process_articles(entity_type=Entity, output_filename='output-all.txt',
     
     articles = Session.query(Entity.sep_dir).filter(Entity.sep_dir!=None)
     articles = articles.filter(Entity.sep_dir!='')
-    articles = articles.distinct().limit(1).all()
+    articles = articles.distinct().all()
     articles = [a[0] for a in articles]
    
     # parallel processing of articles
@@ -128,7 +128,7 @@ def complete_mining(entity_type=Idea, filename='graph.txt', root='./',
         process_articles(entity_type, occur_filename, corpus_root=corpus_root)
 
     print "filtering occurrences..."
-    filter_apriori_input(occur_filename, graph_filename)
+    filter_apriori_input(occur_filename, graph_filename, entity_type)
 
     print "running apriori miner..."
     dm.apriori(graph_filename, edge_filename)
