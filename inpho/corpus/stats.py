@@ -51,11 +51,15 @@ def get_document_occurrences(document, terms, doc_terms=[]):
     return occurrences
 
 def get_sentence_occurrences(document, terms, doc_terms=[], 
-                             remove_overlap=False):
+                             remove_overlap=False, remove_duplicates=False,
+                             remove_duplicate_doc_terms=True):
     """
     Returns a list of lists representing the terms occuring in each sentence.
     Semantically equivalent to: 
     [[term for term in terms if term in sent] for sent in document]
+
+    Order of optional operations is: remove duplicates, remove overlap, 
+    add doc terms, remove duplicate doc terms
     """
     terms_present = set(get_document_occurrences(document, terms, doc_terms))
 
@@ -85,6 +89,10 @@ def get_sentence_occurrences(document, terms, doc_terms=[],
                         logging.warning('Term %d (%s) pattern "%s" failed' % 
                                         (term.ID, term.label, pattern))
 
+        # remove duplicates
+        if remove_duplicates:
+            sentence_occurrences = list(set(sentence_occurrences))
+
         # remove overlapping elements
         if remove_overlap:
             to_remove = set()
@@ -102,7 +110,12 @@ def get_sentence_occurrences(document, terms, doc_terms=[],
 
         # add to list of sentences if any terms are found
         if sentence_occurrences:
-            if doc_terms:
+            # append global terms
+            if doc_terms and remove_duplicate_doc_terms:
+                doc_terms = [term for term in doc_terms 
+                                 if term not in sentence_occurrences]
+                sentence_occurrences.extend(doc_terms)
+            elif doc_terms:
                 sentence_occurrences.extend(doc_terms)
 
             occurrences.append(sentence_occurrences)
