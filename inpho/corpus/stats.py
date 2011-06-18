@@ -22,10 +22,12 @@ from collections import defaultdict
 # http://nltk.googlecode.com/svn/trunk/doc/api/nltk.tokenize.punkt.PunktSentenceTokenizer-class.html
 from nltk.tokenize import PunktSentenceTokenizer as Tokenizer
 
-def get_document_occurrences(document, terms, doc_terms=[]):
+def get_document_occurrences(document, terms, doc_terms=None):
     """
     Returns a list of terms occuring in the document. 
     Semantically equivalent to [term for term in terms if term in document]
+
+    Primarily used by :func:`get_sentence_occurrences()`.
     """
 
     occurrences = []
@@ -50,7 +52,7 @@ def get_document_occurrences(document, terms, doc_terms=[]):
 
     return occurrences
 
-def get_sentence_occurrences(document, terms, doc_terms=[], 
+def get_sentence_occurrences(document, terms, doc_terms=None, terms_present=None, 
                              remove_overlap=False, remove_duplicates=False,
                              remove_duplicate_doc_terms=True):
     """
@@ -61,7 +63,9 @@ def get_sentence_occurrences(document, terms, doc_terms=[],
     Order of optional operations is: remove duplicates, remove overlap, 
     add doc terms, remove duplicate doc terms
     """
-    terms_present = set(get_document_occurrences(document, terms, doc_terms))
+    # get list of terms in the document to narrow sentence-level search
+    if terms_present is None:
+        terms_present = set(get_document_occurrences(document, terms, doc_terms))
 
     # Use a Tokenizer from NLTK to build a sentence list
     tokenizer = Tokenizer(document)
@@ -122,15 +126,34 @@ def get_sentence_occurrences(document, terms, doc_terms=[],
     
     return occurrences
 
-def prepare_apriori_input(document, terms, doc_terms=None, add_newline=True): 
-    occurrences = get_document_occurrences(document, terms, doc_terms)
-    sentence_occurrences = get_sentence_occurrences(document, terms, doc_terms)
+def prepare_apriori_input(document, terms, doc_terms=None, add_newline=True,
+                          remove_overlap=False, document_sentence=False): 
+    '''
+    Prepares "shopping basket" input for the apriori miner, where each sentence
+    stands on its own line.
+    '''
+
+    # grab document-level occurrences, reused in sentence occurrences and
+    # summary sentence
+    occurrences = set(get_document_occurrences(document, terms, doc_terms))
+
+    # grab sentence occurrences
+    sentence_occurrences = get_sentence_occurrences(
+        document, terms, doc_terms, terms_present=occurrences,
+        remove_overlap=remove_overlap, remove_duplicates=True, 
+        remove_duplicate_doc_terms=True)
 
     lines = []
-    lines.append(string.join([str(term.ID) for term in occurrences]))
+
+    # add summary sentence (optional)
+    if document_sentence:
+        lines.append(string.join([str(term.ID) for term in occurrences]))
+
+    # add each sentence
     for sent_occur in sentence_occurrences:
         lines.append(string.join([str(term.ID) for term in sent_occur]))
 
+    # add newlines
     if add_newline:
         lines = [line + '\n' for line in lines]
 
