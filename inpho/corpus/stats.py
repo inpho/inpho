@@ -153,11 +153,35 @@ def prepare_apriori_input(document, terms, doc_terms=None, add_newline=True,
     for sent_occur in sentence_occurrences:
         lines.append(string.join([str(term.ID) for term in sent_occur]))
 
-    # add newlines
+    # add newlines (for file printing)
     if add_newline:
         lines = [line + '\n' for line in lines]
 
     return lines
+
+def prepare_apriori_input_from_file(occurrence_filename, terms, 
+                                    doc_terms=None, add_newline=True):
+    '''
+    Prepares "shopping basket" input for the apriori miner from a file of
+    sentence-lvel occurrences.
+    '''
+    # build up terms, as they will occur in the file
+    terms = [str(term.ID) for term in terms]
+
+    with open(occurrence_filename) as f:
+        lines = []
+        for line in f:
+            line = [term for term in line.split() if term in terms]
+            lines.append(' '.join(line))
+    
+    # add newlines (for file printing)
+    if add_newline:
+        lines = [line + '\n' for line in lines]
+
+    return lines
+
+            
+    
 
 def apriori(input_filename='output.txt', output_filename='edges.txt'):
     args = ['apriori', input_filename, output_filename,
