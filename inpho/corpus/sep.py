@@ -18,9 +18,12 @@ def extract_article_body(filename):
     biblio_root = soup.findAll('h2', text='Bibliography')
     if biblio_root:
         biblio_root = biblio_root[-1].findParent('h2')
-        biblio = [biblio_root]
-        biblio.extend(biblio_root.findNextSiblings())
-        biblio = [elm.extract() for elm in biblio]
+        if biblio_root:
+            biblio = [biblio_root]
+            biblio.extend(biblio_root.findNextSiblings())
+            biblio = [elm.extract() for elm in biblio]
+        else:
+            logging.error('Could not extract bibliography from %s' % filename)
 
     # grab modified body 
     body = soup.find("div", id="aueditable")
@@ -56,7 +59,7 @@ def process_article(article, terms=None, entity_type=Idea, output_filename=None,
     article_terms = article_terms.filter(entity_type.sep_dir==article)
     article_terms = article_terms.all()
     if filename and os.path.isfile(filename):
-        print "processing:", article, filename
+        logging.info("processing: %s %s" % (article, filename))
         doc = extract_article_body(filename)
         lines = dm.prepare_apriori_input(doc, terms, article_terms)
     else:
@@ -78,6 +81,21 @@ def process_articles(entity_type=Entity, output_filename='output-all.txt',
     terms = select_terms(entity_type)
     Session.expunge_all()
     Session.close()
+
+    # fix search patterns
+    for term in terms:
+        newpatterns = []
+        for pattern in term.searchpatterns:
+            if '(' in pattern and ')' in pattern:
+                pattern = pattern.replace('( ', '(\\b')
+                pattern = pattern.replace(' )', '\\b)')
+            else:
+                pattern = '\\b%s\\b' % pattern.strip()
+
+            newpatterns.append(pattern)
+
+        term.searchpatterns = newpatterns
+
     
     articles = Session.query(Entity.sep_dir).filter(Entity.sep_dir!=None)
     articles = articles.filter(Entity.sep_dir!='')
@@ -85,18 +103,18 @@ def process_articles(entity_type=Entity, output_filename='output-all.txt',
     articles = [a[0] for a in articles]
    
     # parallel processing of articles
+    '''
     p = Pool()
     args = [(title, terms, entity_type, None, corpus_root) for title in articles]
     doc_lines = p.map(process_wrapper, args)
     p.close()
+    '''
 
     #serial processing for tests
-    '''
     doc_lines = []
     for title in articles:
         lines = process_article(title, terms, entity_type, None, corpus_root)
         doc_lines.append(lines)
-    '''
 
     # write graph output to file
     print output_filename
