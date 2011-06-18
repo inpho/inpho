@@ -23,6 +23,11 @@ from collections import defaultdict
 from nltk.tokenize import PunktSentenceTokenizer as Tokenizer
 
 def get_document_occurrences(document, terms, doc_terms=[]):
+    """
+    Returns a list of terms occuring in the document. 
+    Semantically equivalent to [term for term in terms if term in document]
+    """
+
     occurrences = []
     
     # iterate over terms to be scanned
@@ -45,7 +50,13 @@ def get_document_occurrences(document, terms, doc_terms=[]):
 
     return occurrences
 
-def get_sentence_occurrences(document, terms, doc_terms=[], remove_overlap=False):
+def get_sentence_occurrences(document, terms, doc_terms=[], 
+                             remove_overlap=False):
+    """
+    Returns a list of lists representing the terms occuring in each sentence.
+    Semantically equivalent to: 
+    [[term for term in terms if term in sent] for sent in document]
+    """
     terms_present = set(get_document_occurrences(document, terms, doc_terms))
 
     # Use a Tokenizer from NLTK to build a sentence list
