@@ -1,4 +1,4 @@
-import os
+import logging
 import os.path
 import re
 
@@ -56,7 +56,7 @@ def process_article(article, terms=None, entity_type=Idea, output_filename=None,
         doc = extract_article_body(filename)
         lines = dm.prepare_apriori_input(doc, terms, article_terms)
     else:
-        print "BAD SEP_DIR:", article
+        logging.warning("BAD SEP_DIR: %s" % article)
 
     if output_filename:
         with open(output_filename, 'w') as f:
@@ -108,7 +108,6 @@ def filter_apriori_input(occur_filename, output_filename, entity_type=Idea):
 
     lines = dm.prepare_apriori_input_from_file(occur_filename, terms)
     
-    print output_filename
     with open(output_filename, 'w') as f:
         f.writelines(lines)
 
