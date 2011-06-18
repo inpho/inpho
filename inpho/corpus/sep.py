@@ -1,5 +1,7 @@
 import os
 import os.path
+import re
+
 from BeautifulSoup import BeautifulSoup
 from sqlalchemy.orm import subqueryload
 from sqlalchemy import and_, or_, not_
@@ -8,9 +10,9 @@ import inpho.corpus.stats as dm
 from inpho.model import Idea, Thinker, Entity, Session 
 
 def extract_article_body(filename):
-    f=open(filename)
-    doc=f.read()
-    soup=BeautifulSoup(doc)
+    f = open(filename)
+    doc = f.read()
+    soup = BeautifulSoup(doc, convertEntities=["xml", "html"])
 
     # rip out bibliography
     biblio_root = soup.findAll('h2', text='Bibliography')
@@ -21,9 +23,12 @@ def extract_article_body(filename):
         biblio = [elm.extract() for elm in biblio]
 
     # grab modified body 
-    body=soup.find("div", id="aueditable")
+    body = soup.find("div", id="aueditable")
 
-    return body.text
+    # remove HTML escaped characters
+    body = re.sub("&\w+;", "", body.text)
+    
+    return body
 
 def select_terms(entity_type=Idea):
     # process entities
@@ -48,11 +53,8 @@ def process_article(article, terms=None, entity_type=Idea, output_filename=None,
     article_terms = article_terms.all()
     if filename and os.path.isfile(filename):
         print "processing:", article, filename
-        try: 
-            doc = extract_article_body(filename)
-            lines = dm.prepare_apriori_input(doc, terms, article_terms)
-        except:
-            print "ERROR PROCESSING:", article, filename
+        doc = extract_article_body(filename)
+        lines = dm.prepare_apriori_input(doc, terms, article_terms)
     else:
         print "BAD SEP_DIR:", article
 
@@ -75,7 +77,7 @@ def process_articles(entity_type=Entity, output_filename='output-all.txt',
     
     articles = Session.query(Entity.sep_dir).filter(Entity.sep_dir!=None)
     articles = articles.filter(Entity.sep_dir!='')
-    articles = articles.distinct().all()
+    articles = articles.distinct().limit(1).all()
     articles = [a[0] for a in articles]
    
     # parallel processing of articles
@@ -108,8 +110,7 @@ def filter_apriori_input(occur_filename, output_filename, entity_type=Idea):
     
     print output_filename
     with open(output_filename, 'w') as f:
-        for lines in doc_lines:
-            f.writelines(lines)
+        f.writelines(lines)
 
 
 
