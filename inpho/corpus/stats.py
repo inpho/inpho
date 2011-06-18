@@ -35,9 +35,9 @@ def get_document_occurrences(document, terms, doc_terms=None):
     for term in terms:
         if term not in doc_terms:
             # build list of search patterns starting with label
-            pattern = ['\b%s\b' % term.label]
-            pattern.extend(term.searchpatterns)
-            for pattern in term.searchpatterns:
+            patterns = ['\b%s\b' % term.label]
+            patterns.extend(term.searchpatterns)
+            for pattern in patterns:
                 try:
                     if re.search(pattern, document, flags=re.IGNORECASE):
                         occurrences.append(term)
@@ -70,6 +70,7 @@ def get_sentence_occurrences(document, terms, doc_terms=None, terms_present=None
     # Use a Tokenizer from NLTK to build a sentence list
     tokenizer = Tokenizer(document)
     sentences = tokenizer.tokenize(document)
+    logging.info("scanning %d sentences for %d terms" % (len(sentences), len(terms)))
     
     # Create a list of lists containing the collection of terms which cooccurr
     # in a sentence
@@ -80,13 +81,13 @@ def get_sentence_occurrences(document, terms, doc_terms=None, terms_present=None
         for term in terms_present:
             if term not in doc_terms:
                 # build list of search patterns starting with label
-                pattern = ['\b%s\b' % term.label]
-                pattern.extend(term.searchpatterns)
+                patterns = ['\b%s\b' % term.label]
+                patterns.extend(term.searchpatterns)
 
-                for pattern in term.searchpatterns:
+                for pattern in patterns:
                     try:
                         # search for any occurrence of term, stop when found
-                        if re.search(pattern, document, flags=re.IGNORECASE):
+                        if re.search(pattern, sentence, flags=re.IGNORECASE):
                             sentence_occurrences.append(term)
                             break
                     except re.error:
