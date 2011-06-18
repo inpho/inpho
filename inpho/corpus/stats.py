@@ -15,7 +15,6 @@
 
 import logging
 import re
-import string
 import subprocess
 from collections import defaultdict
 
@@ -147,11 +146,11 @@ def prepare_apriori_input(document, terms, doc_terms=None, add_newline=True,
 
     # add summary sentence (optional)
     if document_sentence:
-        lines.append(string.join([str(term.ID) for term in occurrences]))
+        lines.append(' '.join([str(term.ID) for term in occurrences]))
 
     # add each sentence
     for sent_occur in sentence_occurrences:
-        lines.append(string.join([str(term.ID) for term in sent_occur]))
+        lines.append(' '.join([str(term.ID) for term in sent_occur]))
 
     # add newlines (for file printing)
     if add_newline:
