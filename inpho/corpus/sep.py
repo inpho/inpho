@@ -24,11 +24,15 @@ def extract_article_body(filename):
 
     # grab modified body 
     body = soup.find("div", id="aueditable")
-
-    # remove HTML escaped characters
-    body = re.sub("&\w+;", "", body.text)
+    if body is not None:
+        # remove HTML escaped characters
+        body = re.sub("&\w+;", "", body.text)
     
-    return body
+        return body
+    else:
+        logging.error('Could not extract text from %s' % filename)
+
+        return ''
 
 def select_terms(entity_type=Idea):
     # process entities
