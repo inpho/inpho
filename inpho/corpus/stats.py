@@ -159,7 +159,7 @@ def prepare_apriori_input(document, terms, doc_terms=None, add_newline=True,
     return lines
 
 def prepare_apriori_input_from_file(occurrence_filename, terms, 
-                                    doc_terms=None, add_newline=True):
+                                    add_newline=True):
     '''
     Prepares "shopping basket" input for the apriori miner from a file of
     sentence-lvel occurrences.
@@ -178,9 +178,6 @@ def prepare_apriori_input_from_file(occurrence_filename, terms,
         lines = [line + '\n' for line in lines]
 
     return lines
-
-            
-    
 
 def apriori(input_filename='output.txt', output_filename='edges.txt'):
     args = ['apriori', input_filename, output_filename,
