@@ -45,6 +45,7 @@ def get_document_occurrences(document, terms, doc_terms=None):
                 except re.error:
                     logging.warning('Term %d (%s) pattern "%s" failed' % 
                                     (term.ID, term.label, pattern))
+                    term.searchpatterns.remove(pattern)
 
     if doc_terms:
         occurrences.extend(doc_terms)
@@ -86,11 +87,12 @@ def get_sentence_occurrences(document, terms, doc_terms=None, terms_present=None
                     try:
                         # search for any occurrence of term, stop when found
                         if re.search(pattern, document, flags=re.IGNORECASE):
-                            occurrences.append(term)
+                            sentence_occurrences.append(term)
                             break
                     except re.error:
                         logging.warning('Term %d (%s) pattern "%s" failed' % 
                                         (term.ID, term.label, pattern))
+                        term.searchpatterns.remove(pattern)
 
         # remove duplicates
         if remove_duplicates:
