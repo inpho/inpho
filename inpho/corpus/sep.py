@@ -98,23 +98,42 @@ def process_articles(entity_type=Entity, output_filename='output-all.txt',
         for lines in doc_lines:
             f.writelines(lines)
 
-import subprocess
+def filter_apriori_input(occur_filename, output_filename, entity_type=Idea):
+    #select terms
+    terms = select_terms(entity_type)
+    Session.expunge_all()
+    Session.close()
 
+    lines = dm.prepare_apriori_input_from_file(occur_filename, terms)
+    
+    print output_filename
+    with open(output_filename, 'w') as f:
+        for lines in doc_lines:
+            f.writelines(lines)
+
+
+
+import subprocess
 def complete_mining(entity_type=Idea, filename='graph.txt', root='./',
-                    corpus_root='corpus/', update_entropy=False):
-    occur_filename = os.path.abspath(root + "graph-" + filename)
+                    corpus_root='corpus/', update_entropy=False,
+                    update_occurrences=False): 
+    occur_filename = os.path.abspath(root + "occur-" + filename)
+    graph_filename = os.path.abspath(root + "graph-" + filename)
     edge_filename = os.path.abspath(root + "edge-" + filename)
     sql_filename = os.path.abspath(root + "sql-" + filename)
 
+    if update_occurrences:
+        print "processing articles..."
+        process_articles(entity_type, occur_filename, corpus_root=corpus_root)
 
-    print "processing articles..."
-    process_articles(entity_type, occur_filename, corpus_root=corpus_root)
+    print "filtering occurrences..."
+    filter_apriori_input(occur_filename, graph_filename)
 
     print "running apriori miner..."
-    dm.apriori(occur_filename, edge_filename)
+    dm.apriori(graph_filename, edge_filename)
     
     print "processing edges..."
-    edges = dm.process_edges(occur_filename, edge_filename)
+    edges = dm.process_edges(graph_filename, edge_filename)
     ents = dm.calculate_node_entropy(edges)
     edges = dm.calculate_edge_weight(edges, ents)
     
@@ -179,7 +198,8 @@ if __name__ == "__main__":
 
     usage = "usage: %prog [options] config_file"
     parser = OptionParser(usage)
-    parser.set_defaults(type='all', mode='complete', update_entropy=False)
+    parser.set_defaults(type='all', mode='complete', update_entropy=False,
+                        update_occurrences=False)
     parser.add_option("-a", "--all", action="store_const",
                       dest='type', const='all',
                       help="mine all edges [default]")
@@ -195,6 +215,9 @@ if __name__ == "__main__":
     parser.add_option("--entropy", action="store_true",
                       dest='update_entropy',
                       help="data mining, with entropy updates")
+    parser.add_option("--occur", action="store_true",
+                      dest='update_occurrences',
+                      help="data mining, with occurrence file generation")
     parser.add_option("--load", action="store_const",
                       dest='mode', const='load',
                       help="load data from sql files")
@@ -213,7 +236,8 @@ if __name__ == "__main__":
         complete_mining(entity_type, 
                         filename=filename_root, 
                         corpus_root=corpus_root, 
-                        update_entropy=options.update_entropy)
+                        update_entropy=options.update_entropy,
+                        update_occurrences=options.update_occurrences)
     elif options.mode == 'load':
         sql_filename = os.path.abspath(corpus_root + "sql-" + filename_root)
         update_graph(entity_type, sql_filename)
