@@ -1,4 +1,5 @@
 import logging
+from multiprocessing import Pool
 import os.path
 import re
 import subprocess
@@ -11,6 +12,11 @@ import inpho.corpus.stats as dm
 from inpho.model import Idea, Thinker, Entity, Session 
 
 def extract_article_body(filename):
+    """
+    Extracts the article body from the SEP article at the given filename. Some
+    error handling is done to guarantee that this function returns at least the
+    empty string. Check the error log.
+    """
     f = open(filename)
     doc = f.read()
     soup = BeautifulSoup(doc, convertEntities=["xml", "html"])
@@ -39,6 +45,10 @@ def extract_article_body(filename):
         return ''
 
 def select_terms(entity_type=Idea):
+    """
+    Returns a list of all terms of a given entity type.
+    """
+
     # process entities
     ideas = Session.query(entity_type)
     ideas = ideas.options(subqueryload('_spatterns'))
@@ -49,6 +59,9 @@ def select_terms(entity_type=Idea):
 
 def process_article(article, terms=None, entity_type=Idea, output_filename=None,
                     corpus_root='corpus/'):
+    """
+    Processes a single article for apriori input.
+    """
     if terms is None:
         terms = select_terms(entity_type)
     
@@ -72,9 +85,11 @@ def process_article(article, terms=None, entity_type=Idea, output_filename=None,
     else:
         return lines
 
-from multiprocessing import Pool
-
 def process_wrapper(args):
+    """
+    Wrapper function for article processing. Necessary for multiprocessing
+    module support. See: http://docs.python.org/library/multiprocessing.html#multiprocessing.pool.multiprocessing.Pool.map
+    """
     return process_article(*args)
 
 def process_articles(entity_type=Entity, output_filename='output-all.txt',
