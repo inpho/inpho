@@ -1,6 +1,7 @@
 import logging
 import os.path
 import re
+import subprocess
 
 from BeautifulSoup import BeautifulSoup
 from sqlalchemy.orm import subqueryload
@@ -133,9 +134,6 @@ def filter_apriori_input(occur_filename, output_filename, entity_type=Idea):
     with open(output_filename, 'w') as f:
         f.writelines(lines)
 
-
-
-import subprocess
 def complete_mining(entity_type=Idea, filename='graph.txt', root='./',
                     corpus_root='corpus/', update_entropy=False,
                     update_occurrences=False): 
@@ -237,9 +235,12 @@ if __name__ == "__main__":
     parser.add_option("--entropy", action="store_true",
                       dest='update_entropy',
                       help="data mining, with entropy updates")
-    parser.add_option("--occur", action="store_true",
+    parser.add_option("--with-occur", action="store_true",
                       dest='update_occurrences',
                       help="data mining, with occurrence file generation")
+    parser.add_option("--occur", action="store_const",
+                      dest='mode', const='occur',
+                      help="occurrence file generation")
     parser.add_option("--load", action="store_const",
                       dest='mode', const='load',
                       help="load data from sql files")
@@ -263,3 +264,6 @@ if __name__ == "__main__":
     elif options.mode == 'load':
         sql_filename = os.path.abspath(corpus_root + "sql-" + filename_root)
         update_graph(entity_type, sql_filename)
+    elif options.mode == 'occur':
+        occur_filename = os.path.abspath(root + "occurrences.txt")
+        process_articles(entity_type, occur_filename, corpus_root=corpus_root)
