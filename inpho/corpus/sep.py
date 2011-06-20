@@ -1,3 +1,4 @@
+from collections import defaultdict
 import logging
 from multiprocessing import Pool
 import os.path
@@ -58,7 +59,7 @@ def select_terms(entity_type=Idea):
      
 
 def process_article(article, terms=None, entity_type=Idea, output_filename=None,
-                    corpus_root='corpus/'):
+                    corpus_root='corpus/', tag=True):
     """
     Processes a single article for apriori input.
     """
@@ -75,15 +76,13 @@ def process_article(article, terms=None, entity_type=Idea, output_filename=None,
     if filename and os.path.isfile(filename):
         logging.info("processing: %s %s" % (article, filename))
         doc = extract_article_body(filename)
-        lines = dm.prepare_apriori_input(doc, terms, article_terms)
+        lines = dm.occurrences(doc, terms, title=article,
+                               format_for_file=True,
+                               output_filename=output_filename)
     else:
         logging.warning("BAD SEP_DIR: %s" % article)
 
-    if output_filename:
-        with open(output_filename, 'w') as f:
-            f.writelines(lines)
-    else:
-        return lines
+    return lines
 
 def process_wrapper(args):
     """
@@ -138,16 +137,30 @@ def process_articles(entity_type=Entity, output_filename='output-all.txt',
         for lines in doc_lines:
             f.writelines(lines)
 
-def filter_apriori_input(occur_filename, output_filename, entity_type=Idea):
+def filter_apriori_input(occur_filename, output_filename, entity_type=Idea,
+                         doc_terms=None):
     #select terms
     terms = select_terms(entity_type)
     Session.expunge_all()
     Session.close()
 
-    lines = dm.prepare_apriori_input_from_file(occur_filename, terms)
+    lines = dm.prepare_apriori_input(occur_filename, terms, doc_terms)
     
     with open(output_filename, 'w') as f:
         f.writelines(lines)
+
+def doc_terms_list():
+    articles = Session.query(Entity)
+    articles = articles.filter(Entity.sep_dir!=None)
+    articles = articles.filter(Entity.sep_dir!='')
+    articles = articles.all()
+   
+    doc_terms = defaultdict(list)
+
+    for entity in articles:
+        doc_terms[entity.sep_dir].append(entity)
+    
+    return doc_terms
 
 def complete_mining(entity_type=Idea, filename='graph.txt', root='./',
                     corpus_root='corpus/', update_entropy=False,
@@ -162,7 +175,8 @@ def complete_mining(entity_type=Idea, filename='graph.txt', root='./',
         process_articles(entity_type, occur_filename, corpus_root=corpus_root)
 
     print "filtering occurrences..."
-    filter_apriori_input(occur_filename, graph_filename, entity_type)
+    filter_apriori_input(occur_filename, graph_filename, entity_type,
+                         doc_terms_list())
 
     print "running apriori miner..."
     dm.apriori(graph_filename, edge_filename)
@@ -280,5 +294,5 @@ if __name__ == "__main__":
         sql_filename = os.path.abspath(corpus_root + "sql-" + filename_root)
         update_graph(entity_type, sql_filename)
     elif options.mode == 'occur':
-        occur_filename = os.path.abspath(root + "occurrences.txt")
+        occur_filename = os.path.abspath("./occurrences.txt")
         process_articles(entity_type, occur_filename, corpus_root=corpus_root)

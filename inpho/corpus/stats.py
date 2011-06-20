@@ -21,7 +21,7 @@ from collections import defaultdict
 # http://nltk.googlecode.com/svn/trunk/doc/api/nltk.tokenize.punkt.PunktSentenceTokenizer-class.html
 from nltk.tokenize import PunktSentenceTokenizer as Tokenizer
 
-def get_document_occurrences(document, terms, doc_terms=None):
+def get_document_occurrences(document, terms):
     """
     Returns a list of terms occuring in the document. 
     Semantically equivalent to [term for term in terms if term in document]
@@ -33,28 +33,23 @@ def get_document_occurrences(document, terms, doc_terms=None):
     
     # iterate over terms to be scanned
     for term in terms:
-        if term not in doc_terms:
-            # build list of search patterns starting with label
-            patterns = ['\b%s\b' % term.label]
-            patterns.extend(term.searchpatterns)
-            for pattern in patterns:
-                try:
-                    if re.search(pattern, document, flags=re.IGNORECASE):
-                        occurrences.append(term)
-                        break
-                except re.error:
-                    logging.warning('Term %d (%s) pattern "%s" failed' % 
-                                    (term.ID, term.label, pattern))
-                    term.searchpatterns.remove(pattern)
-
-    if doc_terms:
-        occurrences._append_doc_terms(doc_terms)
+        # build list of search patterns starting with label
+        patterns = ['\b%s\b' % term.label]
+        patterns.extend(term.searchpatterns)
+        for pattern in patterns:
+            try:
+                if re.search(pattern, document, flags=re.IGNORECASE):
+                    occurrences.append(term)
+                    break
+            except re.error:
+                logging.warning('Term %d (%s) pattern "%s" failed' % 
+                                (term.ID, term.label, pattern))
+                term.searchpatterns.remove(pattern)
 
     return occurrences
 
-def get_sentence_occurrences(document, terms, doc_terms=None, terms_present=None, 
-                             remove_overlap=False, remove_duplicates=False,
-                             skip_duplicate_doc_terms=True):
+def get_sentence_occurrences(document, terms, terms_present=None, 
+                             remove_overlap=False, remove_duplicates=False):
     """
     Returns a list of lists representing the terms occuring in each sentence.
     Semantically equivalent to: 
@@ -65,7 +60,7 @@ def get_sentence_occurrences(document, terms, doc_terms=None, terms_present=None
     """
     # get list of terms in the document to narrow sentence-level search
     if terms_present is None:
-        terms_present = set(get_document_occurrences(document, terms, doc_terms))
+        terms_present = set(get_document_occurrences(document, terms))
 
     # Use a Tokenizer from NLTK to build a sentence list
     tokenizer = Tokenizer(document)
@@ -79,21 +74,20 @@ def get_sentence_occurrences(document, terms, doc_terms=None, terms_present=None
         sentence_occurrences = [] 
 
         for term in terms_present:
-            if term not in doc_terms:
-                # build list of search patterns starting with label
-                patterns = ['\b%s\b' % term.label]
-                patterns.extend(term.searchpatterns)
+            # build list of search patterns starting with label
+            patterns = ['\b%s\b' % term.label]
+            patterns.extend(term.searchpatterns)
 
-                for pattern in patterns:
-                    try:
-                        # search for any occurrence of term, stop when found
-                        if re.search(pattern, sentence, flags=re.IGNORECASE):
-                            sentence_occurrences.append(term)
-                            break
-                    except re.error:
-                        logging.warning('Term %d (%s) pattern "%s" failed' % 
-                                        (term.ID, term.label, pattern))
-                        term.searchpatterns.remove(pattern)
+            for pattern in patterns:
+                try:
+                    # search for any occurrence of term, stop when found
+                    if re.search(pattern, sentence, flags=re.IGNORECASE):
+                        sentence_occurrences.append(term)
+                        break
+                except re.error:
+                    logging.warning('Term %d (%s) pattern "%s" failed' % 
+                                    (term.ID, term.label, pattern))
+                    term.searchpatterns.remove(pattern)
 
         # remove duplicates
         if remove_duplicates:
@@ -116,68 +110,44 @@ def get_sentence_occurrences(document, terms, doc_terms=None, terms_present=None
 
         # add to list of sentences if any terms are found
         if sentence_occurrences:
-            if doc_terms:
-                sentence_occurrences._append_doc_terms(
-                    doc_terms, skip_duplicate=skip_duplicate_doc_terms)
-
             occurrences.append(sentence_occurrences)
     
     return occurrences
 
-def _append_doc_terms(occurrences, doc_terms, delimiter=None,
-                      skip_duplicate=True):
-    """
-    Helper function to append doc terms to a list
-    """
-    # set up delimiter for doc terms
-    doc_terms_to_add = [delimiter] if delimiter else []
- 
-    # append global terms
-    if doc_terms and remove_duplicate:
-        doc_terms_to_add.extend(
-            [term for term in doc_terms if term not in sentence_occurrences])
-        occurrences.extend(doc_terms_to_add)
-    elif doc_terms:
-        doc_terms_to_add.extend(doc_terms)
-        occurrences.extend(doc_terms_to_add)
-
-    return occurrences
-
-def prepare_apriori_input(document, terms, doc_terms=None, add_newline=True,
-                          remove_overlap=False, document_sentence=False): 
-    '''
-    Prepares "shopping basket" input for the apriori miner, where each sentence
-    stands on its own line.
-    '''
-
+def occurrences(document, terms, title=None, remove_overlap=False,
+                format_for_file=False, output_filename=None):
     # grab document-level occurrences, reused in sentence occurrences and
     # summary sentence
-    occurrences = set(get_document_occurrences(document, terms, doc_terms))
+    occurrences = set(get_document_occurrences(document, terms))
 
     # grab sentence occurrences
     sentence_occurrences = get_sentence_occurrences(
-        document, terms, doc_terms, terms_present=occurrences,
-        remove_overlap=remove_overlap, remove_duplicates=True, 
-        skip_duplicate_doc_terms=True)
+        document, terms, terms_present=occurrences,
+        remove_overlap=remove_overlap, remove_duplicates=True)
 
-    lines = []
 
-    # add summary sentence (optional)
-    if document_sentence:
-        lines.append(' '.join([str(term.ID) for term in occurrences]))
+    if not format_for_file:
+        # return raw occurrences
+        return sentence_occurrences
 
-    # add each sentence
-    for sent_occur in sentence_occurrences:
-        lines.append(' '.join([str(term.ID) for term in sent_occur]))
+    else:
+        # format for file writing
+        lines = []
+        for sent_occur in sentence_occurrences:
+            line = ' '.join([str(term.ID) for term in sent_occur])
+            line = line + '\n'
+            if title:
+                line = title + ' ' + line
+            
+            lines.append(line)
 
-    # add newlines (for file printing)
-    if add_newline:
-        lines = [line + '\n' for line in lines]
+        if output_filename:
+            with open(output_filename, 'w') as f:
+                f.writelines(lines)
 
-    return lines
+        return lines
 
-def prepare_apriori_input_from_file(occurrence_filename, terms, 
-                                    add_newline=True):
+def prepare_apriori_input(occurrence_filename, terms, doc_terms=None):
     '''
     Prepares "shopping basket" input for the apriori miner from a file of
     sentence-lvel occurrences.
@@ -188,16 +158,25 @@ def prepare_apriori_input_from_file(occurrence_filename, terms,
     with open(occurrence_filename) as f:
         lines = []
         for line in f:
-            line = [term for term in line.split() if term in terms]
+            lterms = line.split()
+            first = lterms[0]       # Save for doc_terms processing
 
-            # do not include blank lines
-            if line:
+            line = [term for term in lterms if term in terms]
+
+            # append doc_terms
+            if line and doc_terms is not None:
+                # search for doc terms, remove duplicates, add to line
+                key_terms = [str(term.ID) for term in doc_terms[first]]
+                key_terms = [term for term in key_terms 
+                                 if term not in lterms and term in terms]
+                if key_terms:
+                    line.extend(key_terms)
+
+            # do not add blank or singleton lines
+            if len(line) > 1:
+                line.append('\n')
                 lines.append(' '.join(line))
     
-    # add newlines (for file printing)
-    if add_newline:
-        lines = [line + '\n' for line in lines]
-
     return lines
 
 def apriori(input_filename='output.txt', output_filename='edges.txt'):
