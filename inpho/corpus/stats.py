@@ -48,13 +48,13 @@ def get_document_occurrences(document, terms, doc_terms=None):
                     term.searchpatterns.remove(pattern)
 
     if doc_terms:
-        occurrences.extend(doc_terms)
+        occurrences._append_doc_terms(doc_terms)
 
     return occurrences
 
 def get_sentence_occurrences(document, terms, doc_terms=None, terms_present=None, 
                              remove_overlap=False, remove_duplicates=False,
-                             remove_duplicate_doc_terms=True):
+                             skip_duplicate_doc_terms=True):
     """
     Returns a list of lists representing the terms occuring in each sentence.
     Semantically equivalent to: 
@@ -116,16 +116,31 @@ def get_sentence_occurrences(document, terms, doc_terms=None, terms_present=None
 
         # add to list of sentences if any terms are found
         if sentence_occurrences:
-            # append global terms
-            if doc_terms and remove_duplicate_doc_terms:
-                doc_terms = [term for term in doc_terms 
-                                 if term not in sentence_occurrences]
-                sentence_occurrences.extend(doc_terms)
-            elif doc_terms:
-                sentence_occurrences.extend(doc_terms)
+            if doc_terms:
+                sentence_occurrences._append_doc_terms(
+                    doc_terms, skip_duplicate=skip_duplicate_doc_terms)
 
             occurrences.append(sentence_occurrences)
     
+    return occurrences
+
+def _append_doc_terms(occurrences, doc_terms, delimiter=None,
+                      skip_duplicate=True):
+    """
+    Helper function to append doc terms to a list
+    """
+    # set up delimiter for doc terms
+    doc_terms_to_add = [delimiter] if delimiter else []
+ 
+    # append global terms
+    if doc_terms and remove_duplicate:
+        doc_terms_to_add.extend(
+            [term for term in doc_terms if term not in sentence_occurrences])
+        occurrences.extend(doc_terms_to_add)
+    elif doc_terms:
+        doc_terms_to_add.extend(doc_terms)
+        occurrences.extend(doc_terms_to_add)
+
     return occurrences
 
 def prepare_apriori_input(document, terms, doc_terms=None, add_newline=True,
@@ -143,7 +158,7 @@ def prepare_apriori_input(document, terms, doc_terms=None, add_newline=True,
     sentence_occurrences = get_sentence_occurrences(
         document, terms, doc_terms, terms_present=occurrences,
         remove_overlap=remove_overlap, remove_duplicates=True, 
-        remove_duplicate_doc_terms=True)
+        skip_duplicate_doc_terms=True)
 
     lines = []
 
