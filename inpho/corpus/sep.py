@@ -59,7 +59,7 @@ def select_terms(entity_type=Idea):
      
 
 def process_article(article, terms=None, entity_type=Idea, output_filename=None,
-                    corpus_root='corpus/', tag=True):
+                    corpus_root='corpus/'):
     """
     Processes a single article for apriori input.
     """
