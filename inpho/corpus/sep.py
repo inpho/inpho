@@ -226,16 +226,18 @@ def update_graph(entity_type, sql_filename):
 
     print "deleting old graph information ..."
     connection.execute("""
-    DELETE FROM %(table)s;
+    TRUNCATE TABLE %(table)s;
     """ % {'filename' : sql_filename, 'table' : table })
     
     print "inserting new graph information"
     connection.execute("""
     SET foreign_key_checks=0;
+    LOCK TABLES %(table)s WRITE;
     LOAD DATA INFILE '%(filename)s'
     INTO TABLE %(table)s
     FIELDS TERMINATED BY '::'
     (ante_id, cons_id, confidence, jweight, weight, occurs_in);
+    UNLOCK TABLES;
     SET foreign_key_checks=1;
     """ % {'filename' : sql_filename, 'table' : table })
     Session.close()
