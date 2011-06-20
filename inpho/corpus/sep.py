@@ -170,19 +170,22 @@ def complete_mining(entity_type=Idea, filename='graph.txt', root='./',
     edge_filename = os.path.abspath(root + "edge-" + filename)
     sql_filename = os.path.abspath(root + "sql-" + filename)
 
+    doc_terms = doc_terms_list()
+
     if update_occurrences:
         print "processing articles..."
         process_articles(entity_type, occur_filename, corpus_root=corpus_root)
 
     print "filtering occurrences..."
-    filter_apriori_input(occur_filename, graph_filename, entity_type,
-                         doc_terms_list())
+    filter_apriori_input(
+        occur_filename, graph_filename, entity_type, doc_terms)
 
     print "running apriori miner..."
     dm.apriori(graph_filename, edge_filename)
     
     print "processing edges..."
-    edges = dm.process_edges(graph_filename, edge_filename)
+    edges = dm.process_edges(
+        graph_filename, edge_filename, occur_filename, doc_terms)
     ents = dm.calculate_node_entropy(edges)
     edges = dm.calculate_edge_weight(edges, ents)
     
@@ -192,7 +195,8 @@ def complete_mining(entity_type=Idea, filename='graph.txt', root='./',
         for edge, props in edges.iteritems():
             ante,cons = edge
             row = "%s::%s" % edge
-            row += "::%(confidence)s::%(jweight)s::%(weight)s\n" % props
+            row += ("::%(confidence)s::%(jweight)s::%(weight)s"
+                    "::%(occurs_in)s\n" % props)
             f.write(row)
 
     print "updating term entropy..."
@@ -231,7 +235,7 @@ def update_graph(entity_type, sql_filename):
     LOAD DATA INFILE '%(filename)s'
     INTO TABLE %(table)s
     FIELDS TERMINATED BY '::'
-    (ante_id, cons_id, confidence, jweight, weight);
+    (ante_id, cons_id, confidence, jweight, weight, occurs_in);
     SET foreign_key_checks=1;
     """ % {'filename' : sql_filename, 'table' : table })
     Session.close()

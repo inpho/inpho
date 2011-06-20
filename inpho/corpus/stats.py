@@ -185,16 +185,19 @@ def apriori(input_filename='output.txt', output_filename='edges.txt'):
     return subprocess.call(args)
 
 
-def process_edges(occurrences_filename='output.txt', edges_filename='edges.txt'):
+def process_edges(graph_filename='output.txt', edges_filename='edges.txt',
+                  occur_filename='occurrences.txt', doc_terms=None):
     # process occurrence and cooccurrence data
-    occurrences = defaultdict(lambda: defaultdict(int))
-    with open(occurrences_filename) as f:
+    graph = defaultdict(lambda: defaultdict(int))
+    with open(graph_filename) as f:
         for line in f:
             ids = line.split()
 
             for ante in ids:
                 for cons in ids:
-                    occurrences[ante][cons] += 1
+                    graph[ante][cons] += 1
+    
+    occurrences = occurs_in(occur_filename, doc_terms)
 
     edges = defaultdict(dict)
     with open(edges_filename) as f:
@@ -202,8 +205,26 @@ def process_edges(occurrences_filename='output.txt', edges_filename='edges.txt')
             ante,cons,confidence,jweight = line.split()
             edges[(ante,cons)] = {'confidence':float(confidence), 
                                   'jweight':float(jweight),
-                                  'occurrences':occurrences[ante][cons]}
+                                  'occurs_in':occurrences[ante][cons],
+                                  'graph':graph[ante][cons]}
     return edges
+
+def occurs_in(occur_filename='occurrences.txt', doc_terms=None):
+    occurrences = defaultdict(lambda: defaultdict(int))
+    with open(occur_filename) as f:
+        for line in f:
+            lterms = line.split()
+            article = lterms[0]
+
+            if doc_terms:
+                for term in lterms[1:]:
+                    for doc in doc_terms[article]:
+                        occurrences[str(doc.ID)][term] += 1
+            else:
+                for term in lterms[1:]:
+                    occurrences[article][term] += 1
+
+    return occurrences
 
 from math import log
 def calculate_node_entropy(edges):
