@@ -154,6 +154,7 @@ def prepare_apriori_input(occurrence_filename, terms, doc_terms=None):
     '''
     # build up terms, as they will occur in the file
     terms = [str(term.ID) for term in terms]
+    summary = defaultdict(set)
 
     with open(occurrence_filename) as f:
         lines = []
@@ -171,11 +172,18 @@ def prepare_apriori_input(occurrence_filename, terms, doc_terms=None):
                                  if term not in lterms and term in terms]
                 if key_terms:
                     line.extend(key_terms)
+            
+            summary[first].update(line)
 
             # do not add blank or singleton lines
             if len(line) > 1:
                 line.append('\n')
                 lines.append(' '.join(line))
+
+    for line in summary.itervalues():
+        line = list(line)
+        line.append('\n')
+        lines.append(' '.join(line))
     
     return lines
 
