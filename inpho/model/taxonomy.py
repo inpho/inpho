@@ -36,6 +36,7 @@ class Node(Entity):
 
         return path
 
+    # TODO: switch loop to an enumerate!
     def paths_to_root(self, max=False):
         """Returns a list of paths and alternate paths to root using links"""
         direct = self.path_to_root()
