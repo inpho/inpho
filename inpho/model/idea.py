@@ -64,9 +64,8 @@ class Idea(Entity):
         # generates search string for search engines
         search_string = self.searchstring
         if (self.searchstring.find("<u>") >= 0) or (self.searchstring.find("<i>") >= 0): 
-            search_string = search_string.replace("<u>", "\" \"")  #union
-       #     search_string = replace(search_string, "in", "\" \"")   #union
-            search_string = search_string.replace("<i>", "\" | \"") #disjunct
+            search_string = search_string.replace("<u>", "\" + \"")  #union
+            search_string = search_string.replace("<i>", "\" | \"")  #disjunct
         
         search_string = "\"" + search_string + "\""
 

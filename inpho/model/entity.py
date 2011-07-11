@@ -27,6 +27,11 @@ class Entity(object):
                   'url' : self.url()}
         return struct
     
+    def json(self):
+        """ Returns the object's utf8-encoded JSON representation """
+        return ExtJsonEncoder(sort_keys=False, ensure_ascii=False, 
+                              skipkeys=True).encode(self.json_struct())
+    
     def web_search_string(self):
         # generates search string for search engines
         
