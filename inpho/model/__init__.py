@@ -45,44 +45,37 @@ searchpatterns_table = Table('searchpatterns', metadata,
     autoload=True, autoload_with=engine)
 
 #define idea tables
-global idea_table
 idea_table = Table('idea', metadata,
     Column('ID', ForeignKey('entity.ID'), primary_key=True),
     autoload=True, autoload_with=engine)
 
-global idea_link_to_table
 idea_link_to_table = Table('idea_link_to', metadata,
     Column('source_id', ForeignKey('idea.ID')),
     Column('target_id', ForeignKey('idea.ID')),
     autoload=True, autoload_with=engine)
 
-global idea_instance_of_table
 idea_instance_of_table = Table('idea_instance_of', metadata,
     Column('instance_id', ForeignKey('idea.ID')),
     Column('class_id', ForeignKey('idea.ID')),
     autoload=True, autoload_with=engine)
 
-global idea_graph_edges_table
 idea_graph_edges_table = Table('idea_graph_edges', metadata,
     Column('ID', Integer, primary_key=True),
     Column('ante_id', ForeignKey('idea.ID')),
     Column('cons_id', ForeignKey('idea.ID')),
     autoload=True, autoload_with=engine)
 
-global idea_thinker_graph_edges_table
 idea_thinker_graph_edges_table = Table('idea_thinker_graph_edges', metadata,
     Column('ID', Integer, primary_key=True),
     Column('ante_id', ForeignKey('entity.ID')),
     Column('cons_id', ForeignKey('entity.ID')),
     autoload=True, autoload_with=engine)
 
-global thinker_graph_edges_table
 thinker_graph_edges_table = Table('thinker_graph_edges', metadata,
     Column('ante_id', ForeignKey('thinker.ID'), primary_key=True),
     Column('cons_id', ForeignKey('thinker.ID'), primary_key=True),
     autoload=True, autoload_with=engine)
 
-global ontotree_table
 ontotree_table = Table('ontotree', metadata,
     Column('ID', ForeignKey('entity.ID'), primary_key=True),
     Column('concept_id', ForeignKey('idea.ID')),
@@ -92,7 +85,6 @@ ontotree_table = Table('ontotree', metadata,
     autoload=True, autoload_with=engine)
 
 # note - when moving to new schema, will need to change this table's ORM
-global idea_evaluation_table
 idea_evaluation_table = Table('idea_evaluation', metadata,
     Column('ID', Integer, primary_key=True),
     Column('cons_id', ForeignKey('idea.ID')),
@@ -100,7 +92,6 @@ idea_evaluation_table = Table('idea_evaluation', metadata,
     Column('uid', ForeignKey('inpho_user.ID')),
     autoload=True, useexisting=True, autoload_with=engine)
 
-global anon_evaluation_table
 anon_evaluation_table = Table('anon_eval', metadata,
     Column('ip', String, primary_key=True),
     Column('cons_id', ForeignKey('idea.ID'), primary_key=True),
@@ -109,47 +100,39 @@ anon_evaluation_table = Table('anon_eval', metadata,
 
 
 #define thinker tables
-global thinker_table
 thinker_table = Table('thinker', metadata,
     Column('ID', ForeignKey('entity.ID'), primary_key=True),
     autoload=True, autoload_with=engine, useexisting=True)
 
-global nationality_table
 nationality_table = Table('nationality', metadata,
     Column('ID', Integer, primary_key=True),
     autoload=True, autoload_with=engine)
 
-global thinker_has_nationality
 thinker_has_nationality_table = Table('thinker_has_nationality', metadata,
     Column('thinker_id', ForeignKey('thinker.ID')),
     Column('value', ForeignKey('nationality.ID')),
     autoload=True, autoload_with=engine)
 
-global profession_table
 profession_table = Table('profession', metadata,
     Column('id', Integer, primary_key=True),
     autoload=True, autoload_with=engine)
 
-global thinker_has_profession_table
 thinker_has_profession_table = Table('thinker_has_profession', metadata,
     Column('thinker_id', ForeignKey('thinker.ID')),
     Column('value', ForeignKey('profession.id')),
     autoload=True, autoload_with=engine)
 
-global alias_table
 alias_table = Table('alias', metadata,
     Column('thinker_id', ForeignKey('entity.ID'), primary_key=True),
     Column('value', Integer, primary_key=True),
     autoload=True, autoload_with=engine)
 
-global thinker_has_influenced_evaluation_table
 thinker_has_influenced_evaluation_table = Table('thinker_has_influenced_evaluation', metadata,
     Column('thinker1_id', ForeignKey('thinker.ID'), primary_key=True),
     Column('thinker2_id', ForeignKey('thinker.ID'), primary_key=True),
     Column('uid', ForeignKey('inpho_user.ID'), primary_key=True),
     autoload=True, autoload_with=engine)
 
-global thinker_teacher_of_evaluation_table
 thinker_teacher_of_evaluation_table = Table('thinker_teacher_of_evaluation', metadata,
     Column('thinker1_id', ForeignKey('thinker.ID'), primary_key=True),
     Column('thinker2_id', ForeignKey('thinker.ID'), primary_key=True),
@@ -157,18 +140,15 @@ thinker_teacher_of_evaluation_table = Table('thinker_teacher_of_evaluation', met
     autoload=True, autoload_with=engine)
 
 # Journal tables
-global journal_table
 journal_table = Table('journal', metadata,
     Column('ID', ForeignKey('entity.ID'), primary_key=True),
     autoload=True, autoload_with=engine)
 
-global journal_abbr_table
 journal_abbr_table = Table('journal_abbr', metadata,
     Column('id', Integer, primary_key=True),
     Column('journal_id', ForeignKey('journal.ID')),
     autoload=True, autoload_with=engine)
 
-global journal_search_query_table
 journal_search_query_table = Table('journal_search_query', metadata,
     Column('id', Integer, primary_key=True),
     Column('journal_id', ForeignKey('journal.ID')),
@@ -176,19 +156,16 @@ journal_search_query_table = Table('journal_search_query', metadata,
     autoload=True, autoload_with=engine)
 
 # Group tables
-global school_of_thought_table
 school_of_thought_table = Table('school_of_thought', metadata,
     Column('ID', ForeignKey('entity.ID'), primary_key=True),
     autoload=True, autoload_with=engine)
 
 # Work tables
-global work_table
 work_table = Table('work', metadata,
     Column('ID', ForeignKey('entity.ID'), primary_key=True),
     autoload=True, autoload_with=engine)
 
 # User tables
-global user_table
 user_table = Table('inpho_user', metadata,
     Column('ID', Integer, primary_key=True),
     Column('first_area_concept_id', ForeignKey('idea.ID')),
@@ -196,14 +173,12 @@ user_table = Table('inpho_user', metadata,
     Column("group_uid", ForeignKey("groups.uid")),
     autoload=True, autoload_with=engine)
 
-global groups_table
 groups_table = Table(
         "groups",
         metadata,
         Column("uid", Integer, primary_key=True),
         Column("name", String, unique=True,    nullable=False),
     )
-global roles_table
 roles_table = Table(
         "roles",
         metadata,
@@ -211,7 +186,6 @@ roles_table = Table(
         Column("name", String, unique=True,    nullable=False),
     )
 
-global users_roles_table
 users_roles_table = Table(                # many:many relation table
         "users_roles",
         metadata,
@@ -220,13 +194,11 @@ users_roles_table = Table(                # many:many relation table
     )
 
 #SEP Tables
-global sep_area_table
 sep_area_table = Table('sep_areas', metadata,
     Column('id', Integer, primary_key=True),
     Column('concept_id', ForeignKey('idea.ID')),
     autoload=True, autoload_with=engine)
 
-global sepentries_table
 sepentries_table = Table('sepentries', metadata,
     Column('sep_dir', String, unique=True, nullable=False, primary_key=True),
     Column('title', String, unique=True, nullable=False),
@@ -235,7 +207,6 @@ sepentries_table = Table('sepentries', metadata,
     autoload=True, autoload_with=engine
 )
 
-global fuzzymatches_table
 fuzzymatches_table = Table('fuzzymatches', metadata,
     Column('sep_dir', ForeignKey('sepentries.sep_dir'), primary_key=True),
     Column('entityID', ForeignKey('entity.ID'), primary_key=True),
