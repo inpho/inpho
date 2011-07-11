@@ -173,25 +173,17 @@ user_table = Table('inpho_user', metadata,
     Column("group_uid", ForeignKey("groups.uid")),
     autoload=True, autoload_with=engine)
 
-groups_table = Table(
-        "groups",
-        metadata,
-        Column("uid", Integer, primary_key=True),
-        Column("name", String, unique=True,    nullable=False),
-    )
-roles_table = Table(
-        "roles",
-        metadata,
-        Column("uid", Integer, primary_key=True),
-        Column("name", String, unique=True,    nullable=False),
-    )
+groups_table = Table("groups", metadata,
+    Column("uid", Integer, primary_key=True),
+    Column("name", String, unique=True, nullable=False))
 
-users_roles_table = Table(                # many:many relation table
-        "users_roles",
-        metadata,
-        Column("user_uid", ForeignKey("inpho_user.ID")),
-        Column("role_uid", ForeignKey("roles.uid")),
-    )
+roles_table = Table("roles", metadata,
+    Column("uid", Integer, primary_key=True),
+    Column("name", String, unique=True, nullable=False))
+
+users_roles_table = Table("users_roles", metadata,
+    Column("user_uid", ForeignKey("inpho_user.ID")),
+    Column("role_uid", ForeignKey("roles.uid")))
 
 #SEP Tables
 sep_area_table = Table('sep_areas', metadata,
