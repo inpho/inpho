@@ -332,10 +332,12 @@ mapper(AnonIdeaEvaluation, anon_evaluation_table, properties={
     
 mapper(IdeaThinkerGraphEdge, idea_thinker_graph_edges_table, properties={
     'ante':relation(Entity, uselist=False, lazy=False, secondary=entity_table,
+        viewonly=True,
         primaryjoin=(idea_thinker_graph_edges_table.c.ante_id == entity_table.c.ID),
         secondaryjoin=(entity_table.c.ID == idea_thinker_graph_edges_table.c.ante_id)
         ), #uselist=False allows for 1:1 relation
     'cons':relation(Entity, uselist=False, lazy=False, secondary=entity_table,
+        viewonly=True,
         primaryjoin=(idea_thinker_graph_edges_table.c.cons_id == entity_table.c.ID),
         secondaryjoin=(entity_table.c.ID == idea_thinker_graph_edges_table.c.cons_id)
         ), #uselist=False allows for 1:1 relation
@@ -386,65 +388,63 @@ mapper(Thinker, thinker_table,
         secondaryjoin=(thinker_table.c.ID == thinker_teacher_of_evaluation_table.c.thinker2_id),
         cascade="all, delete",
         backref='teachers'),
-    'occurrences':dynamic_loader(Thinker, secondary=thinker_graph_edges_table,
+    'occurrences':relation(Thinker, secondary=thinker_graph_edges_table,
+        lazy='dynamic', viewonly=True,
         primaryjoin=and_(thinker_table.c.ID == thinker_graph_edges_table.c.cons_id, 
                          thinker_graph_edges_table.c.occurs_in > 0),
         secondaryjoin=(thinker_graph_edges_table.c.ante_id == thinker_table.c.ID),
-        order_by=thinker_graph_edges_table.c.occurs_in.desc(),
+        order_by=thinker_graph_edges_table.c.occurs_in.desc()
         ),
-    'idea_occurrences':dynamic_loader(Idea, secondary=idea_thinker_graph_edges_table,
+    'idea_occurrences':relation(Idea, secondary=idea_thinker_graph_edges_table,
+        lazy='dynamic', viewonly=True,
         primaryjoin=and_(entity_table.c.ID == idea_thinker_graph_edges_table.c.cons_id, 
                          idea_thinker_graph_edges_table.c.occurs_in > 0),
         secondaryjoin=(idea_thinker_graph_edges_table.c.ante_id == entity_table.c.ID),
-        order_by=idea_thinker_graph_edges_table.c.occurs_in.desc(),
+        order_by=idea_thinker_graph_edges_table.c.occurs_in.desc()
         ),
-    'hyponyms':dynamic_loader(Thinker, secondary=thinker_graph_edges_table,
+    'hyponyms':relation(Thinker, secondary=thinker_graph_edges_table,
+        lazy='dynamic', viewonly=True,
         primaryjoin=and_(thinker_table.c.ID == thinker_graph_edges_table.c.cons_id, 
                          thinker_graph_edges_table.c.weight > 0),
         secondaryjoin=(thinker_graph_edges_table.c.ante_id == thinker_table.c.ID),
-        order_by=thinker_graph_edges_table.c.weight.desc(),
+        order_by=thinker_graph_edges_table.c.weight.desc()
         ),
-    'related':dynamic_loader(Thinker, secondary=thinker_graph_edges_table,
+    'related':relation(Thinker, secondary=thinker_graph_edges_table,
+        lazy='dynamic', viewonly=True,
         primaryjoin=(thinker_table.c.ID == thinker_graph_edges_table.c.ante_id),
         secondaryjoin=(thinker_graph_edges_table.c.cons_id == thinker_table.c.ID),
-        order_by=thinker_graph_edges_table.c.jweight.desc(),
+        order_by=thinker_graph_edges_table.c.jweight.desc()
         ),
-    'related_ideas':dynamic_loader(Idea, secondary=idea_thinker_graph_edges_table,
+    'related_ideas':relation(Idea, secondary=idea_thinker_graph_edges_table,
+        lazy='dynamic', viewonly=True,
         primaryjoin=and_(entity_table.c.ID ==idea_thinker_graph_edges_table.c.ante_id,
                          entity_table.c.typeID == 1),
         secondaryjoin=(idea_thinker_graph_edges_table.c.cons_id == entity_table.c.ID),
-        order_by=idea_thinker_graph_edges_table.c.jweight.desc(),
+        order_by=idea_thinker_graph_edges_table.c.jweight.desc()
         ),
-    'hyponyms':dynamic_loader(Thinker, secondary=thinker_graph_edges_table,
-        primaryjoin=and_(thinker_table.c.ID == thinker_graph_edges_table.c.cons_id, 
-                         thinker_graph_edges_table.c.weight > 0),
-        secondaryjoin=(thinker_graph_edges_table.c.ante_id == thinker_table.c.ID),
-        order_by=thinker_graph_edges_table.c.weight.desc(),
-        ),
-    'related':dynamic_loader(Thinker, secondary=thinker_graph_edges_table,
-        primaryjoin=(thinker_table.c.ID == thinker_graph_edges_table.c.ante_id),
-        secondaryjoin=(thinker_graph_edges_table.c.cons_id == thinker_table.c.ID),
-        order_by=thinker_graph_edges_table.c.jweight.desc(),
-        ),
-    'it_in_edges':dynamic_loader(IdeaThinkerGraphEdge, secondary=idea_thinker_graph_edges_table,
+    'it_in_edges':relation(IdeaThinkerGraphEdge, secondary=idea_thinker_graph_edges_table,
+        lazy='dynamic', viewonly=True,
         primaryjoin=(entity_table.c.ID==idea_thinker_graph_edges_table.c.cons_id),
         secondaryjoin=(idea_thinker_graph_edges_table.c.cons_id == entity_table.c.ID),
-        order_by=idea_thinker_graph_edges_table.c.jweight.desc(),
+        order_by=idea_thinker_graph_edges_table.c.jweight.desc()
         ),
-    'it_out_edges':dynamic_loader(IdeaThinkerGraphEdge, secondary=idea_thinker_graph_edges_table,
+    'it_out_edges':relation(IdeaThinkerGraphEdge, secondary=idea_thinker_graph_edges_table,
+        lazy='dynamic', viewonly=True,
         primaryjoin=(entity_table.c.ID==idea_thinker_graph_edges_table.c.ante_id),
         secondaryjoin=(idea_thinker_graph_edges_table.c.ante_id == entity_table.c.ID),
-        order_by=idea_thinker_graph_edges_table.c.jweight.desc(),
+        order_by=idea_thinker_graph_edges_table.c.jweight.desc()
         ),
-    'tt_in_edges':dynamic_loader(ThinkerGraphEdge, secondary=thinker_graph_edges_table,
+    'tt_in_edges':relation(ThinkerGraphEdge, secondary=thinker_graph_edges_table,
+        lazy='dynamic', viewonly=True,
         primaryjoin=(thinker_table.c.ID==thinker_graph_edges_table.c.cons_id),
         secondaryjoin=(thinker_graph_edges_table.c.cons_id == thinker_table.c.ID),
-        order_by=thinker_graph_edges_table.c.jweight.desc(),
+        order_by=thinker_graph_edges_table.c.jweight.desc()
         ),
-    'tt_out_edges':dynamic_loader(ThinkerGraphEdge, secondary=thinker_graph_edges_table,
+    'tt_out_edges':relation(ThinkerGraphEdge, secondary=thinker_graph_edges_table,
+        lazy='dynamic', viewonly=True,
         primaryjoin=(thinker_table.c.ID==thinker_graph_edges_table.c.ante_id),
         secondaryjoin=(thinker_graph_edges_table.c.ante_id == thinker_table.c.ID),
-        order_by=thinker_graph_edges_table.c.jweight.desc(),
+        order_by=thinker_graph_edges_table.c.jweight.desc()
         ),
 })
 """    'birth':composite(SplitDate, thinker_table.c.birth_year,
@@ -459,10 +459,12 @@ mapper(Profession, profession_table)
 
 mapper(ThinkerGraphEdge, thinker_graph_edges_table, properties={
     'ante':relation(Thinker, uselist=False, lazy=False, secondary=thinker_table,
+        viewonly=True,
         primaryjoin=(thinker_graph_edges_table.c.ante_id == thinker_table.c.ID),
         secondaryjoin=(thinker_table.c.ID == thinker_graph_edges_table.c.ante_id)
         ), #uselist=False allows for 1:1 relation
     'cons':relation(Thinker, uselist=False, lazy=False, secondary=thinker_table,
+        viewonly=True,
         primaryjoin=(thinker_graph_edges_table.c.cons_id == thinker_table.c.ID),
         secondaryjoin=(thinker_table.c.ID == thinker_graph_edges_table.c.cons_id)
         ), #uselist=False allows for 1:1 relation
