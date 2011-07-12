@@ -1,5 +1,6 @@
 from inpho.model.entity import Entity
 import os.path
+import inpho.helpers
 
 class Idea(Entity):
     """
@@ -17,7 +18,8 @@ class Idea(Entity):
         return self.label.encode('utf-8')
 
     def url(self, filetype='html', action='view'):
-        return url(controller='idea', action=action, id=self.ID, filetype=filetype)
+        return inpho.helpers.url(controller="idea", id=self.ID, action=action, 
+                                 filetype=filetype)
 
     def json_struct(self, sep_filter=True, limit=10, extended=True, graph=False, glimit=None):
         struct = { 'ID' : self.ID, 

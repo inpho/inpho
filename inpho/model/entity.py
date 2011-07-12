@@ -1,6 +1,7 @@
 import re
 import os.path
 import string
+import inpho.helpers
 
 from sqlalchemy.ext.associationproxy import association_proxy
 
@@ -9,8 +10,8 @@ p = inflect.engine()
 
 class Entity(object):
     def url(self, filetype='html', action='view'):
-        # TODO: Rewrite to remove dependency on pylons
-        return url(controller='entity', action=action, id=self.ID, filetype=filetype)
+        return inpho.helpers.url(controller="entity", id=self.ID, 
+                                 action=action, filetype=filetype)
 
     def __repr__(self):
         return '<Entity %d: %s>' % (self.ID, self.label.encode('utf-8'))

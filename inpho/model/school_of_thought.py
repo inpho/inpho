@@ -1,4 +1,5 @@
 from inpho.model import Entity
+import inpho.helpers
 
 #group classes
 class SchoolOfThought(Entity):
@@ -14,4 +15,5 @@ class SchoolOfThought(Entity):
         return self.label.encode('utf-8')
 
     def url(self, filetype='html', action='view'):
-        return url(controller='school_of_thought', action=action, id=self.ID, filetype=filetype)
+        return inpho.helpers.url(controller="school_of_thought", id=self.ID, 
+                                 action=action, filetype=filetype)

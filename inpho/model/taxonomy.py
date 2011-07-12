@@ -1,6 +1,7 @@
 import os.path
 
 from inpho.model.entity import Entity
+import inpho.helpers
 
 class Node(Entity):
     def __repr__(self):
@@ -10,7 +11,8 @@ class Node(Entity):
         return self.label.encode('utf-8')
     
     def url(self, filetype='html', action='view'):
-        return url(controller='taxonomy', action=action, id=self.ID, filetype=filetype)
+        return inpho.helpers.url(controller="taxonomy", id=self.ID, 
+                                 action=action, filetype=filetype)
 
     def json_struct(self, sep_filter=True, limit=10, extended=True):
         struct = { 'ID' : self.ID, 

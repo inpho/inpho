@@ -1,4 +1,5 @@
 from inpho.model import Entity
+import inpho.helpers
 
 #work classes
 class Work(Entity):
@@ -14,4 +15,5 @@ class Work(Entity):
         return self.label.encode('utf-8')
 
     def url(self, filetype='html', action='view'):
-        return url(controller='work', action=action, id=self.ID, filetype=filetype)
+        return inpho.helpers.url(controller="work", id=self.ID, action=action, 
+                                 filetype=filetype)

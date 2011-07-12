@@ -10,15 +10,15 @@ def url(controller, id=None, action=None, id2=None, filetype=None):
 
     url = ''
     if controller:
-        url = url + '/' + controller
+        url += '/' + controller
     if id:
-        url = url + '/' + str(id)
+        url += '/' + str(id)
     if action:
-        url = url + '/' + action
+        url += '/' + action
     if id2:
-        url = url + '/' + str(id2)
+        url += '/' + str(id2)
     if filetype:
-        url = url + '.' + filetype
+        url += '.' + filetype
     return url
 
 class ArgumentError(Exception):

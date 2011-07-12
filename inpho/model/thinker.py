@@ -2,6 +2,7 @@ import os.path
 
 from inpho.model.entity import Entity
 from inpho.model.idea import Idea
+import inpho.helpers
 
 from sqlalchemy.ext.associationproxy import association_proxy
 
@@ -21,7 +22,8 @@ class Thinker(Entity):
         return self.label.encode('utf-8')
 
     def url(self, filetype='html', action='view'):
-        return url(controller='thinker', action=action, id=self.ID, filetype=filetype)
+        return inpho.helpers.url(controller="thinker", id=self.ID, 
+                                 action=action, filetype=filetype)
 
     aliases = association_proxy('alias', 'value')
 

@@ -1,6 +1,7 @@
 import os.path
 
 from inpho.model.entity import Entity
+import inpho.helpers
 
 from sqlalchemy.ext.associationproxy import association_proxy
 
@@ -20,7 +21,8 @@ class Journal(Entity):
         return self.label
     
     def url(self, filetype='html', action='view'):
-        return url(controller='journal', action=action, id=self.ID, filetype=filetype)
+        return inpho.helpers.url(controller="journal", id=self.ID, 
+                                 action=action, filetype=filetype)
 
     abbrs = association_proxy('abbreviations', 'value')
     queries = association_proxy('query', 'value')
