@@ -3,3 +3,23 @@ def titlecase(s):
     for subst in s.split():
         title.append(subst[0].upper() + subst[1:])
     return ' '.join(title)
+
+def url(controller, id=None, action=None, id2=None, filetype=None):
+    if (id2 and (id == None or action == None)):
+        raise ArgumentError()
+
+    url = ''
+    if controller:
+        url = url + '/' + controller
+    if id:
+        url = url + '/' + str(id)
+    if action:
+        url = url + '/' + action
+    if id2:
+        url = url + '/' + str(id2)
+    if filetype:
+        url = url + '.' + filetype
+    return url
+
+class ArgumentError(Exception):
+    pass
