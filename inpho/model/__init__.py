@@ -5,10 +5,8 @@ from sqlalchemy.sql.expression import and_, or_, not_
 from sqlalchemy.types import *
 
 # Create the database engine
-from ConfigParser import ConfigParser
-config = ConfigParser()
-config.read('sql.ini')
-url = config.get('sqlalchemy', 'url') 
+import inpho
+url = inpho.config.get('sqlalchemy', 'url')
 engine = create_engine(url, echo=False, pool_recycle=30) 
 
 # configure Session class with desired options.
@@ -16,8 +14,6 @@ Session = scoped_session(sessionmaker())
 Session.configure(bind=engine)
 
 metadata = MetaData()
-
-
 
 from inpho.model.entity import *
 from inpho.model.graph import *
