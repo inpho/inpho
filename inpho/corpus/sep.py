@@ -244,10 +244,8 @@ def update_graph(entity_type, sql_filename):
 
 
 if __name__ == "__main__":
-    from ConfigParser import ConfigParser
-    config = ConfigParser()
-    config.read('sql.ini')
-    corpus_root = config.get('corpus', 'path') 
+    import inpho.corpus
+    corpus_root = inpho.corpus.path
 
     from optparse import OptionParser
 
