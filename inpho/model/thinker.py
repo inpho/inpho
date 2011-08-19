@@ -21,7 +21,7 @@ class Thinker(Entity):
     def __str__(self):
         return self.label.encode('utf-8')
 
-    def url(self, filetype='html', action='view'):
+    def url(self, filetype=None, action=None):
         return inpho.helpers.url(controller="thinker", id=self.ID, 
                                  action=action, filetype=filetype)
 
