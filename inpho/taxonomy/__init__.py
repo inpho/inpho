@@ -1,4 +1,6 @@
+from collections import defaultdict
 import re
+
 """ 
 A taxonomy is a directed graph consisting of *instances* and *links*.
 
@@ -63,3 +65,36 @@ class Node(object):
         
         return False
 
+def from_dlv(filename):
+    """
+    Function to return a taxonomy from the specified DLV output file.
+    """
+    # build regex for instance and link search
+    regex_class = re.compile("class\(i(\d+)\)")
+    regex_ins = re.compile("[ins|isa]\(i(\d+),i(\d+)\)")
+    regex_links = re.compile("link\(i(\d+),i(\d+)\)")
+ 
+    with open(filename) as f:
+        dlv = f.read()
+
+        classes = frozenset(regex_class.findall(dlv))
+        instances = frozenset(regex_ins.findall(dlv))
+        links = frozenset(regex_links.findall(dlv))
+
+    nodes = defaultdict(Node)
+    root = Node("Philosophy", spine=True)
+
+    for child, parent in instances:
+        nodes[parent].graft(nodes[child])
+
+    for target, source in links:
+        nodes[source].links.add(nodes[target])
+
+    for key,node in nodes.iteritems():
+        node.value = key
+        if node.value in classes:
+            node.spine = True
+        if node.parent is None:
+            root.graft(node)
+
+    return root
