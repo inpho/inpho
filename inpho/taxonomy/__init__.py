@@ -14,6 +14,9 @@ class Node(object):
         self._children = set()
         self.links = set()
 
+    def __repr__(self):
+        return 'Node %s' % (self.value)
+
     @property
     def children(self):
         return frozenset(self._children)
@@ -27,10 +30,7 @@ class Node(object):
     
     @property
     def root(self):
-        if self.parent is None:
-            return self
-        else:
-            return self.parent.root
+        return self.parent.root if self.parent else self
 
     def graft(self, child):
         self._children.add(child)
@@ -46,6 +46,11 @@ class Node(object):
         self.parent._children.remove(self)
         self.parent = None
         return self
+
+    def siblings(self):
+        siblings = list(self.parent.children)
+        siblings.remove(self)
+        return siblings
 
     def search(self, needle):
         if self.value == needle:
