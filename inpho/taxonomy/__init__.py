@@ -15,6 +15,16 @@ class Node(object):
     def __repr__(self):
         return 'Node %s' % (self.value)
 
+    def __iter__(self):
+        return self.next()
+ 
+    def next(self):
+        """ A recursive generator that prints the depth-first traversal. """
+        yield self 
+        for child in self.children:
+            for node in child:
+                yield node
+
     @property
     def children(self):
         return frozenset(self._children)
