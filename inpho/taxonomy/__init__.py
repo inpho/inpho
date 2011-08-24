@@ -61,9 +61,7 @@ class Node(object):
         Removes this Node from its parent and returning a free-standing tree.
         """
         if self.parent is not None:
-            self.parent._children.remove(self)
-            self.parent = None
-        return self
+            return self.parent.prune(self)
 
     def siblings(self):
         """ Returns the list of siblings """
@@ -96,13 +94,18 @@ def from_dlv(filename):
     with open(filename) as f:
         dlv = f.read()
 
-        classes = regex_class.findall(dlv)
-        instances = regex_ins.findall(dlv)
-        links = regex_links.findall(dlv)
+        classes = frozenset(regex_class.findall(dlv))
+        instances = frozenset(regex_ins.findall(dlv))
+        links = frozenset(regex_links.findall(dlv))
 
     # set up taxonomy structure
     nodes = defaultdict(Node)
     root = Node("Philosophy", spine=True)
+
+    # populate classes
+    for child, parent in classes:
+        nodes[child].spine = True
+        nodes[parent].graft(nodes[child])
 
     # populate instances
     for child, parent in instances:
@@ -115,10 +118,6 @@ def from_dlv(filename):
     # glue taxonomies together, initialize values
     for key,node in nodes.iteritems():
         node.value = key
-
-        # specify hand-built portion of the taxonomy
-        if node.value in classes:
-            node.spine = True
 
         # if this is a root, glue it to the Philosophy node.
         if node.parent is None:
