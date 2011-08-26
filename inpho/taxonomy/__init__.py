@@ -102,11 +102,6 @@ def from_dlv(filename):
     nodes = defaultdict(Node)
     root = Node("Philosophy", spine=True)
 
-    # populate classes
-    for child, parent in classes:
-        nodes[child].spine = True
-        nodes[parent].graft(nodes[child])
-
     # populate instances
     for child, parent in instances:
         nodes[parent].graft(nodes[child])
@@ -118,6 +113,10 @@ def from_dlv(filename):
     # glue taxonomies together, initialize values
     for key,node in nodes.iteritems():
         node.value = key
+
+        # specify hand-built portion of the taxonomy
+        if node.value in classes:
+            node.spine = True
 
         # if this is a root, glue it to the Philosophy node.
         if node.parent is None:
