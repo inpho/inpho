@@ -9,6 +9,7 @@ from BeautifulSoup import BeautifulSoup
 from sqlalchemy.orm import subqueryload
 from sqlalchemy import and_, or_, not_
 
+from inpho import config
 import inpho.corpus.stats as dm
 from inpho.model import Idea, Thinker, Entity, Session 
 
@@ -44,6 +45,52 @@ def extract_article_body(filename):
         logging.error('Could not extract text from %s' % filename)
 
         return ''
+
+def published(sep_dir, log_root=None):
+    """
+    Checks if the given article is published.
+    """
+    if log_root is None:
+        log_root = config.get('corpus', 'log_path')
+
+    log_path = os.path.join(log_root, sep_dir)
+    with open(log_path) as log:
+        for line in log:
+            #use the published 
+            if '::eP' in line:
+                return True
+
+    return False
+
+def new_entries():
+    """
+    Returns a list of all entries which do not have a corresponding InPhO Entity.
+    """
+
+    # get list of all entries in database
+    sep_dirs = Session.query(Entity.sep_dir).filter(Entity.sep_dir!='').all()
+    sep_dirs = [row[0] for row in sep_dirs]
+
+    # get list of all entries in the SEP database
+    entries = os.path.join(config.get('corpus', 'db_path'), 'entries.txt')
+
+    # build list of new entries
+    new_sep_dirs = []
+    with open(entries) as f:
+        for line in f:
+            sep_dir = line.split('::', 1)[0]
+            try:
+                if sep_dir not in sep_dirs and published(sep_dir):
+                    # published entry not in database, add to list of entries
+                    new_sep_dirs.append(sep_dir)
+            except IOError:
+                # skip IOErrors, as these indicate potential entries w/o logs
+                continue
+
+    # remove the sample entry
+    new_sep_dirs.remove('sample')
+
+    return new_sep_dirs
 
 def select_terms(entity_type=Idea):
     """
@@ -277,6 +324,9 @@ if __name__ == "__main__":
     parser.add_option("--load", action="store_const",
                       dest='mode', const='load',
                       help="load data from sql files")
+    parser.add_option("--new", action="store_const",
+                      dest='mode', const='new_entries',
+                      help="print a list of new entries")
     options, args = parser.parse_args()
 
     filename_root = options.type
@@ -300,3 +350,6 @@ if __name__ == "__main__":
     elif options.mode == 'occur':
         occur_filename = os.path.abspath("./occurrences.txt")
         process_articles(entity_type, occur_filename, corpus_root=corpus_root)
+    elif options.mode == 'new_entries':
+        for entry in new_entries():
+            print entry
