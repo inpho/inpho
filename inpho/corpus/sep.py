@@ -62,6 +62,34 @@ def published(sep_dir, log_root=None):
 
     return False
 
+def get_titles():
+    """
+    Returns a dictionary of { sep_dir : title } pairs.
+    """
+    entries = os.path.join(config.get('corpus', 'db_path'), 'entries.txt')
+    
+    titles = {}
+    with open(entries) as f:
+        for line in f:
+            current = line.split('::', 2)
+            titles[current[0]] = current[1]
+
+    return titles
+
+def get_title(sep_dir):
+    """
+    Returns the title for the given sep_dir
+    """
+    entries = os.path.join(config.get('corpus', 'db_path'), 'entries.txt')
+    
+    with open(entries) as f:
+        for line in f:
+            current = line.split('::', 2)
+            if current[0] == sep_dir:
+                return current[1]
+
+    raise KeyError("Invalid sep_dir")
+
 def new_entries():
     """
     Returns a list of all entries which do not have a corresponding InPhO Entity.
