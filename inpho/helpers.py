@@ -4,7 +4,7 @@ def titlecase(s):
         title.append(subst[0].upper() + subst[1:])
     return ' '.join(title)
 
-def url(controller, id=None, action=None, id2=None, filetype=None):
+def url(controller, id=None, action=None, id2=None, filetype=None, **kwargs):
     if (id2 and (id == None or action == None)):
         raise ArgumentError()
 
@@ -19,6 +19,15 @@ def url(controller, id=None, action=None, id2=None, filetype=None):
         url += '/' + str(id2)
     if filetype:
         url += '.' + filetype
+
+    # construct the query string
+    if kwargs:
+        url += "?"
+        for key in kwargs:
+            if url[-1] != "?":
+                url += "&"
+            url += key + "=" + kwargs[key]
+
     return url
 
 class ArgumentError(Exception):
