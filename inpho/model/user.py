@@ -1,4 +1,5 @@
-from hashlib import md5 as encrypt
+from hashlib import md5
+import random
 import string
 
 def encrypt(password, secret=''):
