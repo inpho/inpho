@@ -206,7 +206,7 @@ metadata.create_all(engine)
 
 # Entity mappings
 mapper(Entity, entity_table, 
-       #polymorphic_on=entity_table.c.typeID, polymorphic_identity=0,
+       polymorphic_on=entity_table.c.typeID, polymorphic_identity=0,
        properties={
            'alias':relation(Alias), 
            #'spatterns':relation(Searchpattern),
