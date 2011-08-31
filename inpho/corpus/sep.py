@@ -239,7 +239,7 @@ def doc_terms_list():
 
 def complete_mining(entity_type=Idea, filename='graph.txt', root='./',
                     corpus_root='corpus/', update_entropy=False,
-                    update_occurrences=False): 
+                    update_occurrences=False, update_db=False): 
     occur_filename = os.path.abspath(root + "occurrences.txt")
     graph_filename = os.path.abspath(root + "graph-" + filename)
     edge_filename = os.path.abspath(root + "edge-" + filename)
@@ -274,9 +274,9 @@ def complete_mining(entity_type=Idea, filename='graph.txt', root='./',
                     "::%(occurs_in)s\n" % props)
             f.write(row)
 
-    print "updating term entropy..."
-
     if update_entropy:
+        print "updating term entropy..."
+
         for term_id, entropy in ents.iteritems():
             term = Session.query(Idea).get(term_id)
             if term:
@@ -286,7 +286,9 @@ def complete_mining(entity_type=Idea, filename='graph.txt', root='./',
         Session.commit()
         Session.close()
 
-    update_graph(entity_type, sql_filename)
+    if update_db:
+        print "updating the database..."
+        update_graph(entity_type, sql_filename)
 
 def update_graph(entity_type, sql_filename):
     # Import SQL statements
@@ -327,7 +329,7 @@ if __name__ == "__main__":
     usage = "usage: %prog [options] config_file"
     parser = OptionParser(usage)
     parser.set_defaults(type='all', mode='complete', update_entropy=False,
-                        update_occurrences=False)
+                        update_occurrences=False, update_db=False)
     parser.add_option("-a", "--all", action="store_const",
                       dest='type', const='all',
                       help="mine all edges [default]")
@@ -340,6 +342,9 @@ if __name__ == "__main__":
     parser.add_option("--complete", action="store_const",
                       dest='mode', const='complete',
                       help="complete data mining process [default]")
+    parser.add_option("--update-db", action="store_true",
+                      dest='update_db',
+                      help="updates the database with results")
     parser.add_option("--entropy", action="store_true",
                       dest='update_entropy',
                       help="data mining, with entropy updates")
@@ -371,7 +376,8 @@ if __name__ == "__main__":
                         filename=filename_root, 
                         corpus_root=corpus_root, 
                         update_entropy=options.update_entropy,
-                        update_occurrences=options.update_occurrences)
+                        update_occurrences=options.update_occurrences,
+                        update_db=options.update_db)
     elif options.mode == 'load':
         sql_filename = os.path.abspath(corpus_root + "sql-" + filename_root)
         update_graph(entity_type, sql_filename)
