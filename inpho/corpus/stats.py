@@ -1,17 +1,6 @@
-#loadCorpus
-
-# Iterate through corpus dir and find all sep_dirs and index files
-# Alternatively, iterate through sep_dirs of SQL
-
-# Open HTML file and grab sentence list
-# 
-# title.replaceAll(" \\(stanford encyclopedia of philosophy\\)", "");                 
-# title.replaceAll("sep: ", "");   
-
-# documentString which is just sentenceList.join()
-
-# appearList is set of all terms which appear in the sentence
-# occurList is set of all terms occuring in the document
+"""
+Module containing statistical methods for the InPhO data mining process.
+"""
 
 import logging
 import re
