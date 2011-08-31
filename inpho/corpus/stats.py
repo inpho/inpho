@@ -10,6 +10,8 @@ from collections import defaultdict
 # http://nltk.googlecode.com/svn/trunk/doc/api/nltk.tokenize.punkt.PunktSentenceTokenizer-class.html
 from nltk.tokenize import PunktSentenceTokenizer as Tokenizer
 
+from inpho import config
+
 def get_document_occurrences(document, terms):
     """
     Returns a list of terms occuring in the document. 
@@ -177,7 +179,8 @@ def prepare_apriori_input(occurrence_filename, terms, doc_terms=None):
     return lines
 
 def apriori(input_filename='output.txt', output_filename='edges.txt'):
-    args = ['apriori', input_filename, output_filename,
+    apriori_bin = config.get('corpus', 'apriori_bin')
+    args = [apriori_bin, input_filename, output_filename,
             '0.00000000000000001', '0.00000000000000001']
     return subprocess.call(args)
 
