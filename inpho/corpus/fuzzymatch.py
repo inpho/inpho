@@ -17,27 +17,6 @@ from inpho.model import Session
 from inpho.model import Entity
 from inpho import config
 
-def fuzzymatch_entities(string1):
-    """
-    Takes a string and returns all potential fuzzymatches from the Entity
-    database. Matches are returned as a list of (entity,confidence) tuples.
-    """
-    # construct Entity query  
-    entities = Session.query(Entity)
-    entities = entities.filter(Entity.typeID != 2) # exclude nodes
-    entities = entities.filter(Entity.typeID != 4) # exclude journals
-
-    # initialize result object
-    matches = []
-   
-    # build results
-    for entity in entities:
-        confidence, distance = fuzzymatch(string1, entity.label)
-        if confidence >= 0.5:
-            matches.append((entity,confidence))
-    
-    return matches
-
 def fuzzymatch(string1, string2):
     """
     Takes two strings and performs a fuzzymatch on them. 
@@ -57,81 +36,26 @@ def fuzzymatch(string1, string2):
 
     return (confidence, distance)
 
-def fuzzymatchall(SEPEntrieslist):
-    #takes outputs from addlist() and saves all fuzzy match IDs to SEPEntry.fuzzymatch with verdicts (percent of words matched)
-    #now change so that it only updates ones that don't currently have a fuzzymatchlist
-    
-    #clear out fuzzymatch table--otherwise old fuzzies will accumulate, and nobody wants that
-    delquery = Session.query(Fuzzymatch)
-    delquery.delete()
-    Session.flush()
-    Session.commit()
-    
-    
-    for SEPEntry in SEPEntrieslist:
-            print "working on " + SEPEntry.title.encode('utf-8') + "\n"
-            entities = Session.query(Entity)
-            
-            #exclude journals and nodes from fuzzy matching
-            entities = entities.filter(Entity.typeID != 2)
-            entities = entities.filter(Entity.typeID != 4)
-            
-            #reset fuzzymatches for that entry
-            #SEPEntry.fuzzymatches = ""
-    
-            
-            ##string1 = string1.decode('utf8')
-            
-            for entity in entities:
-                php = PHP("set_include_path('/usr/lib/php/');")
-                php = PHP("require 'fuzzymatch.php';")
-                #php = PHP()
-                #print "testing " + entity.label.encode('utf8') + " against " + string1.encode('utf8') + "\n"
-                
-                code = '$string1 = utf8_decode("' + SEPEntry.title.encode('utf8') + '");'
-                
-                #code = code + "$string2 = '" + entity.label.encode('latin-1', 'replace') + "';"
-                #code = code + "print $string1; print $string2;"
-                #print code + '$string2 = utf8_decode("' + entity.label.encode('utf8') + '");'
-                code = code + '$string2 = utf8_decode("' + entity.label.encode('utf8') + '");'
-                code = code + """print fuzzy_match($string1, $string2, 2);"""
-                
-                verdict = php.get_raw(code)
-                #print "verdict is " + verdict + "\n"
-                verdict = verdict.split(',')
-            
-                if float(verdict[0])>=.20:
-                    #print entity.label + " is a match!\n"
-                    #entity.matchvalue = verdict
-                    #string = SEPEntry.fuzzymatches + "|" + str(entity.ID) + "," + verdict
-                    
-                    #if len(string) < 400:
-                    #    SEPEntry.fuzzymatches = SEPEntry.fuzzymatches + "|" + str(entity.ID) + "," + verdict
-                    #else:
-                    #    print "sorry, too many matches!  Can't add " + str(entity.ID) + " to fuzzy matches; over 400 chars."
-                    fmatch = Fuzzymatch(entity.ID)
-                    fmatch.sep_dir = SEPEntry.sep_dir
-                    fmatch.strength = verdict[0]
-                    fmatch.edits = verdict[1]
-                    
-                    SEPEntry.fmatches.append(fmatch)
-                    
-                    
-            Session.flush()
-            Session.commit()
+def fuzzymatch_all(string1):
+    """
+    Takes a string and returns all potential fuzzymatches from the Entity
+    database. Matches are returned as a list of (entity,confidence) tuples.
+    """
+    # construct Entity query  
+    entities = Session.query(Entity)
+    entities = entities.filter(Entity.typeID != 2) # exclude nodes
+    entities = entities.filter(Entity.typeID != 4) # exclude journals
 
-
-def fuzzymatchtest(string1, string2):
-    #note:  fuzzymatch.php must be in php path, e.g.  /usr/lib/php/!!!
-    php = PHP("require 'fuzzymatch.php';")
-    #php = PHP()
+    # initialize result object
+    matches = []
+   
+    # build results
+    for entity in entities:
+        confidence, distance = fuzzymatch(string1, entity.label)
+        if confidence >= 0.5:
+            matches.append((entity,confidence))
     
-    code = "$string1 = '" + string1 + "';"
-    code = code + "$string2 = '" + string2.encode('latin-1', 'replace') + "';"
-    #code = code + "print $string1; print $string2;"
-    code = code + """print fuzzy_match($string1, $string2, 2);"""
-    
-    return php.get_raw(code)
+    return matches
 
 def convertSS(choicestring, ioru):
     #takes one of the output choices from setup_SSL(), as well as whether we are dealing with intersection or union
