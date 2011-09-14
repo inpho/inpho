@@ -18,33 +18,31 @@ from inpho.model import Entity
 from inpho import config
 
 def fuzzymatch(string1):
-    #note:  fuzzymatch.php must be in php path, e.g.  /usr/lib/php/!!!
-    #put in a cron job that runs every half hour for new entries?
-    
+    """
+    Takes a string and returns all potential fuzzymatches from the Entity
+    database. Matches are returned as a list of (entity,confidence) tuples.
+    """
+    # construct Entity query  
     entities = Session.query(Entity)
-    matches = []
+    entities = entities.filter(Entity.typeID != 2) # exclude nodes
+    entities = entities.filter(Entity.typeID != 4) # exclude journals
 
-    ##string1 = string1.decode('utf8')
+    # initialize result objects
+    matches = []
+    php = PHP("""set_include_path('%(lib_path)s'); 
+                 require 'fuzzymatch.php';""" % 
+                 {'lib_path': config.get('general', 'lib_path')})
     for entity in entities:
-        php = PHP("require 'fuzzymatch.php';")
-        #php = PHP()
-        #print "testing " + entity.label.encode('utf8') + " against " + string1.encode('utf8') + "\n"
-        
         code = '$string1 = utf8_decode("' + string1.encode('utf8') + '");'
         
-        #code = code + "$string2 = '" + entity.label.encode('latin-1', 'replace') + "';"
-        #code = code + "print $string1; print $string2;"
-        #print code + '$string2 = utf8_decode("' + entity.label.encode('utf8') + '");'
         code = code + '$string2 = utf8_decode("' + entity.label.encode('utf8') + '");'
         code = code + """print fuzzy_match($string1, $string2, 2);"""
         
-        verdict = php.get_raw(code)
-        #print "verdict is " + verdict + "\n"
-    
-        if float(verdict)>=.5:
-            #print entity.label + " is a match!\n"
-            entity.matchvalue = verdict
-            matches.append(entity)
+        result = php.get_raw(code)
+        confidence,distance = map(float, result.split(','))
+
+        if confidence >= 0.5:
+            matches.append((entity,confidence))
     
     return matches
 

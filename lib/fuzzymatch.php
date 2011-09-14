@@ -95,7 +95,7 @@ function fuzzy_match($str1,$str2,$word_edit_threshold) {
   if ($match) {
     return "$ratioproduct,$distance"; 
   } else {
-    return 0;
+    return "0,0";
   }
 }
 
