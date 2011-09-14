@@ -17,7 +17,7 @@ from inpho.model import Session
 from inpho.model import Entity
 from inpho import config
 
-def fuzzymatch(string1):
+def fuzzymatch_entities(string1):
     """
     Takes a string and returns all potential fuzzymatches from the Entity
     database. Matches are returned as a list of (entity,confidence) tuples.
@@ -27,24 +27,35 @@ def fuzzymatch(string1):
     entities = entities.filter(Entity.typeID != 2) # exclude nodes
     entities = entities.filter(Entity.typeID != 4) # exclude journals
 
-    # initialize result objects
+    # initialize result object
     matches = []
-    php = PHP("""set_include_path('%(lib_path)s'); 
-                 require 'fuzzymatch.php';""" % 
-                 {'lib_path': config.get('general', 'lib_path')})
+   
+    # build results
     for entity in entities:
-        code = '$string1 = utf8_decode("' + string1.encode('utf8') + '");'
-        
-        code = code + '$string2 = utf8_decode("' + entity.label.encode('utf8') + '");'
-        code = code + """print fuzzy_match($string1, $string2, 2);"""
-        
-        result = php.get_raw(code)
-        confidence,distance = map(float, result.split(','))
-
+        confidence, distance = fuzzymatch(string1, entity.label)
         if confidence >= 0.5:
             matches.append((entity,confidence))
     
     return matches
+
+def fuzzymatch(string1, string2):
+    """
+    Takes two strings and performs a fuzzymatch on them. 
+    Returns a (confidence, distance) tuple.
+    """
+    php = PHP("""set_include_path('%(lib_path)s'); 
+                 require 'fuzzymatch.php';""" % 
+                 {'lib_path': config.get('general', 'lib_path')})
+
+
+    code = '$string1 = utf8_decode("' + string1.encode('utf8') + '");'
+    code += '$string2 = utf8_decode("' + string2.encode('utf8') + '");'
+    code += 'print fuzzy_match($string1, $string2, 2);'
+
+    result = php.get_raw(code)
+    confidence,distance = map(float, result.split(','))
+
+    return (confidence, distance)
 
 def fuzzymatchall(SEPEntrieslist):
     #takes outputs from addlist() and saves all fuzzy match IDs to SEPEntry.fuzzymatch with verdicts (percent of words matched)
