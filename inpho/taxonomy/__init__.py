@@ -1,6 +1,8 @@
 from collections import defaultdict
 import re
 
+from inpho.model import Session, Entity
+
 class Node(object):
     """
     Class to represent an InPhO taxonomy
@@ -157,7 +159,7 @@ class Node(object):
         return path
 
 
-def from_dlv(filename):
+def from_dlv(filename, load_obj=False):
     """
     Function to build a taxonomy from the specified DLV output file.
     """
@@ -188,7 +190,11 @@ def from_dlv(filename):
 
     # glue taxonomies together, initialize values
     for key,node in nodes.iteritems():
-        node.value = key
+        # load the database objects 
+        if load_obj:
+            node.value = Session.query(Entity).get(key)
+        else:
+            node.value = key
 
         # specify hand-built portion of the taxonomy
         if node.value in classes:
