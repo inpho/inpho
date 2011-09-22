@@ -13,10 +13,19 @@ class Node(object):
         self.links = set()
 
     def __repr__(self):
-        return 'Node %s' % (self.value)
+        return '<Node %s>' % (repr(self.value))
+
+    def __str__(self):
+        return str(self.value)
 
     def __iter__(self):
         return self.next()
+
+    def pretty(self, level=0, indent=4):
+        print "%(indent)s%(value)s" % {'indent' : " " * indent * level,
+                                 'value' : self.value}
+        for child in self.children:
+            child.pretty(level+1, indent)
  
     def next(self):
         """ A recursive generator that prints the depth-first traversal. """
