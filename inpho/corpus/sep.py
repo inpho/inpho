@@ -152,6 +152,7 @@ def process_article(article, terms=None, entity_type=Idea, output_filename=None,
         logging.info("processing: %s %s" % (article, filename))
         doc = extract_article_body(filename)
         lines = dm.occurrences(doc, terms, title=article,
+                               remove_overlap=True,
                                format_for_file=True,
                                output_filename=output_filename)
     else:
