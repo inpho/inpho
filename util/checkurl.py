@@ -16,25 +16,17 @@ if __name__ == "__main__":
 
     journal_list = Session.query(Journal).all()
     for journal in journal_list:
-        try:
-            f = urllib.urlopen(journal.URL)
-            status = f.getcode()
-            if (status == 302):
-                journal.URL = f.geturl()    # UNTESTED!!
-            if (status <= 307):
-                journal.last_accessed = time.time()
-
-        except:
+        valid = journal.check_url()
+        if not valid:
             errormsg = "As of {0}, the journal {1} had a bad URL: {2}"
             print >> sys.stderr, errormsg.format(time.strftime("%Y-%m-%d %H:%M:%S"), journal.name, journal.URL)
-            
+
         # "magic number" 2419200 == four weeks in seconds
         if not journal.last_accessed or (time.time() - journal.last_accessed > 2419200):
             errormsg = "As of {0}, the journal {1} has been inaccessible for four weeks."
             print >> sys.stderr, errormsg.format(time.strftime("%Y-%m-%d %H:%M:%S"), journal.name)
 
-    # write to the database
-    Session.commit()
-    Session.flush()
+        Session.commit()
+        Session.flush()
 
     print "Succesfully checked {0} journal URLS.".format(len(journal_list))

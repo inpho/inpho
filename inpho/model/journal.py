@@ -1,4 +1,8 @@
+from httplib import HTTPException
+import logging
 import os.path
+import time
+import urllib
 
 from inpho.model.entity import Entity
 import inpho.helpers
@@ -26,6 +30,33 @@ class Journal(Entity):
 
     abbrs = association_proxy('abbreviations', 'value')
     queries = association_proxy('query', 'value')
+
+    def check_url(self):
+        """ Verifies the journal still has a good URL. """
+        # if journal does not have a URL, return None which is False-y
+        if not self.URL:
+            return None
+
+        # attempt to open the URL, capture exceptions as failure
+        try:
+            request = urllib.urlopen(self.URL)
+        except (IOError, HTTPException) as e:
+            logging.warning("URL failed w/exception! [%s] %s" % (self.URL, e))
+            return False
+
+        # Get HTTP status code
+        status = request.getcode()
+
+        # If there is a redirect, fix the url
+        if status == 302:
+            self.URL = request.geturl()
+
+        # Update the last accessed time
+        if status <= 307:
+            self.last_accessed = time.time()
+            return True
+        else:
+            return False
 
     def json_struct(self, sep_filter=True, limit=10, extended=True):
         struct = { 'ID' : self.ID, 
