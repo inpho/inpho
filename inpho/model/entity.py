@@ -1,10 +1,11 @@
 import re
 import os.path
 import string
+from urllib import quote_plus
+
 import inpho.helpers
 
 from sqlalchemy.ext.associationproxy import association_proxy
-
 import inflect
 p = inflect.engine()
 
@@ -50,6 +51,12 @@ class Entity(object):
         return filename
     
     searchpatterns = association_proxy('_spatterns', 'searchpattern')
+
+    @property
+    def google_url(self):
+        google = "http://www.google.com/search?q="
+        google += quote_plus(self.label)
+        return google 
     
     def pluralize(self):
         pluralpatterns = []
