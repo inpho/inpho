@@ -58,6 +58,10 @@ class Journal(Entity):
         else:
             return False
 
+    @property
+    def last_accessed_str(self, format="%x %X %Z"):
+        return time.strftime(format, time.gmtime(self.last_accessed))
+
     def json_struct(self, sep_filter=True, limit=10, extended=True):
         struct = { 'ID' : self.ID, 
                   'type' : 'journal',
