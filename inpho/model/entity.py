@@ -55,7 +55,7 @@ class Entity(object):
     @property
     def google_url(self):
         google = "http://www.google.com/search?q="
-        google += quote_plus(self.label)
+        google += quote_plus(self.label.encode("utf-8"))
         return google 
     
     def pluralize(self):
