@@ -6,10 +6,11 @@ class Idea(Entity):
     """
     Simple Idea class, has custom definitions for representation strings.
     """
-    def __init__(self, label):
+    def __init__(self, label, sep_dir=None):
         self.label = label
         self.searchstring = label
         self.searchpattern = '(%s)' % label
+        self.sep_dir = sep_dir
 
     def __repr__(self):
         return '<Idea %d: %s>' % (self.ID, self.label.encode('utf-8'))
