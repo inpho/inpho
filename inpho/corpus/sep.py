@@ -340,8 +340,9 @@ def mine_article(article, entity_type=Idea, filename='graph.txt', root='./',
     logging.info("mining article: %s" % article)
 
     occur_filename = os.path.abspath(
-        os.path.join(root, article + "-occurrences.txt"))
-    sql_filename = os.path.abspath(root + "sql-" + filename)
+        os.path.join(inpho.corpus.occur_path, article))
+    sql_filename = os.path.abspath(
+        os.path.join(inpho.corpus.sql_path, article))
 
     doc_terms = doc_terms_list()
    
