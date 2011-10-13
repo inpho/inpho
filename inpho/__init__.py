@@ -1,1 +1,1 @@
-from inpho.config import config
+import inpho.config as config

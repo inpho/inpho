@@ -1,7 +1,7 @@
 '''
 Imports configuration files for use with the inpho libraries.
 '''
-from ConfigParser import ConfigParser, NoOptionError
+from ConfigParser import ConfigParser, NoOptionError, NoSectionError
 import logging
 import os
 import os.path
@@ -24,19 +24,20 @@ if config_path is None:
 config = ConfigParser()
 config.read(config_path)
 
+
 def get_data_path(var, section=None):
     """
     Gets the data path for the given variable, checking for an override in
     section. Creates path if it does not exist.
     """
     # set default path
-    path = os.path.join(inpho.config.get('general', 'data_path'), var)
+    path = os.path.join(config.get('general', 'data_path'), var)
     
     # check for override in given section
     if section:
         try:
-            path = inpho.config.get(section, var + '_path')
-        except NoOptionError:
+            path = config.get(section, var + '_path')
+        except (NoOptionError, NoSectionError):
             # override not found, go ahead and use default
             pass
 
@@ -45,3 +46,6 @@ def get_data_path(var, section=None):
         os.makedirs(path)
 
     return path
+
+# make inpho.config.get point to the raw ConfigParser
+get = config.get
