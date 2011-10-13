@@ -1,8 +1,11 @@
 '''
 Imports configuration files for use with the inpho libraries.
 '''
-import os.path
+from ConfigParser import ConfigParser, NoOptionError
 import logging
+import os
+import os.path
+
 config_paths = [os.path.abspath("inpho.ini"), 
                 os.path.expanduser("~/.config/inpho/inpho.ini")]
 
@@ -18,7 +21,27 @@ logging.debug("Using config path: %s" % config_path)
 if config_path is None:
     raise IOError("Missing inpho.ini configuration file.")
 
-from ConfigParser import ConfigParser
 config = ConfigParser()
 config.read(config_path)
 
+def get_data_path(var, section=None):
+    """
+    Gets the data path for the given variable, checking for an override in
+    section. Creates path if it does not exist.
+    """
+    # set default path
+    path = os.path.join(inpho.config.get('general', 'data_path'), var)
+    
+    # check for override in given section
+    if section:
+        try:
+            path = inpho.config.get(section, var + '_path')
+        except NoOptionError:
+            # override not found, go ahead and use default
+            pass
+
+    # Create path, if it doesn't exist
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+    return path
