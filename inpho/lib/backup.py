@@ -1,11 +1,13 @@
 #!/usr/bin/python
-import tarfile
 from datetime import date
-import os.path
-import os
 from glob import iglob
+import os
+import os.path
+import shlex
+import subprocess
+import tarfile
 
-import sqlalchemy.lib.url
+from sqlalchemy.engine.url import make_url
 
 import inpho.config
 import inpho.corpus
@@ -26,7 +28,7 @@ def sep(remote_file=None):
     if remote_file:
         os.symlink(backup_file, remote_file)
 
-def data(remote_file=None):
+def data(filename=None, remote_file=None):
     """
     Backs up the InPhO database, excluding all user information.
 
@@ -34,7 +36,54 @@ def data(remote_file=None):
     mysqldump $LOGIN --no-data > $OUTFILE
     mysqldump $LOGIN --tables entity groups idea idea_instance_of idea_link_to institution journal journal_abbr nationality ontotree profession school_of_thought searchpatterns sep_areas sepentries thinker thinker_has_influenced thinker_has_nationality thinker_has_profession work >> $OUTFILE
     """
-    raise NotImplementedError
+    # initialize file
+    if filename is None:
+        timestamp = date.today().strftime("%Y%m%d")
+        filename = os.path.join(backup_path, 'inpho_%s.sql' % timestamp)
+
+    # Get login arguments
+    login = mysql_login_args()
+    
+    print "dumping schema..."
+    # Dump complete database schema
+    # Execute `mysqldump $LOGIN --no-data > $OUTFILE`
+    args = ['mysqldump', login, '--no-data']
+    with open(filename, 'w') as f:
+        schema = subprocess.call(_clean_args(args), stdout=f)
+   
+    print "dumping data..."
+    # Dump entity tables, do not dump user data
+    # mysqldump $LOGIN --tables entity groups idea idea_instance_of idea_link_to institution journal journal_abbr nationality ontotree profession school_of_thought searchpatterns sep_areas sepentries thinker thinker_has_influenced thinker_has_nationality thinker_has_profession work >> $OUTFILE
+    args = ['mysqldump', login, '--tables']
+    tables = ["entity groups institution school_of_thought work",
+              "idea idea_instance_of idea_link_to ontotree",
+              "journal journal_abbr",
+              "thinker nationality profession thinker_has_influenced",
+              "thinker_has_nationality thinker_has_profession",
+              "searchpatterns sep_areas sepentries"]
+    args.extend(tables)
+    with open(filename, 'a') as f:
+        data = subprocess.call(_clean_args(args), stdout=f)
+
+def _clean_args(args):
+    """ Helper to clean up arg string """
+    # join together
+    args = ' '.join(args)
+    # transform into subprocess-compatible list
+    return shlex.split(args)
+
+
+def mysql_login_args():
+    """ creates the login arguments for mysql, based on inpho.config """
+    # TODO: Migrate to inpho.model without necessitating model import
+    url = make_url(inpho.config.get('sqlalchemy', 'url'))
+
+    login = "-u %(username)s -p%(password)s -h %(host)s" % url.__dict__
+    if url.port:
+        login += " --port=%(port)s" % url.__dict__
+    login += " %(database)s" % url.__dict__
+
+    return login
 
 def graph(remote_file=None):
     """
@@ -54,7 +103,7 @@ if __name__ == '__main__':
                       dest='mode', const='sep',
                       help="backup the SEP corpus")
     parser.add_option('--data', action='store_const', 
-                      dest='mode', const='sql',
+                      dest='mode', const='data',
                       help="backup inpho entities")
     parser.add_option('--safe', action='store_true', dest='safe',
                       help="safe data backup, excludes user info [default]")
@@ -62,7 +111,7 @@ if __name__ == '__main__':
                       help="unsafe data backup, includes user info")
     parser.add_option('--graph', action='store_const',
                       dest='mode', const='graph',
-                      help="backup graph data"
+                      help="backup graph data")
     options, args = parser.parse_args()
 
     if options.mode == 'sep':
