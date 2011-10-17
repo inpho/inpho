@@ -320,7 +320,11 @@ def update_graph(entity_type, sql_filename):
     LOAD DATA INFILE '%(filename)s'
     INTO TABLE %(table)s
     FIELDS TERMINATED BY '::'
-    (ante_id, cons_id, confidence, jweight, weight, occurs_in);
+    : Only process article given. Use process_article function
+        process_article(entity_type, occur_filename, corpus_root=corpus_root)
+
+
+    (ante_id, cons_id, confidence, jweight, w
     UNLOCK TABLES;
     SET foreign_key_checks=1;
     """ % {'filename' : sql_filename, 'table' : table })
@@ -343,13 +347,14 @@ def mine_article(article, entity_type=Idea, filename='graph.txt', root='./',
     doc_terms = doc_terms_list()
    
     # N.B. This line must be commented/removed to test further.
+
+    
+    print "processing " + article + "..."
+    # TODO: Only process article given. Use process_article function
+    process_article(article, entity_type=entity_type,
+                    output_filename=occur_filename, corpus_root=corpus_root)
+
     raise NotImplementedError
-
-    if update_occurrences:
-        print "processing articles..."
-        # TODO: Only process article given. Use process_article function
-        process_articles(entity_type, occur_filename, corpus_root=corpus_root)
-
     # This will create a python dictionary of dictionary from the occur file.
     occurrences = dm.occurs_in(occur_filename, doc_terms)
 
