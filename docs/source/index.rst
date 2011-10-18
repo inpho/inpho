@@ -48,7 +48,7 @@ Debian/Ubuntu
 Debian-based Linux distributions (including Ubuntu) can use the following
 command to install all required dependencies::
 
-    sudo apt-get install git python2.6-dev mysql-server python-setuptools python-virtualenv python-nltk build-essential
+    sudo apt-get install git-core git-docs python2.6-dev mysql-server python-setuptools python-virtualenv build-essential libmysqlclient15-dev
 
 Mac OS X
 """""""""""""""""""""
@@ -109,12 +109,12 @@ Installation
 '''''''''''''''
 After all dependencies are installed... [not yet complete]
 
-1.  Configure MySQL user
-#.  Import entity database
-#.  Import graph
-#.  Download corpus
-#.  Configure inpho.ini
-#.  Create virtualenv sandbox::
+1.  Create workspace::
+        
+        mkdir ~/workspace
+        cd ~/workspace
+
+#.  Create virtualenv sandbox to isolate InPhO modules::
     
         virtualenv sandbox
 
@@ -122,17 +122,29 @@ After all dependencies are installed... [not yet complete]
         
         source sandbox/bin/activate
 
+    .. note:: You will have to activate your sandbox **every time** you work on the InPhO.
+
 #.  Install inpho repository to sandbox::
 
-        git clone git:github.com/inpho/inpho.git
-        python inpho/setup.py develop
+        git clone git@github.com:inpho/inpho.git
+        cd inpho
+        python setup.py develop
+
+    .. note:: If setup.py raises ``AttributeError: 'NoneType' object has no attribute 'clone'``, update to the development version of setup tools by running ``easy_install setuptools==dev06``
+
+#.  Configure inpho.ini
+
+    .. TODO: Document this, create tool. Bug #
 
 #.  Install inphosite repository to sandbox::
 
-        git clone git:github.com/inpho/inphosite.git
-        python inphosite/setup.py develop
+        git clone git@github.com:inpho/inphosite.git
+        cd inphosite
+        python setup.py develop
 
 #.  Configure development.ini
+    
+    .. TODO: Document this, create tool. Bug #
 
 #.  Start inphosite server::
 
@@ -141,6 +153,18 @@ After all dependencies are installed... [not yet complete]
 
     We reccommend using the `GNU Screen <http://www.gnu.org/s/screen/>`_ utility
     to keep a persistent server running.
+
+
+
+
+
+1.  Configure MySQL user
+#.  Import entity database
+#.  Import graph
+#.  Download corpus
+
+
+
 
 Collaboration
 '''''''''''''''''
