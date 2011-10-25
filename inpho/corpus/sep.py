@@ -346,50 +346,47 @@ def mine_article(article, entity_type=Idea, filename='graph.txt', root='./',
 
     doc_terms = doc_terms_list()
    
-    # N.B. This line must be commented/removed to test further.
-
-    
     print "processing " + article + "..."
-    # TODO: Only process article given. Use process_article function
     process_article(article, entity_type=entity_type,
                     output_filename=occur_filename, corpus_root=corpus_root)
 
-    raise NotImplementedError
     # This will create a python dictionary of dictionary from the occur file.
     occurrences = dm.occurs_in(occur_filename, doc_terms)
 
-    # The following section is semi-complete, untested though.
-    with open(sql_filename, 'w') as f:
-        for ante, occurs in occurrences.iteritems():
-            for cons, occurs_in in occurs.iteritems():
-                props = {'occurs_in' : occurs_in, 'jweight' : 0,
-                         'weight' : 0, 'confidence' : 0}
-                row = "%s::%s" % (ante, cons)
-                row += ("::%(confidence)s::%(jweight)s::%(weight)s"
-                        "::%(occurs_in)s\n" % props)
-                f.write(row)
-
-    # TODO: Implement Partial graph update. See Jaimie for batch upsert script.
-    if update_db:
-        print "updating the database..."
-        update_partial_graph(entity_type, sql_filename)
+    update_partial_graph(entity_type, occurrences)
 
 def update_partial_graph(entity_type, sql_filename):
     """
     Takes an entity type and a SQL filename and only updates part of the graph.
     For use with single article statistical information.
     """
+    raise NotImplementedError
+
     # Import SQL statements
     if entity_type == Idea:
         table = "idea_graph_edges"
+        type = IdeaGraphEdge
     elif entity_type == Thinker:
         table = "thinker_graph_edges"
+        type = ThinkerGraphEdge
     else:
         table = "idea_thinker_graph_edges"
+        type = IdeaThinkerGraphEdge
 
-    connection = Session.connection()
+    edges = Session.query(type)
+    # filter edges query to only the key term
 
-    raise NotImplementedError
+    for ante, occurs in occurrences.iteritems():
+        for cons, occurs_in in occurs.iteritems():
+            # select the proper edge from result set
+            # if edge does not exist, create it and add to session
+            
+            #update edge
+            edge.occurs_in = occurs_in
+
+    # commit changes
+    Session.commit()
+
 
 if __name__ == "__main__":
     import inpho.corpus
