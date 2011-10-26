@@ -25,7 +25,14 @@ g.bind("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#")
 rdfs = Namespace("http://www.w3.org/TR/rdf-schema/#")
 g.bind("rdfs", "http://www.w3.org/TR/rdf-schema/#")
 
-# TODO: Add Namespace for OWL, SKOS, and Dublin Core (dc)
+owl = Namespace("http://www.w3.org/2002/07/owl#")
+g.bind("owl", "http://www.w3.org/2002/07/owl#")
+
+skos = Namespace("http://www.w3.org/2004/02/skos/core#")
+g.bind("skos", "http://www.w3.org/2004/02/skos/core#")
+
+dc = Namespace("http://purl.org/dc/elements/1.1/")
+g.bind ("dc", "http://purl.org/dc/elements/1.1/")
 
 # Select all Thinkers
 thinkers = Session.query(Thinker).all()
@@ -36,4 +43,4 @@ for thinker in thinkers:
     g.add((t['t' + str(thinker.ID)], foaf['name'], Literal(thinker.label)))
 
 with open("out.rdf", "w") as f:
-    f.write(g.serialize(format="nt"))
+    f.write(g.serialize(format="n3"))
