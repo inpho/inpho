@@ -51,6 +51,8 @@ g.add((inpho['thinker'], rdfs['subClassOf'], inpho['entity']))
 for thinker in thinkers:
     g.add((t['t' + str(thinker.ID)], rdf['type'], inpho['thinker']))
     g.add((t['t' + str(thinker.ID)], foaf['name'], Literal(thinker.label)))
+    g.add((t['t' + str(thinker.ID)], owl['sameAs'], e['e' + str(thinker.ID)]))
+        
 
 # Select all ConceptSchemes
 g.add((skos['conceptscheme'], skos['hasTopConcept'], inpho['idea']))
@@ -62,6 +64,7 @@ g.add((inpho['idea'], rdfs['subClassOf'], inpho['entity']))
 g.add((inpho['idea'], rdfs['subClassOf'], skos['Concept'])) 
 for idea in ideas:
     g.add((i['idea' + str(idea.ID)], rdf['type'], inpho['idea']))
+    g.add((t['t' + str(thinker.ID)], owl['sameAs'], e['e' + str(thinker.ID)]))
 
 # Never create an instance of an inpho:user, used to tag provenance of evaluations
 # Select all Users
