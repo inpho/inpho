@@ -20,6 +20,9 @@ g.bind("thinker", "http://inpho.cogs.indiana.edu/thinker/")
 u = Namespace("http://inpho.cogs.indiana.edu/user/")
 g.bind("user", "http://inpho.cogs.indiana.edu/user/")
 
+e = Namespace("http://inpho.cogs.indiana.edu/entity/")
+g.bind("entity", "http://inpho.cogs.indiana.edu/entity/")
+
 foaf = Namespace("http://xmlns.com/foaf/0.1/")
 g.bind("foaf", "http://xmlns.com/foaf/0.1/")
 
@@ -73,6 +76,16 @@ g.add((inpho['admin'], rdfs['subClassOf'], inpho['user']))
 for user in users:
     g.add((u['u' + str(user.ID)], rdf['type'], inpho['user']))
 
+# Select all Entities
+entities = Session.query(Entity).all()
+g.add((inpho['entity'], rdf['type'], owl['Thing']))
+for entity in entities:
+    g.add((e['e' + str(entity.ID)], rdf['type'], inpho['entity']))
+    g.add((e['e' + str(entity.ID)], skos['prefLabel'], Literal(entity.label)))
+    g.add((e['e' + str(entity.ID)], inpho['provenance'], Literal(entity.created_by)))
+    g.add((e['e' + str(entity.ID)], dc['creator'], Literal(entity.created_by)))
+    g.add((e['e' + str(entity.ID)], dc['created'], Literal(entity.created)))
+    # g.add((e['e' + str(entity.ID)], skos['alt'], Literal(entity.alias)))
 
 with open("out.rdf", "w") as f:
     f.write(g.serialize(format="n3"))
