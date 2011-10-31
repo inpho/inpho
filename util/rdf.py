@@ -35,8 +35,8 @@ g.bind("rdfs", "http://www.w3.org/TR/rdf-schema/#")
 owl = Namespace("http://www.w3.org/2002/07/owl#")
 g.bind("owl", "http://www.w3.org/2002/07/owl#")
 
-i = Namespace("http://inpho.cogs.indiana.edu/idea")
-g.bind("idea", "http://inpho.cogs.indiana.edu/idea")
+i = Namespace("http://inpho.cogs.indiana.edu/idea/")
+g.bind("idea", "http://inpho.cogs.indiana.edu/idea/")
 
 skos = Namespace("http://www.w3.org/2004/02/skos/core#")
 g.bind("skos", "http://www.w3.org/2004/02/skos/core#")
@@ -53,22 +53,19 @@ for thinker in thinkers:
     g.add((t['t' + str(thinker.ID)], foaf['name'], Literal(thinker.label)))
 
 # Select all ConceptSchemes
-conceptschemes = Session.query(ConceptSchemes).all()
 g.add((skos['conceptscheme'], skos['hasTopConcept'], inpho['idea']))
-g.add((inpho['idea'], rfds['subClassOf'], inpho['entity']))
-for conceptscheme in conceptschemes:
-    g.add((skos['s' + str(conceptscheme.ID)], inpho['taxonomy'], inpho['includes']))
+g.add((inpho['idea'], rdfs['subClassOf'], inpho['entity']))
 
 #Select all Ideas
-ideas = Session.query{Ideas).all()
+ideas = Session.query(Idea).all()
 g.add((inpho['idea'], rdfs['subClassOf'], inpho['entity']))
 g.add((inpho['idea'], rdfs['subClassOf'], skos['Concept'])) 
 for idea in ideas:
-    g.add((i['idea' + string(idea.ID)], rdf['type'], inpho['idea']))
+    g.add((i['idea' + str(idea.ID)], rdf['type'], inpho['idea']))
 
 # Never create an instance of an inpho:user, used to tag provenance of evaluations
 # Select all Users
-users = Session.query(Users).all()
+users = Session.query(User).all()
 g.add((inpho['user'], rdf['type'], foaf['Person']))
 g.add((inpho['expert_user'], rdfs['subClassOf'], inpho['user']))
 g.add((inpho['turk_user'], rdf['type'], foaf['Person']))
