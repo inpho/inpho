@@ -41,6 +41,9 @@ g.bind("idea", "http://inpho.cogs.indiana.edu/idea/")
 skos = Namespace("http://www.w3.org/2004/02/skos/core#")
 g.bind("skos", "http://www.w3.org/2004/02/skos/core#")
 
+db = Namespace("http://dbpedia.org/")
+g.bind ("db", "http://dbpedia.org/")
+
 dc = Namespace("http://purl.org/dc/elements/1.1/")
 g.bind ("dc", "http://purl.org/dc/elements/1.1/")
 
@@ -61,10 +64,16 @@ g.add((inpho['idea'], rdfs['subClassOf'], inpho['entity']))
 #Select all Ideas
 ideas = Session.query(Idea).all()
 g.add((inpho['idea'], rdfs['subClassOf'], inpho['entity']))
-g.add((inpho['idea'], rdfs['subClassOf'], skos['Concept'])) 
+g.add((inpho['idea'], rdfs['subClassOf'], skos['Concept']))
+g.add((inpho['idea'], skos['exactMatch'], db['concept'])) 
 for idea in ideas:
     g.add((i['idea' + str(idea.ID)], rdf['type'], inpho['idea']))
     g.add((t['t' + str(thinker.ID)], owl['sameAs'], e['e' + str(thinker.ID)]))
+    for instance in idea.instances:
+        g.add((i['idea' + str(idea.ID)], skos['broader'], i['idea' + str(instance.ID)]))
+    for node in idea.nodes:
+        for child in node.children:
+            g.add((i['idea' + str(idea.ID)], skos['broader'], i['idea' + str(child.idea.ID)]))
 
 # Never create an instance of an inpho:user, used to tag provenance of evaluations
 # Select all Users
@@ -86,6 +95,14 @@ for entity in entities:
     g.add((e['e' + str(entity.ID)], dc['creator'], Literal(entity.created_by)))
     g.add((e['e' + str(entity.ID)], dc['created'], Literal(entity.created)))
     # g.add((e['e' + str(entity.ID)], skos['alt'], Literal(entity.alias)))
+
+# OWL disjoints
+# http://docs.python.org/library/itertools.html#itertools.combinations
+# disjoints = ["thinker", "journal", "idea"]
+# combinations(disjoints, 2)
+g.add((inpho['thinker'], owl['disjointWith'], inpho['idea']))
+g.add((inpho['thinker'], owl['disjointWith'], inpho['journal']))
+g.add((inpho['idea'], owl['disjointWith'], inpho['journal']))
 
 with open("out.rdf", "w") as f:
     f.write(g.serialize(format="n3"))
