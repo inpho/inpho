@@ -14,3 +14,7 @@ data
 apriori
 
 sql.ini
+
+.*.swp
+*~
+#*#
