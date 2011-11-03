@@ -107,7 +107,11 @@ def make_graph():
 
     return g
 
-g = make_graph()
-
-with open("out.rdf", "w") as f:
-    f.write(g.serialize(format="n3"))
+if __name__ == '__main__':
+    from argparse import ArgumentParser
+    parser = ArgumentParser(description="determines RDF serialization format")
+    parser.add_argument('-f', '--format', dest='serialization', help='set the serialization format', choices=['n3', 'nt', 'pretty-xml', 'trix', 'turtle', 'xml'], default='n3')
+    args = parser.parse_args()
+    g = make_graph()
+    with open("out_" + str(args.serialization) + ".rdf", "w") as f:
+        f.write(g.serialize(format=args.serialization))
