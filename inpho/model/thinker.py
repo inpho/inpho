@@ -11,6 +11,7 @@ class Thinker(Entity):
     Simple Thinker class, has custom definitions for representation strings.
     """
     def __init__(self, name, **kwargs):
+        self.label = name
         self.name = name
         for k, v in kwargs.iteritems():
             self.__setattr__(k, v)
