@@ -7,6 +7,8 @@ from rdflib.graph import ConjunctiveGraph as Graph
 
 from inpho.model import *
 
+from itertools import *
+
 def make_graph():
     g = Graph()
 
@@ -98,19 +100,22 @@ def make_graph():
         # g.add((e['e' + str(entity.ID)], skos['alt'], Literal(entity.alias)))
             
     # OWL disjoints
-    # http://docs.python.org/library/itertools.html#itertools.combinations
-    # disjoints = ["thinker", "journal", "idea"]
-    # combinations(disjoints, 2)
-    g.add((inpho['thinker'], owl['disjointWith'], inpho['idea']))
-    g.add((inpho['thinker'], owl['disjointWith'], inpho['journal']))
-    g.add((inpho['idea'], owl['disjointWith'], inpho['journal']))
-
+    disjoint_objects = ["thinker", "journal", "idea"]
+    disjoint_combinations = list(combinations(disjoint_objects, 2))
+    for i in range(len(disjoint_combinations)):
+        g.add((inpho[disjoint_combinations[i][0]], owl['disjointWith'], inpho[disjoint_combinations[i][1]]))
+ 
     return g
 
+# serialization format argument parser
 if __name__ == '__main__':
     from argparse import ArgumentParser
     parser = ArgumentParser(description="determines RDF serialization format")
-    parser.add_argument('-f', '--format', dest='serialization', help='set the serialization format', choices=['n3', 'nt', 'pretty-xml', 'trix', 'turtle', 'xml'], default='n3')
+    parser.add_argument('-f', '--format', 
+                        dest='serialization', 
+                        help='set the serialization format', 
+                        choices=['n3', 'nt', 'pretty-xml', 'trix', 'turtle', 'xml'], 
+                        default='n3')
     args = parser.parse_args()
     g = make_graph()
     with open("out_" + str(args.serialization) + ".rdf", "w") as f:
