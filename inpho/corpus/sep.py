@@ -389,9 +389,12 @@ def update_partial_graph(entity_type, sql_filename):
 
 
 if __name__ == "__main__":
+    # grab the corpus path
     import inpho.corpus
     corpus_root = inpho.corpus.path
 
+    # parse arguments
+    # TODO: Migrate to argparse for future compatibility.
     from optparse import OptionParser
 
     usage = "usage: %prog [options] config_file"
@@ -434,15 +437,17 @@ if __name__ == "__main__":
 
     filename_root = options.type
 
-    if options.article is not None:
-        options.mode = 'single'
-
     entity_type = Entity
     if options.type == 'idea':
         entity_type = Idea
     elif options.type == 'thinker':
         entity_type = Thinker
-    
+   
+    # single article parsing?
+    if options.article is not None:
+        options.mode = 'single'
+
+    # pick the right action
     if options.mode == 'complete':
         complete_mining(entity_type, 
                         filename=filename_root, 
