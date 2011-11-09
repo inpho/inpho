@@ -387,50 +387,70 @@ def update_partial_graph(entity_type, sql_filename):
     # commit changes
     Session.commit()
 
-
 if __name__ == "__main__":
     import inpho.corpus
     corpus_root = inpho.corpus.path
-
-    from optparse import OptionParser
-
-    usage = "usage: %prog [options] config_file"
-    parser = OptionParser(usage)
-    parser.set_defaults(type='all', mode='complete', update_entropy=False,
-                        update_occurrences=False, update_db=False, article=None)
-    parser.add_option("-a", "--all", action="store_const",
-                      dest='type', const='all',
-                      help="mine all edges [default]")
-    parser.add_option("-i", "--idea", action="store_const",
-                      dest='type', const='idea',
-                      help="mine only idea-idea edges")
-    parser.add_option("-t", "--thinker", action="store_const",
-                      dest='type', const='thinker',
-                      help="mine only thinker-thinker edges")
-    parser.add_option("--complete", action="store_const",
-                      dest='mode', const='complete',
-                      help="complete data mining process [default]")
-    parser.add_option("--update-db", action="store_true",
-                      dest='update_db',
-                      help="updates the database with results")
-    parser.add_option("--entropy", action="store_true",
-                      dest='update_entropy',
-                      help="data mining, with entropy updates")
-    parser.add_option("--with-occur", action="store_true",
-                      dest='update_occurrences',
-                      help="data mining, with occurrence file generation")
-    parser.add_option("--occur", action="store_const",
-                      dest='mode', const='occur',
-                      help="occurrence file generation")
-    parser.add_option("--load", action="store_const",
-                      dest='mode', const='load',
-                      help="load data from sql files")
-    parser.add_option("--new", action="store_const",
-                      dest='mode', const='new_entries',
-                      help="print a list of new entries")
-    parser.add_option("--entry", dest='article',
-                      help="process a single article")
-    options, args = parser.parse_args()
+    
+    from argparse import ArgumentParser
+    
+    parser = ArgumentParser()
+    parser.set_defaults(type='all',
+                        mode='complete',
+                        update_entropy=False,
+                        update_occurrences=False,
+                        update_db=False,
+                        article=None)
+    parser.add_argument("-a", "--all",
+                        action="store_const",
+                        dest='type',
+                        const='all',
+                        help="mine all edges [default]")
+    parser.add_argument("-i", "--idea",
+                        action="store_const",
+                        dest='type',
+                        const='idea',
+                        help="mine only idea-idea edges")
+    parser.add_argument("-t", "--thinker",
+                        action="store_const",
+                        dest='type',
+                        const='thinker',
+                        help="mine only thinker-thinker edges")
+    parser.add_argument("--complete",
+                        action="store_const",
+                        dest='mode',
+                        const='complete',
+                        help="complete data mining process [default]")
+    parser.add_argument("--update-db",
+                        action="store_true",
+                        dest='update_db',
+                        help="updates the database with results")
+    parser.add_argument("--entropy",
+                        action="store_true",
+                        dest='update_entropy',
+                        help="data mining, with entropy updates")
+    parser.add_argument("--with-occur",
+                        action="store_true",
+                        dest='update_occurrences',
+                        help="data mining, with occurrence file generation")
+    parser.add_argument("--occur",
+                        action="store_const",
+                        dest='mode',
+                        const='occur',
+                        help="occurrence file generation")
+    parser.add_argument("--load",
+                        action="store_const",
+                        dest='mode',
+                        const='load',
+                        help="load data from sql files")
+    parser.add_argument("--new",
+                        action="store_const",
+                        dest='mode',
+                        const='new_entries',
+                        help="print a list of new entries")
+    parser.add_argument("--entry",
+                        dest='article',
+                        help="process a single article")
+    options = parser.parse_args()
 
     filename_root = options.type
 
