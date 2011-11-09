@@ -1,5 +1,4 @@
 from collections import defaultdict
-import logging
 from multiprocessing import Pool
 import os.path
 import re
@@ -10,6 +9,7 @@ from sqlalchemy.orm import subqueryload
 from sqlalchemy import and_, or_, not_
 
 from inpho import config
+from inpho.corpus import log
 import inpho.corpus.stats as dm
 from inpho.model import Idea, Thinker, Entity, Session 
 
@@ -32,7 +32,7 @@ def extract_article_body(filename):
             biblio.extend(biblio_root.findNextSiblings())
             biblio = [elm.extract() for elm in biblio]
         else:
-            logging.error('Could not extract bibliography from %s' % filename)
+            log.error('Could not extract bibliography from %s' % filename)
 
     # grab modified body 
     body = soup.find("div", id="aueditable")
@@ -42,7 +42,7 @@ def extract_article_body(filename):
     
         return body
     else:
-        logging.error('Could not extract text from %s' % filename)
+        log.error('Could not extract text from %s' % filename)
 
         return ''
 
@@ -149,14 +149,14 @@ def process_article(article, terms=None, entity_type=Idea, output_filename=None,
     article_terms = article_terms.filter(entity_type.sep_dir==article)
     article_terms = article_terms.all()
     if filename and os.path.isfile(filename):
-        logging.info("processing: %s %s" % (article, filename))
+        log.info("processing: %s %s" % (article, filename))
         doc = extract_article_body(filename)
         lines = dm.occurrences(doc, terms, title=article,
                                remove_overlap=True,
                                format_for_file=True,
                                output_filename=output_filename)
     else:
-        logging.warning("BAD SEP_DIR: %s" % article)
+        log.warning("BAD SEP_DIR: %s" % article)
 
     return lines
 
@@ -337,7 +337,7 @@ def mine_article(article, entity_type=Idea, filename='graph.txt', root='./',
     Performs the data mining for a single article. Does not generate edge data
     using the frequent itemset mining algorithm or term entropy. 
     """
-    logging.info("mining article: %s" % article)
+    log.info("mining article: %s" % article)
 
     occur_filename = os.path.abspath(
         os.path.join(inpho.corpus.occur_path, article))
