@@ -90,7 +90,7 @@ def initPool(queue, level):
         MultiprocessingHandler(logging.StreamHandler(), queue, child=True))
     logger.setLevel(level)
 
-def get_logging_pool():
+def get_logging_pool(logQueue):
     """
     Returns a multiprocessing.Pool object with MultiprocessingHandler loggers
     pre-configured.
