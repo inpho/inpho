@@ -1,8 +1,10 @@
 from datetime import datetime
 import logging
+from multiprocessing import Queue
 import os
 
 import inpho
+from inpho.lib.log import *
 
 # get corpus path
 path = inpho.config.get('corpus', 'path')
@@ -13,7 +15,7 @@ fuzzy_path = inpho.config.get_data_path('fuzzy', 'corpus')
 sql_path = inpho.config.get_data_path('sql', 'corpus')
 
 # set up logging
-log = logging.getLogger('mining')
+log = logging.getLogger('')
 log.setLevel(logging.DEBUG)
 
 # configure logfilename
@@ -28,4 +30,7 @@ print os.path.abspath(logfilename)
 # add filehandler
 file_handler = logging.FileHandler(logfilename)
 file_handler.setLevel(logging.DEBUG)
-log.addHandler(file_handler)
+# add multiprocessing handler
+logQueue = multiprocessing.Queue(-1)
+mp_handler = MultiprocessingHandler(file_handler, logQueue)
+log.addHandler(mp_handler)

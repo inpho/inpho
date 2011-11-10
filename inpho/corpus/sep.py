@@ -1,4 +1,5 @@
 from collections import defaultdict
+import logging
 from multiprocessing import Pool
 import os.path
 import re
@@ -9,15 +10,16 @@ from sqlalchemy.orm import subqueryload
 from sqlalchemy import and_, or_, not_
 
 from inpho import config
-from inpho.corpus import log
+from inpho.corpus import logQueue
 import inpho.corpus.stats as dm
+from inpho.lib.log import get_logging_pool
 from inpho.model import Idea, Thinker, Entity, Session 
 
 def extract_article_body(filename):
     """
     Extracts the article body from the SEP article at the given filename. Some
     error handling is done to guarantee that this function returns at least the
-    empty string. Check the error log.
+    empty string. Check the error logging.
     """
     f = open(filename)
     doc = f.read()
@@ -32,7 +34,7 @@ def extract_article_body(filename):
             biblio.extend(biblio_root.findNextSiblings())
             biblio = [elm.extract() for elm in biblio]
         else:
-            log.error('Could not extract bibliography from %s' % filename)
+            logging.error('Could not extract bibliography from %s' % filename)
 
     # grab modified body 
     body = soup.find("div", id="aueditable")
@@ -42,7 +44,7 @@ def extract_article_body(filename):
     
         return body
     else:
-        log.error('Could not extract text from %s' % filename)
+        logging.error('Could not extract text from %s' % filename)
 
         return ''
 
@@ -149,14 +151,14 @@ def process_article(article, terms=None, entity_type=Idea, output_filename=None,
     article_terms = article_terms.filter(entity_type.sep_dir==article)
     article_terms = article_terms.all()
     if filename and os.path.isfile(filename):
-        log.info("processing: %s %s" % (article, filename))
+        logging.info("processing: %s %s" % (article, filename))
         doc = extract_article_body(filename)
         lines = dm.occurrences(doc, terms, title=article,
                                remove_overlap=True,
                                format_for_file=True,
                                output_filename=output_filename)
     else:
-        log.warning("BAD SEP_DIR: %s" % article)
+        logging.warning("BAD SEP_DIR: %s" % article)
 
     return lines
 
@@ -194,7 +196,7 @@ def process_articles(entity_type=Entity, output_filename='output-all.txt',
     articles = [a[0] for a in articles]
    
     # parallel processing of articles
-    p = Pool()
+    p = get_logging_pool(logQueue) 
     args = [(title, terms, entity_type, None, corpus_root) for title in articles]
     doc_lines = p.map(process_wrapper, args)
     p.close()
@@ -337,7 +339,7 @@ def mine_article(article, entity_type=Idea, filename='graph.txt', root='./',
     Performs the data mining for a single article. Does not generate edge data
     using the frequent itemset mining algorithm or term entropy. 
     """
-    log.info("mining article: %s" % article)
+    logging.info("mining article: %s" % article)
 
     occur_filename = os.path.abspath(
         os.path.join(inpho.corpus.occur_path, article))
