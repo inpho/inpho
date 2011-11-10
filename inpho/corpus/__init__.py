@@ -13,11 +13,19 @@ fuzzy_path = inpho.config.get_data_path('fuzzy', 'corpus')
 sql_path = inpho.config.get_data_path('sql', 'corpus')
 
 # set up logging
+log = logging.getLogger('mining')
+log.setLevel(logging.DEBUG)
+
+# configure logfilename
 timestamp = datetime.now().strftime('%Y%m%d-%H%M')
 logfilename = os.path.join('logs', '%s.log' % timestamp) 
 
 if not os.path.exists('logs'):
     os.mkdir('logs')
 
-logging.basicConfig(filename=logfilename, level=logging.DEBUG)
-log = logging.getLogger('mining')
+print os.path.abspath(logfilename)
+
+# add filehandler
+file_handler = logging.FileHandler(logfilename)
+file_handler.setLevel(logging.DEBUG)
+log.addHandler(file_handler)

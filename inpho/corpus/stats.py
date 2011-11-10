@@ -2,7 +2,6 @@
 Module containing statistical methods for the InPhO data mining process.
 """
 
-import logging
 import re
 import subprocess
 from collections import defaultdict
@@ -11,6 +10,7 @@ from collections import defaultdict
 from nltk.tokenize import PunktSentenceTokenizer as Tokenizer
 
 from inpho import config
+from inpho.corpus import log
 
 def get_document_occurrences(document, terms):
     """
@@ -33,7 +33,7 @@ def get_document_occurrences(document, terms):
                     occurrences.append(term)
                     break
             except re.error:
-                logging.warning('Term %d (%s) pattern "%s" failed' % 
+                log.warning('Term %d (%s) pattern "%s" failed' % 
                                 (term.ID, term.label, pattern))
                 term.searchpatterns.remove(pattern)
 
@@ -56,7 +56,7 @@ def get_sentence_occurrences(document, terms, terms_present=None,
     # Use a Tokenizer from NLTK to build a sentence list
     tokenizer = Tokenizer(document)
     sentences = tokenizer.tokenize(document)
-    logging.info("scanning %d sentences for %d terms" % (len(sentences), len(terms)))
+    log.info("scanning %d sentences for %d terms" % (len(sentences), len(terms)))
     
     # Create a list of lists containing the collection of terms which cooccurr
     # in a sentence
@@ -76,7 +76,7 @@ def get_sentence_occurrences(document, terms, terms_present=None,
                         sentence_occurrences.append(term)
                         break
                 except re.error:
-                    logging.warning('Term %d (%s) pattern "%s" failed' % 
+                    log.warning('Term %d (%s) pattern "%s" failed' % 
                                     (term.ID, term.label, pattern))
                     term.searchpatterns.remove(pattern)
 
