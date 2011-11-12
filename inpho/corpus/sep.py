@@ -337,11 +337,7 @@ def update_graph(entity_type, sql_filename):
     LOAD DATA INFILE '%(filename)s'
     INTO TABLE %(table)s
     FIELDS TERMINATED BY '::'
-    : Only process article given. Use process_article function
-        process_article(entity_type, occur_filename, corpus_root=corpus_root)
-
-
-    (ante_id, cons_id, confidence, jweight, w
+    (ante_id, cons_id, confidence, jweight, weight, occurs_in);
     UNLOCK TABLES;
     SET foreign_key_checks=1;
     """ % {'filename' : sql_filename, 'table' : table })
