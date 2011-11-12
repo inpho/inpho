@@ -1,4 +1,5 @@
 from collections import defaultdict
+import csv
 import logging
 from multiprocessing import Pool
 import os.path
@@ -10,6 +11,7 @@ from sqlalchemy.orm import subqueryload
 from sqlalchemy import and_, or_, not_
 
 from inpho import config
+from inpho.corpus.fuzzymatch import fuzzymatch_all as fuzzymatch
 import inpho.corpus.stats as dm
 from inpho.model import Idea, Thinker, Entity, Session 
 
@@ -119,6 +121,21 @@ def new_entries():
     new_sep_dirs.remove('sample')
 
     return new_sep_dirs
+
+def fuzzymatch_new():
+    """
+    Writes the fuzzymatch data to the cache specified in the config file.
+    """
+    fuzzy_path = config.get('corpus', 'fuzzy_path')
+    titles = get_titles()
+    for entry in new_entries():
+        print entry
+        matches = fuzzymatch(titles[entry])
+        with open(os.path.join(fuzzy_path, entry), 'wb') as f:
+            writer = csv.writer(f)
+            for match, prob in matches:
+                writer.writerow([match.ID, match.label, prob])
+        
 
 def select_terms(entity_type=Idea):
     """
@@ -470,5 +487,4 @@ if __name__ == "__main__":
         occur_filename = os.path.abspath("./occurrences.txt")
         process_articles(entity_type, occur_filename, corpus_root=corpus_root)
     elif options.mode == 'new_entries':
-        for entry in new_entries():
-            print entry
+        fuzzymatch_new()
