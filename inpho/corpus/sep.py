@@ -73,8 +73,9 @@ def get_titles():
     titles = {}
     with open(entries) as f:
         for line in f:
-            current = line.split('::', 2)
-            titles[current[0]] = current[1]
+            sep_dir, title, rest = line.split('::', 2)
+            title = title.replace(r"\'", "'")
+            titles[sep_dir] = title
 
     return titles
 
@@ -86,9 +87,9 @@ def get_title(sep_dir):
     
     with open(entries) as f:
         for line in f:
-            current = line.split('::', 2)
-            if current[0] == sep_dir:
-                return current[1]
+            dir, title, rest = line.split('::', 2)
+            if dir == sep_dir:
+                return title.replace(r"\'", "'")
 
     raise KeyError("Invalid sep_dir")
 
