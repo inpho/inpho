@@ -12,10 +12,10 @@ particular sciences'.
 The methods in this file could use significant attention, as they are mostly
 extracted from their context in a legacy interface.
 """
+from inpho import config
 from inpho.lib.php import PHP
 from inpho.model import Session
 from inpho.model import Entity
-from inpho import config
 
 def fuzzymatch(string1, string2):
     """

@@ -9,6 +9,7 @@ sandbox
 
 cache
 data
+fuzzy
 *-graph.txt
 *.o
 apriori
