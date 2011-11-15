@@ -10,6 +10,13 @@ Contents:
 
 .. toctree::
    :maxdepth: 2
+   
+   corpus 
+   dlv
+   lib
+   model
+   taxonomy
+   module
 
 Indices and tables
 ==================
