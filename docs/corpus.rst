@@ -1,4 +1,4 @@
-Corpus File Documentation
+corpus File Documentation
 =========================
 
 __init__
