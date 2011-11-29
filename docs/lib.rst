@@ -1,4 +1,4 @@
-lib File Documentation
+lib Documentation
 ======================
 
 backup

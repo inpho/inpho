@@ -1,4 +1,4 @@
-dlv File Documentation
+dlv Documentation
 ======================
 
 .. automodule:: inpho.dlv

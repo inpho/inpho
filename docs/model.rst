@@ -1,8 +1,5 @@
-model File Documentation
+model Documentation
 ========================
-
-.. automodule:: inpho.model.__init__
-   :members:
 
 entity
 ------
@@ -25,7 +22,7 @@ idea
 journal
 -------
 
-.. automodule:: inpho.model.idea
+.. automodule:: inpho.model.journal
    :members:
 
 school_of_thought
