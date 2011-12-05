@@ -56,11 +56,12 @@ def published(sep_dir, log_root=None):
         log_root = config.get('corpus', 'log_path')
 
     log_path = os.path.join(log_root, sep_dir)
-    with open(log_path) as log:
-        for line in log:
-            #use the published 
-            if '::eP' in line:
-                return True
+    if os.path.exists(log_path):
+        with open(log_path) as log:
+            for line in log:
+                #use the published flag 
+                if '::eP' in line:
+                    return True
 
     return False
 
