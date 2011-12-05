@@ -19,3 +19,7 @@ sql.ini
 .*.swp
 *~
 #*#
+
+_templates
+_static
+_build

@@ -58,11 +58,13 @@ def fuzzymatch_all(string1):
     return matches
 
 def convertSS(choicestring, ioru):
-    #takes one of the output choices from setup_SSL(), as well as whether we are dealing with intersection or union
-    #returns a pair of string--[searchstring, searchpattern]
-    #where relevant, assume union by default (e.g. if ioru = anything other than 'i', union is implemented)
-    #get first three characters of string to see which option from setup_SSL() we have
-    #eventually replace choicestring in output with output from Jaimie's function
+    """
+    takes one of the output choices from setup_SSL(), as well as whether we are dealing with intersection or union
+    returns a pair of string--[searchstring, searchpattern]
+    where relevant, assume union by default (e.g. if ioru = anything other than 'i', union is implemented)
+    get first three characters of string to see which option from setup_SSL() we have
+    eventually replace choicestring in output with output from Jaimie's function
+    """
     split = choicestring.split(': ')
 
     #get # choice in "option" and string to be massaged in "string"
