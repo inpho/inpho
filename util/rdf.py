@@ -101,9 +101,8 @@ def make_graph():
             
     # OWL disjoints
     disjoint_objects = ["thinker", "journal", "idea"]
-    disjoint_combinations = list(combinations(disjoint_objects, 2))
-    for i in range(len(disjoint_combinations)):
-        g.add((inpho[disjoint_combinations[i][0]], owl['disjointWith'], inpho[disjoint_combinations[i][1]]))
+    for a, b in combinations(disjoint_objects, 2):
+        g.add((inpho[a], owl['disjointWith'], inpho[b]))
  
     return g
 

@@ -1,4 +1,5 @@
 from collections import defaultdict
+import csv
 import logging
 from multiprocessing import Pool
 import os.path
@@ -10,6 +11,7 @@ from sqlalchemy.orm import subqueryload
 from sqlalchemy import and_, or_, not_
 
 from inpho import config
+from inpho.corpus.fuzzymatch import fuzzymatch_all as fuzzymatch
 import inpho.corpus.stats as dm
 from inpho.model import Idea, Thinker, Entity, Session 
 
@@ -54,11 +56,12 @@ def published(sep_dir, log_root=None):
         log_root = config.get('corpus', 'log_path')
 
     log_path = os.path.join(log_root, sep_dir)
-    with open(log_path) as log:
-        for line in log:
-            #use the published 
-            if '::eP' in line:
-                return True
+    if os.path.exists(log_path):
+        with open(log_path) as log:
+            for line in log:
+                #use the published flag 
+                if '::eP' in line:
+                    return True
 
     return False
 
@@ -71,8 +74,9 @@ def get_titles():
     titles = {}
     with open(entries) as f:
         for line in f:
-            current = line.split('::', 2)
-            titles[current[0]] = current[1]
+            sep_dir, title, rest = line.split('::', 2)
+            title = title.replace(r"\'", "'")
+            titles[sep_dir] = title
 
     return titles
 
@@ -84,9 +88,9 @@ def get_title(sep_dir):
     
     with open(entries) as f:
         for line in f:
-            current = line.split('::', 2)
-            if current[0] == sep_dir:
-                return current[1]
+            dir, title, rest = line.split('::', 2)
+            if dir == sep_dir:
+                return title.replace(r"\'", "'")
 
     raise KeyError("Invalid sep_dir")
 
@@ -119,6 +123,21 @@ def new_entries():
     new_sep_dirs.remove('sample')
 
     return new_sep_dirs
+
+def fuzzymatch_new():
+    """
+    Writes the fuzzymatch data to the cache specified in the config file.
+    """
+    fuzzy_path = config.get('corpus', 'fuzzy_path')
+    titles = get_titles()
+    for entry in new_entries():
+        print entry
+        matches = fuzzymatch(titles[entry])
+        with open(os.path.join(fuzzy_path, entry), 'wb') as f:
+            writer = csv.writer(f)
+            for match, prob in matches:
+                writer.writerow([match.ID, match.label, prob])
+        
 
 def select_terms(entity_type=Idea):
     """
@@ -320,11 +339,7 @@ def update_graph(entity_type, sql_filename):
     LOAD DATA INFILE '%(filename)s'
     INTO TABLE %(table)s
     FIELDS TERMINATED BY '::'
-    : Only process article given. Use process_article function
-        process_article(entity_type, occur_filename, corpus_root=corpus_root)
-
-
-    (ante_id, cons_id, confidence, jweight, w
+    (ante_id, cons_id, confidence, jweight, weight, occurs_in);
     UNLOCK TABLES;
     SET foreign_key_checks=1;
     """ % {'filename' : sql_filename, 'table' : table })
@@ -388,6 +403,7 @@ def update_partial_graph(entity_type, sql_filename):
     Session.commit()
 
 if __name__ == "__main__":
+    # grab the corpus path
     import inpho.corpus
     corpus_root = inpho.corpus.path
     
@@ -454,15 +470,17 @@ if __name__ == "__main__":
 
     filename_root = options.type
 
-    if options.article is not None:
-        options.mode = 'single'
-
     entity_type = Entity
     if options.type == 'idea':
         entity_type = Idea
     elif options.type == 'thinker':
         entity_type = Thinker
-    
+   
+    # single article parsing?
+    if options.article is not None:
+        options.mode = 'single'
+
+    # pick the right action
     if options.mode == 'complete':
         complete_mining(entity_type, 
                         filename=filename_root, 
@@ -485,5 +503,4 @@ if __name__ == "__main__":
         occur_filename = os.path.abspath("./occurrences.txt")
         process_articles(entity_type, occur_filename, corpus_root=corpus_root)
     elif options.mode == 'new_entries':
-        for entry in new_entries():
-            print entry
+        fuzzymatch_new()
