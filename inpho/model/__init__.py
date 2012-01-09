@@ -15,6 +15,7 @@ Session.configure(bind=engine)
 
 metadata = MetaData()
 
+from inpho.model.date import *
 from inpho.model.entity import *
 from inpho.model.graph import *
 from inpho.model.idea import *
@@ -135,6 +136,10 @@ thinker_teacher_of_evaluation_table = Table('thinker_teacher_of_evaluation', met
     Column('uid', ForeignKey('inpho_user.ID'), primary_key=True),
     autoload=True, autoload_with=engine)
 
+date_table = Table('date', metadata,
+    Column('entity_id', ForeignKey('entity.ID'), primary_key=True),
+    autoload=True, autoload_with=engine, useexisting=True)
+
 # Journal tables
 journal_table = Table('journal', metadata,
     Column('ID', ForeignKey('entity.ID'), primary_key=True),
@@ -214,6 +219,7 @@ mapper(Entity, entity_table,
       })
 mapper(Searchpattern, searchpatterns_table)
 mapper(Alias, alias_table)
+mapper(Date, date_table)
 
 
 # Idea mappings
