@@ -1,12 +1,13 @@
 *.pyc
 *.egg/
 *.egg-info
-docs/build
+docs/_build
 
 sandbox
 
 *.log
 
+backup
 cache
 data
 fuzzy
