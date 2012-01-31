@@ -15,8 +15,8 @@ class Date(object):
         '''
         parses a date object into an iso_string                   
         '''
-        begin_date_list = [self.day, self.month, self.year]
-        end_date_list = [self.day_end, self.month_end, self.year_end]
+        begin_date_list = [self.year, self.month, self.day]
+        end_date_list = [self.year_end, self.month_end, self.day_end]
         for i, date in enumerate(begin_date_list):
             if int(date[1]) == 0 or date is None:
                 dates.pop(i)
