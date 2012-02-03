@@ -15,20 +15,35 @@ class Date(object):
         '''
         parses a date object into an iso_string                   
         '''
-        begin_date_list = [self.year, self.month, self.day]
-        end_date_list = [self.year_end, self.month_end, self.day_end]
-        for i, date in enumerate(begin_date_list):
-            if int(date[1]) == 0 or date is None:
-                dates.pop(i)
-        for i, date in enumerate(end_date_list):
-            if int(date[1]) == 0 or date is None:
-                dates.pop(i)
-        if begin_date_list:
-            begin_date = '-'.join(begin_date_list)
-            if end_date_list:
-                return '/'.join[begin_date, ('-'.join(begin_date_list))]
-            else:
-                return begin_date
+        begin_date = [self.year, self.month, self.day]
+        end_date = [self.year_end, self.month_end, self.day_end]
+        begin_date = []
+        end_date = []
+        for element in begin_date:
+            if element:
+                if ((element is self.year) and 
+                    (len(element) < 4)):
+                    new_begin_date.append(str(element).zfill(4))
+                elif (((element is self.month) or (element is self.day)) and 
+                      (len(element) < 2)):
+                    new_begin_date.append(str(element).zfill(2))
+                else:
+                    new_begin_date.append(str(element))
+        for element in end_date:
+            if element:
+                if ((element is self.year_end) and 
+                    (len(element) < 4)):
+                    new_end_date.append(str(element).zfill(4))
+                elif (((element is self.month_end) or (element is self.day_end)) and 
+                      (len(element) < 2)):
+                    new_end_date.append(str(element).zfill(2))
+                else:
+                    new_end_date.append(str(element))        
+        begin_date_string = ''.join(new_begin_date)
+        if new_end_date:
+            return '/'.join([begin_date_string, (''.join(new_end_date))])
+        else:
+            return begin_date_string
         
     @staticmethod
     def convert_from_iso(entity_id, relation_id, iso_string):
