@@ -69,7 +69,7 @@ def post_iter(t, tag=None):
     accordingly.
     """
     nodes = []
-    for node in t.getiterator():
+    for node in t._children:
         nodes.extend(post_iter(node, tag))
     if tag == "*":
         tag = None
@@ -81,7 +81,7 @@ def cp_map(tree):
     """
     Takes an Element object and returns a child:parent dictionary.
     """
-    return dict((c, p) for p in root.getiterator() for c in p)
+    return dict((c, p) for p in tree.getiterator() for c in p)
 
 def match_qname(local, qname):
     """
@@ -141,6 +141,7 @@ class SEPTokenizer(Tokenizer):
         # import the DOM of the SEP article
         self.tree = tidy(self.path)
         self.plain = self.clean()           # get paragraphs
+        print self.plain
         self.plain = '\n\n'.join(self.plain)    # join with 2 breaks
         self.plain = inpho.lib.unidecode(self.plain)    # unicode -> ascii range 
         print self.title
@@ -160,22 +161,15 @@ class SEPTokenizer(Tokenizer):
         if self.tree:
             # SEP Specific
             self.clr_pubinfo()
-            print "clr_pubinfo", self.tree
             self.clr_toc()
-            print "clr_toc", self.tree
             self.clr_bib()
-            print "clr_bib", self.tree
             self.clr_sectnum()
-            print "clr_sectnum", self.tree
 
             # general routines
             self.proc_imgs()
-            print "proc_imgs", self.tree
             self.clr_inline()
-            print "clr_inline", self.tree
             self.fill_par()
-            print "fill_par", self.tree
-            self.tree = flatten(self.tree)
+            return flatten(self.tree)
         else:
             return self.title
 
@@ -324,7 +318,7 @@ class SEPTokenizer(Tokenizer):
                     cp[t].remove(t)
             return
        
-        for el in self.tree.getroot()[:]:
+        for el in self.tree[:]:
             clr(el, cp_map(self.tree))
         return
         
