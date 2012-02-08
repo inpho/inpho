@@ -37,9 +37,9 @@ class Tokenizer(object):
 
 def flatten(t):
     """
-    Takes an ElementTree object and returns a list of strings,
-    extracted from the text and tail attributes of the nodes in the
-    tree, in a sensible order.
+    Takes an Element and returns a list of strings, extracted from the
+    text and tail attributes of the nodes in the tree, in a sensible
+    order.
     """
     pre = pre_iter(t)
     post = post_iter(t)
@@ -56,17 +56,17 @@ def flatten(t):
 
 def pre_iter(t, tag=None):
     """
-    Takes an ElementTree object, and optionally a tag name, and
-    performs a preorder traversal and returns a list of nodes visited
-    ordered accordingly.
+    Takes an Element, and optionally a tag name, and performs a
+    preorder traversal and returns a list of nodes visited ordered
+    accordingly.
     """
     return t.getiterator(tag)
 
 def post_iter(t, tag=None):
     """
-    Takes an ElementTree object, and optionally a tag name, and
-    performs a postorder traversal and returns a list of nodes visited
-    ordered accordingly.
+    Takes an Element object, and optionally a tag name, and performs a
+    postorder traversal and returns a list of nodes visited ordered
+    accordingly.
     """
     nodes = []
     for node in t.getiterator():
@@ -79,9 +79,8 @@ def post_iter(t, tag=None):
 
 def cp_map(tree):
     """
-    Takes an ElementTree object and returns a child:parent dictionary.
+    Takes an Element object and returns a child:parent dictionary.
     """
-    root = tree.getroot()
     return dict((c, p) for p in root.getiterator() for c in p)
 
 def match_qname(local, qname):
@@ -93,14 +92,14 @@ def match_qname(local, qname):
 
 def filter_by_tag(elems, tag):
     """
-    Takes a list of ElementTree objects and filters it by a local tag
+    Takes a list of Element objects and filters it by a local tag
     name (e.g., 'h1').
     """
     return [el for el in elems if match_qname(tag, el.tag)]
 
 def get_prefix(t):
     """
-    Takes an ElementTree object and returns the prefix portion of the
+    Takes an Element object and returns the prefix portion of the
     QName (its tag). For example, if t is XHTML, the QName may be
     'http://www.w3.org/1999/xhtml'. (A typical tag in t would be
     '{http://www.w3.org/1999/xhtml}div').
@@ -111,6 +110,7 @@ def get_prefix(t):
         return ''
     else:
         return m.group(0)
+
 
 class SEPTokenizer(Tokenizer):
     def __init__(self, article=None):
@@ -179,24 +179,22 @@ class SEPTokenizer(Tokenizer):
         else:
             return self.title
 
-    def _cp_map(self, tree=None):
-        """
-        Takes an ElementTree object and returns a child:parent dictionary.
-        """
-        if tree is None:
-            tree = self.tree
+    # def _cp_map(self, tree=None):
+    #     """
+    #     Takes an Element object and returns a child:parent dictionary.
+    #     """
+    #     if tree is None:
+    #         tree = self.tree
 
-        print tree
-        root = tree.getroot()
-        return dict((c, p) for p in root.getiterator() for c in p)
+    #     return dict((c, p) for p in root.getiterator() for c in p)
     
     def clr_pubinfo(self):
         """
-        Takes an ElementTree object and child:parent dictionary and
-        removes any node with the id attribute 'pubinfo'. (For SEP)
+        Takes an Element object and removes any node with the id
+        attribute 'pubinfo'. (For SEP)
         """
         # TODO: Turn into a pop()-like function, return pubinfo
-        cp = self._cp_map(self.tree)
+        cp = cp_map(self.tree)
         for el in filter_by_tag(self.tree.getiterator(), 'div'):
             if (el.attrib.has_key('id') and
                 el.attrib['id'] == 'pubinfo'):
@@ -207,12 +205,12 @@ class SEPTokenizer(Tokenizer):
     
     def clr_toc(self):
         """
-        Takes an ElementTree and child:parent dictionary and removes any
-        subtrees which are unordered lists of anchors. Such things are
-        tables of contents in the SEP.
+        Takes an Element object and removes any subtrees which are
+        unordered lists of anchors. Such things are tables of contents
+        in the SEP.
         """
         # TODO: Turn into a pop()-like function, return toc
-        cp = self._cp_map(self.tree)
+        cp = cp_map(self.tree)
         uls = filter_by_tag(self.tree.getiterator(), 'ul')
         for ul in uls[:]:
             if reduce(lambda v1, v2: v1 and v2,
@@ -225,11 +223,11 @@ class SEPTokenizer(Tokenizer):
     
     def clr_bib(self):
         """
-        Takes an ElementTree and child:parent dictionary and removes nodes
-        which are likely candidates for the bibliography in the SEP.
+        Takes an Element object and removes nodes which are likely
+        candidates for the bibliography in the SEP.
         """
         # TODO: Turn into a pop()-like function, return bib
-        cp = self._cp_map(self.tree)
+        cp = cp_map(self.tree)
 
         hs = (filter_by_tag(self.tree.getiterator(), 'h2') +
               filter_by_tag(self.tree.getiterator(), 'h3'))
@@ -250,7 +248,7 @@ class SEPTokenizer(Tokenizer):
     
     def clr_sectnum(self):
         """
-        Takes an ElementTree object and child:parent dictionary and
+        Takes an Element object and child:parent dictionary and
         removes SEP text identifying section numbers.
         """
         hs = (filter_by_tag(self.tree.getiterator(), 'h1') +
@@ -269,7 +267,7 @@ class SEPTokenizer(Tokenizer):
     
     def proc_imgs(self):
         """
-        Takes an ElementTree object and child:parent dictionary and
+        Takes an Element object and child:parent dictionary and
         removes img nodes or replaces them with div nodes containing the
         alt text.
         """
@@ -283,7 +281,7 @@ class SEPTokenizer(Tokenizer):
 
     def clr_inline(self):
         """
-        Takes an ElementTree object, looks for nodes whose tags are xhmtl
+        Takes an Element object, looks for nodes whose tags are xhmtl
         inline tags, and removes these nodes while appending the contents
         of their text and tail attributes in the appropriate places.
         """
@@ -303,7 +301,7 @@ class SEPTokenizer(Tokenizer):
     
         def clr(t, cp):
             for node in t[:]:
-                clr(node, cp_map(ElementTree(cp[t])))
+                clr(node, cp_map(t))
             if [inl for inl in inline if match_qname(inl, t.tag)]:
                 i = list(cp[t]).index(t)
                 if i == 0:
@@ -332,7 +330,7 @@ class SEPTokenizer(Tokenizer):
         
     def fill_par(self):
         """
-        Takes an ElementTree object and removes extraneous spaces and line
+        Takes an Element object and removes extraneous spaces and line
         breaks from text and tail attributes.
         """
         els = self.tree.getiterator()
@@ -357,10 +355,10 @@ class SEPTokenizer(Tokenizer):
 
     def get_auedit(self):
         """
-        Takes an ElementTree object and returns a subtree containing only the body
+        Takes an Element object and returns a subtree containing only the body
         of an SEP article.
         """
         #TODO: Merge with self.html property definition
         for el in filter_by_tag(self.tree.getiterator(), 'div'):
             if el.attrib['id'] == 'aueditable':
-                return ElementTree(el)
+                return el
