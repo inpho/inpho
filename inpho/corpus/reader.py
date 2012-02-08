@@ -11,7 +11,7 @@ from elementtree.TidyTools import *
 from elementtree.ElementTree import ElementTree
 
 
-class Tokenizer(object):
+class Reader(object):
     """
     Abstract tokenization class, methods must be overloaded for each corpus
     type.
@@ -112,10 +112,10 @@ def get_prefix(t):
         return m.group(0)
 
 
-class SEPTokenizer(Tokenizer):
+class SEPReader(Reader):
     def __init__(self, article=None):
         """
-        Constructor takes a path to a SEP article and intializes a Tokenizer
+        Constructor takes a path to a SEP article and intializes a Reader
         object. 
         """
         # intialize sepdir and path arguments
