@@ -9,21 +9,40 @@ from inpho.corpus import sep
 
 from elementtree.TidyTools import *
 from elementtree.ElementTree import ElementTree
-
+from nltk import LineTokenizer, TreebankWordTokenizer
+from nltk.tokenize.punkt import PunktSentenceTokenizer as PST
 
 class Reader(object):
     """
     Abstract tokenization class, methods must be overloaded for each corpus
     type.
     """
-    def article():
-        raise NotImplementedError
-    def paragraph():
-        raise NotImplementedError
-    def sentence():
-        raise NotImplementedError
-    def word():
-        raise NotImplementedError
+    ##################
+    ### PROPERTIES ###
+    ##################
+    @property
+    def document(self):
+        return self.plain
+
+    @property
+    def paragraphs(self):
+        """
+        Returns the list of paragraphs.
+        """
+        return self.plain.split('\n\n')
+
+    @property
+    def sentences(self):
+        """
+        Returns the list of sentences.
+        """
+        sentence_tokenizer = PST()
+        return sentence_tokenizer.tokenize(self.plain)
+   
+    @property
+    def words(self):
+        word_tokenizer = TreebankWordTokenizer()
+        return word_tokenizer.tokenize(self.plain)
 
     def bibliography():
         raise NotImplementedError
