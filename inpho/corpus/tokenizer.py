@@ -141,10 +141,8 @@ class SEPTokenizer(Tokenizer):
         # import the DOM of the SEP article
         self.tree = tidy(self.path)
         self.plain = self.clean()           # get paragraphs
-        print self.plain
         self.plain = '\n\n'.join(self.plain)    # join with 2 breaks
         self.plain = inpho.lib.unidecode(self.plain)    # unicode -> ascii range 
-        print self.title
 
     def clean(self):
         """
@@ -155,8 +153,6 @@ class SEPTokenizer(Tokenizer):
 
         self.tree = self.tree.getroot()
         self.tree = self.get_auedit()
-
-        print "debugging: found article body"
 
         if self.tree:
             # SEP Specific
