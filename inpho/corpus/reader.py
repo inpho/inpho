@@ -44,6 +44,19 @@ class Reader(object):
         word_tokenizer = TreebankWordTokenizer()
         return word_tokenizer.tokenize(self.plain)
 
+    @property
+    def tokens(self):
+        """
+        Returns a fully tokenized list of lists of lists of words (i.e.,
+        paragraphs, sentence, and words)
+        """
+        sentence_tokenizer = PST()
+        word_tokenizer = TreebankWordTokenizer()
+        return [[[word for word in word_tokenizer.tokenize(sentence)] 
+                       for sentence in sentence_tokenizer.tokenize(paragraph)]
+                       for paragraph in self.plain.split('\n\n')]
+        
+
     def bibliography():
         raise NotImplementedError
     def citation():
