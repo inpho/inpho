@@ -124,7 +124,24 @@ class DatabaseLexicon(Lexicon):
     DatabaseLexicon imports term lists from inpho.model.
     """
     def __init__(self, entity_type=Idea):
+        # select all terms from the database and delink them
         self.terms = Session.query(Idea).all()
+        Session.expunge_all()
+        Session.close()
+        
+        # fix search patterns to find word breaks, rather than just spaces
+        for term in terms:
+            newpatterns = []
+            for pattern in term.searchpatterns:
+                if '(' in pattern and ')' in pattern:
+                    pattern = pattern.replace('( ', '(\\b')
+                    pattern = pattern.replace(' )', '\\b)')
+                else:
+                    pattern = '\\b%s\\b' % pattern.strip()
+    
+                newpatterns.append(pattern)
+    
+            term.searchpatterns = newpatterns
 
 class Term(object):
     """
