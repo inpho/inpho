@@ -1,6 +1,8 @@
 import logging
 import re
 
+from sqlalchemy.orm import subqueryload
+
 from inpho.model import Session, Idea
 
 class Lexicon(object):
@@ -74,7 +76,7 @@ class Lexicon(object):
         """
         # Create a list of lists containing the collection of terms which cooccurr
         # in a sentence
-        doc_lexicon = self.sublexicon(reader.occurrences)
+        doc_lexicon = Lexicon(self.document_occurrences(reader))
         occurrences = [doc_lexicon.occurrences(sentence)
                            for sentence in reader.sentences]
         
@@ -124,13 +126,19 @@ class DatabaseLexicon(Lexicon):
     DatabaseLexicon imports term lists from inpho.model.
     """
     def __init__(self, entity_type=Idea):
-        # select all terms from the database and delink them
-        self.terms = Session.query(Idea).all()
+        # select terms of the entity_type
+        term_q = Session.query(entity_type)
+        # eagerly load all search patterns to enable Session decoupling
+        term_q = term_q.options(subqueryload('_spatterns'))
+        # select all terms
+        self.terms = term_q.all()
+
+        # decouple from the Session
         Session.expunge_all()
         Session.close()
         
         # fix search patterns to find word breaks, rather than just spaces
-        for term in terms:
+        for term in self.terms:
             newpatterns = []
             for pattern in term.searchpatterns:
                 if '(' in pattern and ')' in pattern:

@@ -4,13 +4,14 @@ Base Tokenization class
 import re
 import os.path
 
+from inpho import config
 import inpho.lib
-from inpho.corpus import sep
 
 from elementtree.TidyTools import *
 from elementtree.ElementTree import ElementTree
 from nltk import LineTokenizer, TreebankWordTokenizer
 from nltk.tokenize.punkt import PunktSentenceTokenizer as PST
+
 
 class Reader(object):
     """
@@ -169,7 +170,7 @@ class SEPReader(Reader):
             self.sepdir = os.path.dirname(self.path)
             self.sepdir = os.path.split(self.sepdir)[1]
 
-        self.title = sep.get_title(self.sepdir)
+        self.title = SEPReader.get_title(self.sepdir)
         # import the DOM of the SEP article
         self.tree = tidy(self.path)
         self.plain = self.clean()           # get paragraphs
@@ -384,3 +385,18 @@ class SEPReader(Reader):
         for el in filter_by_tag(self.tree.getiterator(), 'div'):
             if el.attrib['id'] == 'aueditable':
                 return el
+
+    @staticmethod 
+    def get_title(sep_dir):
+        """
+        Returns the title for the given sep_dir
+        """
+        entries = os.path.join(config.get('corpus', 'db_path'), 'entries.txt')
+        
+        with open(entries) as f:
+            for line in f:
+                dir, title, rest = line.split('::', 2)
+                if dir == sep_dir:
+                    return title.replace(r"\'", "'")
+    
+        raise KeyError("Invalid sep_dir")

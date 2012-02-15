@@ -7,51 +7,57 @@ import re
 import subprocess
 from collections import defaultdict
 
-# http://nltk.googlecode.com/svn/trunk/doc/api/nltk.tokenize.punkt.PunktSentenceTokenizer-class.html
-from nltk.tokenize import PunktSentenceTokenizer as Tokenizer
-
 from inpho import config
 
-def occurrences(document, lexicon, title=None, remove_overlap=False,
-                format_for_file=False, output_filename=None):
-    # grab document-level occurrences, reused in sentence occurrences and
-    # summary sentence
-    occurrences = set(get_document_occurrences(document, terms))
+def prepare_occurrences_file(reader, lexicon, title=None, 
+                             remove_overlap=False):
+    """
+    Prepares the lines ontaining the sentence occurrence data for the given
+    reader and lexicon. Optional argument for writing the article title as an
+    option for multi-corpus files. Returns the list of lines written.
+    """
+    sentence_occurrences = lexicon.sentence_occurrences(
+        reader, remove_overlap=remove_overlap)
 
-    # grab sentence occurrences
-    sentence_occurrences = get_sentence_occurrences(
-        document, terms, terms_present=occurrences,
-        remove_overlap=remove_overlap, remove_duplicates=True)
+    lines = []
+
+    # prebuffer lines in memory
+    for sentence in sentence_occurrences:
+        line = ' '.join([str(term.ID) for term in sentence])
+        line += '\n'
+
+        # append article title, if provided
+        if title:
+            line = title + ' ' + line
+        
+        lines.append(line)
+
+    return lines
 
 
-    if not format_for_file:
-        # return raw occurrences
-        return sentence_occurrences
+def write_occurrences_file(reader, lexicon, filename, title=None, append=False,
+                           remove_overlap=False):
+    """
+    Write an file containing the sentence occurrence data for the given reader
+    and lexicon. Optional argument for writing the article title as an option
+    for multi-corpus files. Returns the list of lines written.
+    """
+    lines = prepare_occurrences_file(reader, lexicon, title, remove_overlap)
 
-    else:
-        # format for file writing
-        lines = []
-        for sent_occur in sentence_occurrences:
-            line = ' '.join([str(term.ID) for term in sent_occur])
-            line = line + '\n'
-            if title:
-                line = title + ' ' + line
-            
-            lines.append(line)
+    # write file to disk
+    mode = 'a' if append else 'w'
+    with open(filename, mode) as f:
+        f.writelines(lines)
 
-        if output_filename:
-            with open(output_filename, 'w') as f:
-                f.writelines(lines)
+    return lines
 
-        return lines
-
-def prepare_apriori_input(occurrence_filename, terms, doc_terms=None):
+def prepare_apriori_input(occurrence_filename, lexicon, doc_terms=None):
     '''
     Prepares "shopping basket" input for the apriori miner from a file of
     sentence-lvel occurrences.
     '''
     # build up terms, as they will occur in the file
-    terms = [str(term.ID) for term in terms]
+    terms = [str(term.ID) for term in lexicon.terms]
     summary = defaultdict(set)
 
     with open(occurrence_filename) as f:
@@ -84,6 +90,9 @@ def prepare_apriori_input(occurrence_filename, terms, doc_terms=None):
         lines.append(' '.join(line))
     
     return lines
+
+def write_apriori_input(filename):
+    pass
 
 def apriori(input_filename='output.txt', output_filename='edges.txt'):
     apriori_bin = config.get('corpus', 'apriori_bin')
@@ -164,3 +173,13 @@ def calculate_edge_weight(edges, ents):
         print "ERROR PROCESSING EDGES. NO ENTROPY VALUES."
 
     return edges    
+
+if __name__ == '__main__':
+    """ Quick test cases """
+    from inpho.corpus.reader import SEPReader
+    from inpho.corpus.lexicon import DatabaseLexicon
+
+    reader = SEPReader('epistemology')
+    lexicon = DatabaseLexicon()
+
+    print prepare_occurrences_file(reader, lexicon)
