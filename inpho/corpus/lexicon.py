@@ -11,13 +11,30 @@ class Lexicon(object):
     """
     def __init__(self, terms=None):
         """
-        Dummy constructor. Not sure if best practices dictate that I should
-        raise NotImplementedError or not for an abstract class.
+        Generic Lexicon constructor.
         """
         if terms is None:
             self.terms = []
         else:
             self.terms = terms
+
+    def __contains__(self, obj):
+        """
+        Returns whether the specified term is in the lexicon.
+        """
+        return obj in self.terms
+
+    def __len__(self):
+        """
+        Returns the number of terms in the lexicon.
+        """
+        return len(self.terms)
+
+    def __iter__(self):
+        """
+        Returns an iterator over the lexicon.
+        """
+        return self.terms.__iter__()
 
     def sublexicon(self, string):
         """
@@ -163,3 +180,8 @@ class Term(object):
         if searchpatterns is not None:
             self.searchpatterns.extend(searchpatterns)
 
+    def __str__(self):
+        return self.label
+
+    def __repr__(self):
+        return "<Term %s: %s>" % (self.ID, self.label)
