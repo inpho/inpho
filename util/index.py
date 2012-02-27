@@ -20,6 +20,8 @@ print "processing index"
 index_terms = lexicon.document_occurrences(index)
 print index_terms
 
+terms = sorted(terms, key=lambda x: x.label)
+
 print "yielding terms"
 for term in terms:
     if term not in index_terms:
