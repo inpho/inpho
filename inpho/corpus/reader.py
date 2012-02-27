@@ -7,11 +7,14 @@ import os.path
 from inpho import config
 import inpho.lib
 
+import dstk
 from elementtree.TidyTools import *
 from elementtree.ElementTree import ElementTree
 from nltk import LineTokenizer, TreebankWordTokenizer
 from nltk.tokenize.punkt import PunktSentenceTokenizer as PST
 
+# Initialize dstk
+dstk = dstk.DSTK()
 
 class Reader(object):
     """
@@ -67,6 +70,16 @@ class Reader(object):
         """ Writes the plain text version of the corpus to a file """
         with codecs.open(outfile, encoding='utf-8', mode='w') as f:
             f.write(self.plain)
+
+class FileReader(Reader):
+    """
+    Generic file to text to token Reader object. Very useful. Can handle doc,
+    pdf, xsl, html, and image files. Uses dstk's file2text method:
+    http://www.datasciencetoolkit.org/developerdocs#file2text
+    """
+    def __init__(self, filename):
+        self.filename = filename
+        self.plain = dstk.file2text(filename, open(filename).read())
 
 def flatten(t):
     """
