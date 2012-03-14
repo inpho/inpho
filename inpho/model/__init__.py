@@ -213,7 +213,8 @@ metadata.create_all(engine)
 mapper(Entity, entity_table, 
        polymorphic_on=entity_table.c.typeID, polymorphic_identity=0,
        properties={
-           'alias':relation(Alias), 
+           'alias':relation(Alias),
+           'dates':relation(Date, backref='entity'),
            #'spatterns':relation(Searchpattern),
            '_spatterns':relation(Searchpattern, cascade="all,delete-orphan")
       })
@@ -448,6 +449,10 @@ mapper(Thinker, thinker_table,
         secondaryjoin=(thinker_graph_edges_table.c.ante_id == thinker_table.c.ID),
         order_by=thinker_graph_edges_table.c.jweight.desc()
         ),
+    'birth_dates':relation(Date,
+        primaryjoin=and_(entity_table.c.ID==date_table.c.entity_id, date_table.c.relation_id == 1))
+    'death_dates':relation(Date,
+        primaryjoin=and_(entity_table.c.ID==date_table.c.entity_id, date_table.c.relation_id == 2))
 })
 """    'birth':composite(SplitDate, thinker_table.c.birth_year,
                                  thinker_table.c.birth_month,
