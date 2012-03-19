@@ -96,7 +96,7 @@ class Date(object):
                 return [int(iso_string[0:4]), 0, 0]
         if iso_string:
             if '/' in iso_string:
-                date_list = date_range.split('/')
+                date_list = iso_string.split('/')
                 begin_date_string = date_list[0]
                 end_date_string = date_list[1]
                 begin_date_list = foo(begin_date_string)
