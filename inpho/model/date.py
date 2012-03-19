@@ -1,3 +1,5 @@
+from inpho.model import *
+
 month_dict = {1:'January', 2:'February', 3:'March', 4:'April', 5:'May',
               6:'June', 7:'July', 8:'August', 9:'September', 10:'October', 
               11:'November', 12:'December'}
@@ -85,6 +87,18 @@ class Date(object):
         '''
         parses an iso_string into a date object                    
         '''
+        def foo(iso_string):
+            if iso_string:
+                string_length = len(iso_string)
+                if string_length > 4:
+                    if string_length == 8:
+                        return [int(iso_string[0:4]), int(iso_string[4:6]), int(iso_string[6:8])]
+                    else:    
+                        return [int(iso_string[0:4]), int(iso_string[4:6]), None]
+                else:            
+                    return [int(iso_string[0:4]), None, None]
+            else:
+                return [None, None, None]
         if iso_string:
             if '/' in iso_string:
                 date_list = date_range.split('/')
@@ -106,21 +120,10 @@ class Date(object):
             else:
                 date_list = foo(iso_string)
                 year = date_list[0]
-                if year_end >= 0:
-                    year_end += 1
+                if year >= 0:
+                    year += 1
                 month = date_list[1]
                 day = date_list[2]
                 date = Date(entity_id, relation_id, year, month, day, None, None, None)
         Session.add(date)
         Session.commit()
-    
-    @staticmethod
-    def foo(iso_string):
-        string_length = len(iso_string)
-        if string_length > 4:
-            if string_length == 8:
-                return [int(iso_string[0:4]), int(iso_string[4:6]), int(iso_string[6:8])]
-            else:    
-                return [int(iso_string[0:4]), int(iso_string[4:6])]
-        else:            
-            return [int(iso_string[0:4])]
