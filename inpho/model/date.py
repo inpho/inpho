@@ -88,17 +88,14 @@ class Date(object):
         parses an iso_string into a date object                    
         '''
         def foo(iso_string):
-            if iso_string:
-                string_length = len(iso_string)
-                if string_length > 4:
-                    if string_length == 8:
-                        return [int(iso_string[0:4]), int(iso_string[4:6]), int(iso_string[6:8])]
-                    else:    
-                        return [int(iso_string[0:4]), int(iso_string[4:6]), None]
-                else:            
-                    return [int(iso_string[0:4]), None, None]
-            else:
-                return [None, None, None]
+            string_length = len(iso_string)
+            if string_length > 4:
+                if string_length == 8:
+                    return [int(iso_string[0:4]), int(iso_string[4:6]), int(iso_string[6:8])]
+                else:    
+                    return [int(iso_string[0:4]), int(iso_string[4:6]), 0]
+            else:            
+                return [int(iso_string[0:4]), 0, 0]
         if iso_string:
             if '/' in iso_string:
                 date_list = date_range.split('/')
@@ -124,6 +121,6 @@ class Date(object):
                     year += 1
                 month = date_list[1]
                 day = date_list[2]
-                date = Date(entity_id, relation_id, year, month, day, None, None, None)
+                date = Date(entity_id, relation_id, year, month, day, 0, 0, 0)
         Session.add(date)
         Session.commit()
