@@ -1,17 +1,55 @@
+month_dict = {1:'January', 2:'February', 3:'March', 4:'April', 5:'May',
+              6:'June', 7:'July', 8:'August', 9:'September', 10:'October', 
+              11:'November', 12:'December'}
+
 class Date(object):
     """ SQLAlchemy wrapper for Date objects """
 
-    def __init__(self, entity_id, relation_id, year=None, month=None, day=None, end_year=None, end_month=None, end_day=None):
+    def __init__(self, entity_id, relation_id, year=None, month=None, day=None, year_end=None, month_end=None, day_end=None):
         self.entity_id = entity_id
         self.relation_id = relation_id
         self.year = year
         self.month = month
         self.day = day
-        self.end_year = end_year
-        self.end_month = end_month
-        self.end_day = end_day
-            
+        self.year_end = year_end
+        self.month_end = month_end
+        self.day_end = day_end
+
     def __str__(self):
+        '''
+        Pretty prints a date.
+        '''
+        string = ""
+        string += Date._print_date(self.year, self.month, self.day)
+
+        if self.year_end:
+            string += ' - '
+            string += Date.print_date(self.year_end, self.month_end, self.day_end)
+
+        return string
+
+    def __eq__(self, other):
+        return (self.entity_id == other.entity_id and 
+                self.relation_id == other.relation_id and
+                self.year == other.year and 
+                self.month == other.month and
+                self.day == other.day and
+                self.year_end == other.year_end and
+                self.month_end == other.month_end and
+                self.day_end == other.day_end)
+
+    @staticmethod
+    def _print_date(year, month, day):
+        string = ''
+        if month:
+            string += month_dict[month] + " "
+            if day:
+                string += str(day) + ", "
+
+        string += str(year)
+        return string
+
+    def __repr__(self):
         '''
         parses a date object into an iso_string                   
         '''

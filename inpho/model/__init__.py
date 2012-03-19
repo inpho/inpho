@@ -450,7 +450,7 @@ mapper(Thinker, thinker_table,
         order_by=thinker_graph_edges_table.c.jweight.desc()
         ),
     'birth_dates':relation(Date,
-        primaryjoin=and_(entity_table.c.ID==date_table.c.entity_id, date_table.c.relation_id == 1))
+        primaryjoin=and_(entity_table.c.ID==date_table.c.entity_id, date_table.c.relation_id == 1)),
     'death_dates':relation(Date,
         primaryjoin=and_(entity_table.c.ID==date_table.c.entity_id, date_table.c.relation_id == 2))
 })
