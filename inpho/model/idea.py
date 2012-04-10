@@ -25,7 +25,7 @@ class Idea(Entity):
     def json_struct(self, sep_filter=True, limit=10, extended=True, graph=False, glimit=None):
         struct = { 'ID' : self.ID, 
                   'type' : 'idea',
-                  'label' : self.label, 
+                  'label' : inpho.helpers.titlecase(self.label), 
                   'sep_dir' : self.sep_dir,
                   'url' : self.url()}
         if extended:
