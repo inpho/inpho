@@ -13,6 +13,7 @@ class Thinker(Entity):
     def __init__(self, name, **kwargs):
         self.label = name
         self.name = name
+        self.searchstring = name
         for k, v in kwargs.iteritems():
             self.__setattr__(k, v)
 

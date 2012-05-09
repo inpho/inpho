@@ -15,6 +15,7 @@ Session.configure(bind=engine)
 
 metadata = MetaData()
 
+from inpho.model.date import *
 from inpho.model.entity import *
 from inpho.model.graph import *
 from inpho.model.idea import *
@@ -135,6 +136,10 @@ thinker_teacher_of_evaluation_table = Table('thinker_teacher_of_evaluation', met
     Column('uid', ForeignKey('inpho_user.ID'), primary_key=True),
     autoload=True, autoload_with=engine)
 
+date_table = Table('date', metadata,
+    Column('entity_id', ForeignKey('entity.ID'), primary_key=True),
+    autoload=True, autoload_with=engine, useexisting=True)
+
 # Journal tables
 journal_table = Table('journal', metadata,
     Column('ID', ForeignKey('entity.ID'), primary_key=True),
@@ -208,12 +213,14 @@ metadata.create_all(engine)
 mapper(Entity, entity_table, 
        polymorphic_on=entity_table.c.typeID, polymorphic_identity=0,
        properties={
-           'alias':relation(Alias), 
+           'alias':relation(Alias),
+           'dates':relation(Date, backref='entity'),
            #'spatterns':relation(Searchpattern),
            '_spatterns':relation(Searchpattern, cascade="all,delete-orphan")
       })
 mapper(Searchpattern, searchpatterns_table)
 mapper(Alias, alias_table)
+mapper(Date, date_table)
 
 
 # Idea mappings
@@ -442,6 +449,10 @@ mapper(Thinker, thinker_table,
         secondaryjoin=(thinker_graph_edges_table.c.ante_id == thinker_table.c.ID),
         order_by=thinker_graph_edges_table.c.jweight.desc()
         ),
+    'birth_dates':relation(Date,
+        primaryjoin=and_(entity_table.c.ID==date_table.c.entity_id, date_table.c.relation_id == 1)),
+    'death_dates':relation(Date,
+        primaryjoin=and_(entity_table.c.ID==date_table.c.entity_id, date_table.c.relation_id == 2))
 })
 """    'birth':composite(SplitDate, thinker_table.c.birth_year,
                                  thinker_table.c.birth_month,
