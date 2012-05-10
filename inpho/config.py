@@ -17,12 +17,15 @@ for path in config_paths:
 
 logging.debug("Using config path: %s" % config_path)
 
+config = ConfigParser()
+
 # Configuration file does not exist, raise Exception
 if config_path is None:
-    raise IOError("Missing inpho.ini configuration file.")
-
-config = ConfigParser()
-config.read(config_path)
+    # TODO: Resolve conundrum of path resolution in build of doc system
+    # raise IOError("Missing inpho.ini configuration file.")
+    pass
+else:
+    config.read(config_path)
 
 
 def get_data_path(var, section=None):
