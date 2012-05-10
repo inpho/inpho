@@ -370,7 +370,7 @@ def mine_article(article, entity_type=Idea, filename='graph.txt', root='./',
 
     update_partial_graph(entity_type, occurrences)
 
-def update_partial_graph(entity_type, sql_filename):
+def update_partial_graph(entity_type, occurrences):
     """
     Takes an entity type and a SQL filename and only updates part of the graph.
     For use with single article statistical information.
