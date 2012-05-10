@@ -58,6 +58,8 @@ def make_graph():
         g.add((t['t' + str(thinker.ID)], rdf['type'], inpho['thinker']))
         g.add((t['t' + str(thinker.ID)], foaf['name'], Literal(thinker.label)))
         g.add((t['t' + str(thinker.ID)], owl['sameAs'], e['e' + str(thinker.ID)]))
+        if thinker.wiki:
+            g.add((t['t' + str(thinker.ID)], owl['sameAs'], db[thinker.wiki]))
         
 
     # Select all ConceptSchemes
