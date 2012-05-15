@@ -17,6 +17,6 @@ class Work(Entity):
     def __str__(self):
         return self.label.encode('utf-8')
 
-    def url(self, filetype=None, action=None):
+    def url(self, filetype=None, action=None, id2=None):
         return inpho.helpers.url(controller="work", id=self.ID, action=action, 
-                                 filetype=filetype)
+                                 id2=id2, filetype=filetype)

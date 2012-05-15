@@ -10,9 +10,9 @@ import inflect
 p = inflect.engine()
 
 class Entity(object):
-    def url(self, filetype='html', action='view'):
+    def url(self, filetype='html', action='view', id2=None):
         return inpho.helpers.url(controller="entity", id=self.ID, 
-                                 action=action, filetype=filetype)
+                                 action=action, id2=id2, filetype=filetype)
 
     def __repr__(self):
         return '<Entity %d: %s>' % (self.ID, self.label.encode('utf-8'))

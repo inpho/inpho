@@ -26,8 +26,8 @@ class Journal(Entity):
     def __str__(self):
         return self.label
     
-    def url(self, filetype=None, action=None):
-        return inpho.helpers.url(controller="journal", id=self.ID, 
+    def url(self, filetype=None, action=None, id2=None):
+        return inpho.helpers.url(controller="journal", id=self.ID, id2=id2,
                                  action=action, filetype=filetype)
 
     abbrs = association_proxy('abbreviations', 'value')
