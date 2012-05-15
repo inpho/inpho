@@ -2,10 +2,11 @@ from httplib import HTTPException
 import logging
 import os.path
 import time
-from inpho.lib.url import URLopener
+from urllib import quote_plus
 
-from inpho.model.entity import Entity
 import inpho.helpers
+from inpho.lib.url import URLopener
+from inpho.model.entity import Entity
 
 from sqlalchemy.ext.associationproxy import association_proxy
 
@@ -62,6 +63,12 @@ class Journal(Entity):
     @property
     def last_accessed_str(self, format="%x %X %Z"):
         return time.strftime(format, time.gmtime(self.last_accessed))
+
+    @property
+    def ISSN_google_url(self):
+        google = "http://www.google.com/search?q="
+        google += quote_plus("%s %s" % (self.label.encode("utf-8"), self.ISSN))
+        return google 
 
     def json_struct(self, sep_filter=True, limit=10, extended=True):
         struct = { 'ID' : self.ID, 
