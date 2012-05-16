@@ -41,7 +41,7 @@ class Journal(Entity):
 
         # attempt to open the URL, capture exceptions as failure
         try:
-            request = URLopener().open(self.URL)
+            request = URLopener().open(self.URL.encode('utf-8'))
         except (IOError, HTTPException) as e:
             logging.warning("URL failed w/exception! [%s] %s" % (self.URL, e))
             return False
