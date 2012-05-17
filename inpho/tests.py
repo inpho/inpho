@@ -17,16 +17,18 @@ class Autotest(unittest2.TestCase):
         """
         SEP Cross-References
         Verify that SEP Cross-Reference at http://plato.stanford.edu/~inpho/crossref.php still works
+        http://plato.stanford.edu/~inpho/crossref.php
         """
         self.conn = httplib.HTTPConnection("plato.stanford.edu")
         self.conn.request("GET", "/~inpho/crossref.php")
         result = self.conn.getresponse()
         self.assertLessEqual(result.status, 200)
-
+        
     def test_entity_json(self):
         """
         Entity JSON
         Verify that https://inpho.cogs.indiana.edu/entity.json returns HTTP 200
+        https://inpho.cogs.indiana.edu/entity.json
         """
         self.conn.request("GET", "/entity")
         result = self.conn.getresponse()
@@ -36,6 +38,7 @@ class Autotest(unittest2.TestCase):
         """
         Idea JSON
         Verify that https://inpho.cogs.indiana.edu/idea.json returns HTTP 200
+        https://inpho.cogs.indiana.edu/idea.json
         """
         self.conn.request("GET", "/idea")
         result = self.conn.getresponse()
@@ -45,6 +48,7 @@ class Autotest(unittest2.TestCase):
         """
         Thinker JSON
         Verify that https://inpho.cogs.indiana.edu/thinker.json returns HTTP 200
+        https://inpho.cogs.indiana.edu/thinker.json
         """
         self.conn.request("GET", "/thinker")
         result = self.conn.getresponse()
@@ -54,6 +58,7 @@ class Autotest(unittest2.TestCase):
         """
         Journal JSON
         Verify that https://inpho.cogs.indiana.edu/journal.json returns HTTP 200
+        https://inpho.cogs.indiana.edu/journal.json
         """
         self.conn.request("GET", "/journal")
         result = self.conn.getresponse()
@@ -63,6 +68,7 @@ class Autotest(unittest2.TestCase):
         """
         Taxonomy JSON
         Verify that https://inpho.cogs.indiana.edu/taxonomy.json returns HTTP 200
+        https://inpho.cogs.indiana.edu/taxonomy.json
         """
         self.conn.request("GET", "/taxonomy")
         result = self.conn.getresponse()
@@ -72,6 +78,7 @@ class Autotest(unittest2.TestCase):
         """
         Search Box
         Verify autocomplete works. Easy test: "time"
+        https://inpho.cogs.indiana.edu/entity.json?q=time
         """
         self.conn.request("GET", "/entity.json?q=time")
         result = self.conn.getresponse()
@@ -84,6 +91,7 @@ class Autotest(unittest2.TestCase):
         """
         OWL
         Verify log-generating script works
+        https://inpho.cogs.indiana.edu/owl
         """
         #OWL script
         node_q = Session.query(Node)
@@ -107,6 +115,7 @@ class Autotest(unittest2.TestCase):
         """
         Evaluation UI
         Verify user is able to Enable evaluations, choose an item, choose a setting, and submit an evaluation.
+        http://inpho.cogs.indiana.edu/idea/1488
         """
         #make user eval using POST
         #look for develper tools (use google chrome or new firefox)
@@ -121,6 +130,7 @@ class Autotest(unittest2.TestCase):
         """
         Evaluation Database
         Verify evaluation submissions append to database
+        http://inpho.cogs.indiana.edu/idea/1488
         """
         #being able to delete user eval
         self.conn.request("GET", "/idea/1488/relatedness/1793?_method=DELETE")
@@ -135,6 +145,7 @@ class Autotest(unittest2.TestCase):
         """
         SEP Publishing list
         Verify items are not already in database. Check sep_dir fields.
+        https://inpho.cogs.indiana.edu/admin
         """
         new = sep.new_entries()
         entries_in_db = 0
