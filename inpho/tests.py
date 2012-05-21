@@ -7,11 +7,16 @@ import sqlalchemy
 __all__ = ["Autotest"]
 
 class Autotest(unittest2.TestCase):
-    def getPassedTests(self):
-        return passed
+
+    def __init__(self, testname, server):
+        """
+        Initialized with the server host to test on.
+        """
+        super(Autotest, self).__init__(testname)
+        self.server = server
 
     def setUp(self):
-        self.conn = httplib.HTTPConnection("inphodev.cogs.indiana.edu:8087")
+        self.conn = httplib.HTTPConnection(self.server)
 
     def test_sep_crossRef(self):
         """
@@ -28,7 +33,7 @@ class Autotest(unittest2.TestCase):
         """
         Entity JSON
         Verify that https://inpho.cogs.indiana.edu/entity.json returns HTTP 200
-        https://inpho.cogs.indiana.edu/entity.json
+        /entity.json
         """
         self.conn.request("GET", "/entity")
         result = self.conn.getresponse()
@@ -38,7 +43,7 @@ class Autotest(unittest2.TestCase):
         """
         Idea JSON
         Verify that https://inpho.cogs.indiana.edu/idea.json returns HTTP 200
-        https://inpho.cogs.indiana.edu/idea.json
+        /idea.json
         """
         self.conn.request("GET", "/idea")
         result = self.conn.getresponse()
@@ -48,7 +53,7 @@ class Autotest(unittest2.TestCase):
         """
         Thinker JSON
         Verify that https://inpho.cogs.indiana.edu/thinker.json returns HTTP 200
-        https://inpho.cogs.indiana.edu/thinker.json
+        /thinker.json
         """
         self.conn.request("GET", "/thinker")
         result = self.conn.getresponse()
@@ -58,7 +63,7 @@ class Autotest(unittest2.TestCase):
         """
         Journal JSON
         Verify that https://inpho.cogs.indiana.edu/journal.json returns HTTP 200
-        https://inpho.cogs.indiana.edu/journal.json
+        /journal.json
         """
         self.conn.request("GET", "/journal")
         result = self.conn.getresponse()
@@ -68,7 +73,7 @@ class Autotest(unittest2.TestCase):
         """
         Taxonomy JSON
         Verify that https://inpho.cogs.indiana.edu/taxonomy.json returns HTTP 200
-        https://inpho.cogs.indiana.edu/taxonomy.json
+        /taxonomy.json
         """
         self.conn.request("GET", "/taxonomy")
         result = self.conn.getresponse()
@@ -78,7 +83,7 @@ class Autotest(unittest2.TestCase):
         """
         Search Box
         Verify autocomplete works. Easy test: "time"
-        https://inpho.cogs.indiana.edu/entity.json?q=time
+        /entity.json?q=time
         """
         self.conn.request("GET", "/entity.json?q=time")
         result = self.conn.getresponse()
@@ -91,7 +96,7 @@ class Autotest(unittest2.TestCase):
         """
         OWL
         Verify log-generating script works
-        https://inpho.cogs.indiana.edu/owl
+        /owl
         """
         #OWL script
         node_q = Session.query(Node)
@@ -115,7 +120,7 @@ class Autotest(unittest2.TestCase):
         """
         Evaluation UI
         Verify user is able to Enable evaluations, choose an item, choose a setting, and submit an evaluation.
-        http://inpho.cogs.indiana.edu/idea/1488
+        /idea/1488
         """
         #make user eval using POST
         #look for develper tools (use google chrome or new firefox)
@@ -130,7 +135,7 @@ class Autotest(unittest2.TestCase):
         """
         Evaluation Database
         Verify evaluation submissions append to database
-        http://inpho.cogs.indiana.edu/idea/1488
+        /idea/1488
         """
         #being able to delete user eval
         self.conn.request("GET", "/idea/1488/relatedness/1793?_method=DELETE")
@@ -145,7 +150,7 @@ class Autotest(unittest2.TestCase):
         """
         SEP Publishing list
         Verify items are not already in database. Check sep_dir fields.
-        https://inpho.cogs.indiana.edu/admin
+        /admin
         """
         new = sep.new_entries()
         entries_in_db = 0
@@ -154,7 +159,3 @@ class Autotest(unittest2.TestCase):
                 entries_in_db += 1
                 print entry
         self.assertEqual(entries_in_db, 0)
-
-if __name__ == '__main__':
-   suite = unittest2.TestLoader().loadTestsFromTestCase(Autotest)
-   unittest2.TextTestRunner(verbosity=2).run(suite)
