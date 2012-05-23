@@ -1,0 +1,560 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>inpho.corpus.sep &mdash; InPhO v1.0 documentation</title>
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="InPhO v1.0 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">InPhO v1.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for inpho.corpus.sep</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="kn">import</span> <span class="n">Pool</span>
+<span class="kn">import</span> <span class="nn">os.path</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
+
+<span class="kn">from</span> <span class="nn">BeautifulSoup</span> <span class="kn">import</span> <span class="n">BeautifulSoup</span>
+<span class="kn">from</span> <span class="nn">sqlalchemy.orm</span> <span class="kn">import</span> <span class="n">subqueryload</span>
+<span class="kn">from</span> <span class="nn">sqlalchemy</span> <span class="kn">import</span> <span class="n">and_</span><span class="p">,</span> <span class="n">or_</span><span class="p">,</span> <span class="n">not_</span>
+
+<span class="kn">from</span> <span class="nn">inpho</span> <span class="kn">import</span> <span class="n">config</span>
+<span class="kn">import</span> <span class="nn">inpho.corpus.stats</span> <span class="kn">as</span> <span class="nn">dm</span>
+<span class="kn">from</span> <span class="nn">inpho.model</span> <span class="kn">import</span> <span class="n">Idea</span><span class="p">,</span> <span class="n">Thinker</span><span class="p">,</span> <span class="n">Entity</span><span class="p">,</span> <span class="n">Session</span> 
+
+<div class="viewcode-block" id="extract_article_body"><a class="viewcode-back" href="../../../corpus.html#inpho.corpus.sep.extract_article_body">[docs]</a><span class="k">def</span> <span class="nf">extract_article_body</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Extracts the article body from the SEP article at the given filename. Some</span>
+<span class="sd">    error handling is done to guarantee that this function returns at least the</span>
+<span class="sd">    empty string. Check the error log.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+    <span class="n">doc</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+    <span class="n">soup</span> <span class="o">=</span> <span class="n">BeautifulSoup</span><span class="p">(</span><span class="n">doc</span><span class="p">,</span> <span class="n">convertEntities</span><span class="o">=</span><span class="p">[</span><span class="s">&quot;xml&quot;</span><span class="p">,</span> <span class="s">&quot;html&quot;</span><span class="p">])</span>
+
+    <span class="c"># rip out bibliography</span>
+    <span class="n">biblio_root</span> <span class="o">=</span> <span class="n">soup</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s">&#39;h2&#39;</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s">&#39;Bibliography&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">biblio_root</span><span class="p">:</span>
+        <span class="n">biblio_root</span> <span class="o">=</span> <span class="n">biblio_root</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">findParent</span><span class="p">(</span><span class="s">&#39;h2&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">biblio_root</span><span class="p">:</span>
+            <span class="n">biblio</span> <span class="o">=</span> <span class="p">[</span><span class="n">biblio_root</span><span class="p">]</span>
+            <span class="n">biblio</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">biblio_root</span><span class="o">.</span><span class="n">findNextSiblings</span><span class="p">())</span>
+            <span class="n">biblio</span> <span class="o">=</span> <span class="p">[</span><span class="n">elm</span><span class="o">.</span><span class="n">extract</span><span class="p">()</span> <span class="k">for</span> <span class="n">elm</span> <span class="ow">in</span> <span class="n">biblio</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&#39;Could not extract bibliography from </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">filename</span><span class="p">)</span>
+
+    <span class="c"># grab modified body </span>
+    <span class="n">body</span> <span class="o">=</span> <span class="n">soup</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&quot;div&quot;</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="s">&quot;aueditable&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">body</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="c"># remove HTML escaped characters</span>
+        <span class="n">body</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&quot;&amp;\w+;&quot;</span><span class="p">,</span> <span class="s">&quot;&quot;</span><span class="p">,</span> <span class="n">body</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+    
+        <span class="k">return</span> <span class="n">body</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&#39;Could not extract text from </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">filename</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="s">&#39;&#39;</span>
+</div>
+<div class="viewcode-block" id="published"><a class="viewcode-back" href="../../../corpus.html#inpho.corpus.sep.published">[docs]</a><span class="k">def</span> <span class="nf">published</span><span class="p">(</span><span class="n">sep_dir</span><span class="p">,</span> <span class="n">log_root</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Checks if the given article is published.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">log_root</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">log_root</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;corpus&#39;</span><span class="p">,</span> <span class="s">&#39;log_path&#39;</span><span class="p">)</span>
+
+    <span class="n">log_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">log_root</span><span class="p">,</span> <span class="n">sep_dir</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">log_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">log</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">log</span><span class="p">:</span>
+            <span class="c">#use the published </span>
+            <span class="k">if</span> <span class="s">&#39;::eP&#39;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">True</span>
+
+    <span class="k">return</span> <span class="bp">False</span>
+</div>
+<div class="viewcode-block" id="get_titles"><a class="viewcode-back" href="../../../corpus.html#inpho.corpus.sep.get_titles">[docs]</a><span class="k">def</span> <span class="nf">get_titles</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns a dictionary of { sep_dir : title } pairs.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">entries</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;corpus&#39;</span><span class="p">,</span> <span class="s">&#39;db_path&#39;</span><span class="p">),</span> <span class="s">&#39;entries.txt&#39;</span><span class="p">)</span>
+    
+    <span class="n">titles</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">entries</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">current</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;::&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="n">titles</span><span class="p">[</span><span class="n">current</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="n">current</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">titles</span>
+</div>
+<div class="viewcode-block" id="get_title"><a class="viewcode-back" href="../../../corpus.html#inpho.corpus.sep.get_title">[docs]</a><span class="k">def</span> <span class="nf">get_title</span><span class="p">(</span><span class="n">sep_dir</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns the title for the given sep_dir</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">entries</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;corpus&#39;</span><span class="p">,</span> <span class="s">&#39;db_path&#39;</span><span class="p">),</span> <span class="s">&#39;entries.txt&#39;</span><span class="p">)</span>
+    
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">entries</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">current</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;::&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">current</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">sep_dir</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">current</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s">&quot;Invalid sep_dir&quot;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="new_entries"><a class="viewcode-back" href="../../../corpus.html#inpho.corpus.sep.new_entries">[docs]</a><span class="k">def</span> <span class="nf">new_entries</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns a list of all entries which do not have a corresponding InPhO Entity.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c"># get list of all entries in database</span>
+    <span class="n">sep_dirs</span> <span class="o">=</span> <span class="n">Session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">Entity</span><span class="o">.</span><span class="n">sep_dir</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">Entity</span><span class="o">.</span><span class="n">sep_dir</span><span class="o">!=</span><span class="s">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+    <span class="n">sep_dirs</span> <span class="o">=</span> <span class="p">[</span><span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">sep_dirs</span><span class="p">]</span>
+
+    <span class="c"># get list of all entries in the SEP database</span>
+    <span class="n">entries</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;corpus&#39;</span><span class="p">,</span> <span class="s">&#39;db_path&#39;</span><span class="p">),</span> <span class="s">&#39;entries.txt&#39;</span><span class="p">)</span>
+
+    <span class="c"># build list of new entries</span>
+    <span class="n">new_sep_dirs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">entries</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">sep_dir</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;::&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">sep_dir</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sep_dirs</span> <span class="ow">and</span> <span class="n">published</span><span class="p">(</span><span class="n">sep_dir</span><span class="p">):</span>
+                    <span class="c"># published entry not in database, add to list of entries</span>
+                    <span class="n">new_sep_dirs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sep_dir</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">IOError</span><span class="p">:</span>
+                <span class="c"># skip IOErrors, as these indicate potential entries w/o logs</span>
+                <span class="k">continue</span>
+
+    <span class="c"># remove the sample entry</span>
+    <span class="n">new_sep_dirs</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s">&#39;sample&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">new_sep_dirs</span>
+</div>
+<div class="viewcode-block" id="select_terms"><a class="viewcode-back" href="../../../corpus.html#inpho.corpus.sep.select_terms">[docs]</a><span class="k">def</span> <span class="nf">select_terms</span><span class="p">(</span><span class="n">entity_type</span><span class="o">=</span><span class="n">Idea</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns a list of all terms of a given entity type.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c"># process entities</span>
+    <span class="n">ideas</span> <span class="o">=</span> <span class="n">Session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">entity_type</span><span class="p">)</span>
+    <span class="n">ideas</span> <span class="o">=</span> <span class="n">ideas</span><span class="o">.</span><span class="n">options</span><span class="p">(</span><span class="n">subqueryload</span><span class="p">(</span><span class="s">&#39;_spatterns&#39;</span><span class="p">))</span>
+    <span class="c"># do not process Nodes or Journals</span>
+    <span class="n">ideas</span> <span class="o">=</span> <span class="n">ideas</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">and_</span><span class="p">(</span><span class="n">Entity</span><span class="o">.</span><span class="n">typeID</span><span class="o">!=</span><span class="mi">2</span><span class="p">,</span> <span class="n">Entity</span><span class="o">.</span><span class="n">typeID</span><span class="o">!=</span><span class="mi">4</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">ideas</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+     
+</div>
+<div class="viewcode-block" id="process_article"><a class="viewcode-back" href="../../../corpus.html#inpho.corpus.sep.process_article">[docs]</a><span class="k">def</span> <span class="nf">process_article</span><span class="p">(</span><span class="n">article</span><span class="p">,</span> <span class="n">terms</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">entity_type</span><span class="o">=</span><span class="n">Idea</span><span class="p">,</span> <span class="n">output_filename</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                    <span class="n">corpus_root</span><span class="o">=</span><span class="s">&#39;corpus/&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Processes a single article for apriori input.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">terms</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">terms</span> <span class="o">=</span> <span class="n">select_terms</span><span class="p">(</span><span class="n">entity_type</span><span class="p">)</span>
+    
+
+    <span class="n">lines</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">corpus_root</span><span class="p">,</span> <span class="n">article</span><span class="p">,</span> <span class="s">&#39;index.html&#39;</span><span class="p">)</span>
+    <span class="n">article_terms</span> <span class="o">=</span> <span class="n">Session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">entity_type</span><span class="p">)</span>
+    <span class="n">article_terms</span> <span class="o">=</span> <span class="n">article_terms</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">entity_type</span><span class="o">.</span><span class="n">sep_dir</span><span class="o">==</span><span class="n">article</span><span class="p">)</span>
+    <span class="n">article_terms</span> <span class="o">=</span> <span class="n">article_terms</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">filename</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;processing: </span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">article</span><span class="p">,</span> <span class="n">filename</span><span class="p">))</span>
+        <span class="n">doc</span> <span class="o">=</span> <span class="n">extract_article_body</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="n">dm</span><span class="o">.</span><span class="n">occurrences</span><span class="p">(</span><span class="n">doc</span><span class="p">,</span> <span class="n">terms</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="n">article</span><span class="p">,</span>
+                               <span class="n">remove_overlap</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                               <span class="n">format_for_file</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                               <span class="n">output_filename</span><span class="o">=</span><span class="n">output_filename</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s">&quot;BAD SEP_DIR: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">article</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">lines</span>
+</div>
+<div class="viewcode-block" id="process_wrapper"><a class="viewcode-back" href="../../../corpus.html#inpho.corpus.sep.process_wrapper">[docs]</a><span class="k">def</span> <span class="nf">process_wrapper</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Wrapper function for article processing. Necessary for multiprocessing</span>
+<span class="sd">    module support. See: http://docs.python.org/library/multiprocessing.html#multiprocessing.pool.multiprocessing.Pool.map</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">process_article</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="process_articles"><a class="viewcode-back" href="../../../corpus.html#inpho.corpus.sep.process_articles">[docs]</a><span class="k">def</span> <span class="nf">process_articles</span><span class="p">(</span><span class="n">entity_type</span><span class="o">=</span><span class="n">Entity</span><span class="p">,</span> <span class="n">output_filename</span><span class="o">=</span><span class="s">&#39;output-all.txt&#39;</span><span class="p">,</span>
+                     <span class="n">corpus_root</span><span class="o">=</span><span class="s">&#39;corpus/&#39;</span><span class="p">):</span>
+    <span class="n">terms</span> <span class="o">=</span> <span class="n">select_terms</span><span class="p">(</span><span class="n">entity_type</span><span class="p">)</span>
+    <span class="n">Session</span><span class="o">.</span><span class="n">expunge_all</span><span class="p">()</span>
+    <span class="n">Session</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="c"># fix search patterns</span>
+    <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">terms</span><span class="p">:</span>
+        <span class="n">newpatterns</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">pattern</span> <span class="ow">in</span> <span class="n">term</span><span class="o">.</span><span class="n">searchpatterns</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s">&#39;(&#39;</span> <span class="ow">in</span> <span class="n">pattern</span> <span class="ow">and</span> <span class="s">&#39;)&#39;</span> <span class="ow">in</span> <span class="n">pattern</span><span class="p">:</span>
+                <span class="n">pattern</span> <span class="o">=</span> <span class="n">pattern</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;( &#39;</span><span class="p">,</span> <span class="s">&#39;(</span><span class="se">\\</span><span class="s">b&#39;</span><span class="p">)</span>
+                <span class="n">pattern</span> <span class="o">=</span> <span class="n">pattern</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39; )&#39;</span><span class="p">,</span> <span class="s">&#39;</span><span class="se">\\</span><span class="s">b)&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">pattern</span> <span class="o">=</span> <span class="s">&#39;</span><span class="se">\\</span><span class="s">b</span><span class="si">%s</span><span class="se">\\</span><span class="s">b&#39;</span> <span class="o">%</span> <span class="n">pattern</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+            <span class="n">newpatterns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span>
+
+        <span class="n">term</span><span class="o">.</span><span class="n">searchpatterns</span> <span class="o">=</span> <span class="n">newpatterns</span>
+
+    
+    <span class="n">articles</span> <span class="o">=</span> <span class="n">Session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">Entity</span><span class="o">.</span><span class="n">sep_dir</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">Entity</span><span class="o">.</span><span class="n">sep_dir</span><span class="o">!=</span><span class="bp">None</span><span class="p">)</span>
+    <span class="n">articles</span> <span class="o">=</span> <span class="n">articles</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">Entity</span><span class="o">.</span><span class="n">sep_dir</span><span class="o">!=</span><span class="s">&#39;&#39;</span><span class="p">)</span>
+    <span class="n">articles</span> <span class="o">=</span> <span class="n">articles</span><span class="o">.</span><span class="n">distinct</span><span class="p">()</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+    <span class="n">articles</span> <span class="o">=</span> <span class="p">[</span><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">articles</span><span class="p">]</span>
+   
+    <span class="c"># parallel processing of articles</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">Pool</span><span class="p">()</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="p">[(</span><span class="n">title</span><span class="p">,</span> <span class="n">terms</span><span class="p">,</span> <span class="n">entity_type</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="n">corpus_root</span><span class="p">)</span> <span class="k">for</span> <span class="n">title</span> <span class="ow">in</span> <span class="n">articles</span><span class="p">]</span>
+    <span class="n">doc_lines</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">process_wrapper</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span>
+    <span class="n">p</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="c">#serial processing for tests</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    doc_lines = []</span>
+<span class="sd">    for title in articles:</span>
+<span class="sd">        lines = process_article(title, terms, entity_type, None, corpus_root)</span>
+<span class="sd">        doc_lines.append(lines)</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="c"># write graph output to file</span>
+    <span class="k">print</span> <span class="n">output_filename</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">output_filename</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">lines</span> <span class="ow">in</span> <span class="n">doc_lines</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">writelines</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="filter_apriori_input"><a class="viewcode-back" href="../../../corpus.html#inpho.corpus.sep.filter_apriori_input">[docs]</a><span class="k">def</span> <span class="nf">filter_apriori_input</span><span class="p">(</span><span class="n">occur_filename</span><span class="p">,</span> <span class="n">output_filename</span><span class="p">,</span> <span class="n">entity_type</span><span class="o">=</span><span class="n">Idea</span><span class="p">,</span>
+                         <span class="n">doc_terms</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="c">#select terms</span>
+    <span class="n">terms</span> <span class="o">=</span> <span class="n">select_terms</span><span class="p">(</span><span class="n">entity_type</span><span class="p">)</span>
+    <span class="n">Session</span><span class="o">.</span><span class="n">expunge_all</span><span class="p">()</span>
+    <span class="n">Session</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="n">lines</span> <span class="o">=</span> <span class="n">dm</span><span class="o">.</span><span class="n">prepare_apriori_input</span><span class="p">(</span><span class="n">occur_filename</span><span class="p">,</span> <span class="n">terms</span><span class="p">,</span> <span class="n">doc_terms</span><span class="p">)</span>
+    
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">output_filename</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">writelines</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="doc_terms_list"><a class="viewcode-back" href="../../../corpus.html#inpho.corpus.sep.doc_terms_list">[docs]</a><span class="k">def</span> <span class="nf">doc_terms_list</span><span class="p">():</span>
+    <span class="n">articles</span> <span class="o">=</span> <span class="n">Session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">Entity</span><span class="p">)</span>
+    <span class="n">articles</span> <span class="o">=</span> <span class="n">articles</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">Entity</span><span class="o">.</span><span class="n">sep_dir</span><span class="o">!=</span><span class="bp">None</span><span class="p">)</span>
+    <span class="n">articles</span> <span class="o">=</span> <span class="n">articles</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">Entity</span><span class="o">.</span><span class="n">sep_dir</span><span class="o">!=</span><span class="s">&#39;&#39;</span><span class="p">)</span>
+    <span class="n">articles</span> <span class="o">=</span> <span class="n">articles</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+   
+    <span class="n">doc_terms</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">entity</span> <span class="ow">in</span> <span class="n">articles</span><span class="p">:</span>
+        <span class="n">doc_terms</span><span class="p">[</span><span class="n">entity</span><span class="o">.</span><span class="n">sep_dir</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">entity</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">doc_terms</span>
+</div>
+<div class="viewcode-block" id="complete_mining"><a class="viewcode-back" href="../../../corpus.html#inpho.corpus.sep.complete_mining">[docs]</a><span class="k">def</span> <span class="nf">complete_mining</span><span class="p">(</span><span class="n">entity_type</span><span class="o">=</span><span class="n">Idea</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="s">&#39;graph.txt&#39;</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="s">&#39;./&#39;</span><span class="p">,</span>
+                    <span class="n">corpus_root</span><span class="o">=</span><span class="s">&#39;corpus/&#39;</span><span class="p">,</span> <span class="n">update_entropy</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                    <span class="n">update_occurrences</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">update_db</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span> 
+    <span class="n">occur_filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">root</span> <span class="o">+</span> <span class="s">&quot;occurrences.txt&quot;</span><span class="p">)</span>
+    <span class="n">graph_filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">root</span> <span class="o">+</span> <span class="s">&quot;graph-&quot;</span> <span class="o">+</span> <span class="n">filename</span><span class="p">)</span>
+    <span class="n">edge_filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">root</span> <span class="o">+</span> <span class="s">&quot;edge-&quot;</span> <span class="o">+</span> <span class="n">filename</span><span class="p">)</span>
+    <span class="n">sql_filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">root</span> <span class="o">+</span> <span class="s">&quot;sql-&quot;</span> <span class="o">+</span> <span class="n">filename</span><span class="p">)</span>
+
+    <span class="n">doc_terms</span> <span class="o">=</span> <span class="n">doc_terms_list</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">update_occurrences</span><span class="p">:</span>
+        <span class="k">print</span> <span class="s">&quot;processing articles...&quot;</span>
+        <span class="n">process_articles</span><span class="p">(</span><span class="n">entity_type</span><span class="p">,</span> <span class="n">occur_filename</span><span class="p">,</span> <span class="n">corpus_root</span><span class="o">=</span><span class="n">corpus_root</span><span class="p">)</span>
+
+    <span class="k">print</span> <span class="s">&quot;filtering occurrences...&quot;</span>
+    <span class="n">filter_apriori_input</span><span class="p">(</span>
+        <span class="n">occur_filename</span><span class="p">,</span> <span class="n">graph_filename</span><span class="p">,</span> <span class="n">entity_type</span><span class="p">,</span> <span class="n">doc_terms</span><span class="p">)</span>
+
+    <span class="k">print</span> <span class="s">&quot;running apriori miner...&quot;</span>
+    <span class="n">dm</span><span class="o">.</span><span class="n">apriori</span><span class="p">(</span><span class="n">graph_filename</span><span class="p">,</span> <span class="n">edge_filename</span><span class="p">)</span>
+    
+    <span class="k">print</span> <span class="s">&quot;processing edges...&quot;</span>
+    <span class="n">edges</span> <span class="o">=</span> <span class="n">dm</span><span class="o">.</span><span class="n">process_edges</span><span class="p">(</span>
+        <span class="n">graph_filename</span><span class="p">,</span> <span class="n">edge_filename</span><span class="p">,</span> <span class="n">occur_filename</span><span class="p">,</span> <span class="n">doc_terms</span><span class="p">)</span>
+    <span class="n">ents</span> <span class="o">=</span> <span class="n">dm</span><span class="o">.</span><span class="n">calculate_node_entropy</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span>
+    <span class="n">edges</span> <span class="o">=</span> <span class="n">dm</span><span class="o">.</span><span class="n">calculate_edge_weight</span><span class="p">(</span><span class="n">edges</span><span class="p">,</span> <span class="n">ents</span><span class="p">)</span>
+    
+    <span class="k">print</span> <span class="s">&quot;creating sql files...&quot;</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">sql_filename</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">edge</span><span class="p">,</span> <span class="n">props</span> <span class="ow">in</span> <span class="n">edges</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+            <span class="n">ante</span><span class="p">,</span><span class="n">cons</span> <span class="o">=</span> <span class="n">edge</span>
+            <span class="n">row</span> <span class="o">=</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">::</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">edge</span>
+            <span class="n">row</span> <span class="o">+=</span> <span class="p">(</span><span class="s">&quot;::</span><span class="si">%(confidence)s</span><span class="s">::</span><span class="si">%(jweight)s</span><span class="s">::</span><span class="si">%(weight)s</span><span class="s">&quot;</span>
+                    <span class="s">&quot;::</span><span class="si">%(occurs_in)s</span><span class="se">\n</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">props</span><span class="p">)</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">update_entropy</span><span class="p">:</span>
+        <span class="k">print</span> <span class="s">&quot;updating term entropy...&quot;</span>
+
+        <span class="k">for</span> <span class="n">term_id</span><span class="p">,</span> <span class="n">entropy</span> <span class="ow">in</span> <span class="n">ents</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+            <span class="n">term</span> <span class="o">=</span> <span class="n">Session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">Idea</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">term_id</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">term</span><span class="p">:</span>
+                <span class="n">term</span><span class="o">.</span><span class="n">entropy</span> <span class="o">=</span> <span class="n">entropy</span>
+
+        <span class="n">Session</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+        <span class="n">Session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+        <span class="n">Session</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">update_db</span><span class="p">:</span>
+        <span class="k">print</span> <span class="s">&quot;updating the database...&quot;</span>
+        <span class="n">update_graph</span><span class="p">(</span><span class="n">entity_type</span><span class="p">,</span> <span class="n">sql_filename</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="update_graph"><a class="viewcode-back" href="../../../corpus.html#inpho.corpus.sep.update_graph">[docs]</a><span class="k">def</span> <span class="nf">update_graph</span><span class="p">(</span><span class="n">entity_type</span><span class="p">,</span> <span class="n">sql_filename</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Performs a complete update of the database graph information, adding</span>
+<span class="sd">    jweight, entropy and occurrence data from the sql file generated by</span>
+<span class="sd">    complete_mining. This will remove ALL previous graph data.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># Import SQL statements</span>
+    <span class="k">if</span> <span class="n">entity_type</span> <span class="o">==</span> <span class="n">Idea</span><span class="p">:</span>
+        <span class="n">table</span> <span class="o">=</span> <span class="s">&quot;idea_graph_edges&quot;</span>
+    <span class="k">elif</span> <span class="n">entity_type</span> <span class="o">==</span> <span class="n">Thinker</span><span class="p">:</span>
+        <span class="n">table</span> <span class="o">=</span> <span class="s">&quot;thinker_graph_edges&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">table</span> <span class="o">=</span> <span class="s">&quot;idea_thinker_graph_edges&quot;</span>
+
+    <span class="n">connection</span> <span class="o">=</span> <span class="n">Session</span><span class="o">.</span><span class="n">connection</span><span class="p">()</span>
+
+    <span class="k">print</span> <span class="s">&quot;deleting old graph information ...&quot;</span>
+    <span class="n">connection</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s">&quot;&quot;&quot;</span>
+<span class="s">    TRUNCATE TABLE </span><span class="si">%(table)s</span><span class="s">;</span>
+<span class="s">    &quot;&quot;&quot;</span> <span class="o">%</span> <span class="p">{</span><span class="s">&#39;filename&#39;</span> <span class="p">:</span> <span class="n">sql_filename</span><span class="p">,</span> <span class="s">&#39;table&#39;</span> <span class="p">:</span> <span class="n">table</span> <span class="p">})</span>
+    
+    <span class="k">print</span> <span class="s">&quot;inserting new graph information&quot;</span>
+    <span class="n">connection</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s">&quot;&quot;&quot;</span>
+<span class="s">    SET foreign_key_checks=0;</span>
+<span class="s">    LOCK TABLES </span><span class="si">%(table)s</span><span class="s"> WRITE;</span>
+<span class="s">    LOAD DATA INFILE &#39;</span><span class="si">%(filename)s</span><span class="s">&#39;</span>
+<span class="s">    INTO TABLE </span><span class="si">%(table)s</span><span class="s"></span>
+<span class="s">    FIELDS TERMINATED BY &#39;::&#39;</span>
+<span class="s">    : Only process article given. Use process_article function</span>
+<span class="s">        process_article(entity_type, occur_filename, corpus_root=corpus_root)</span>
+
+
+<span class="s">    (ante_id, cons_id, confidence, jweight, w</span>
+<span class="s">    UNLOCK TABLES;</span>
+<span class="s">    SET foreign_key_checks=1;</span>
+<span class="s">    &quot;&quot;&quot;</span> <span class="o">%</span> <span class="p">{</span><span class="s">&#39;filename&#39;</span> <span class="p">:</span> <span class="n">sql_filename</span><span class="p">,</span> <span class="s">&#39;table&#39;</span> <span class="p">:</span> <span class="n">table</span> <span class="p">})</span>
+    <span class="n">Session</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="mine_article"><a class="viewcode-back" href="../../../corpus.html#inpho.corpus.sep.mine_article">[docs]</a><span class="k">def</span> <span class="nf">mine_article</span><span class="p">(</span><span class="n">article</span><span class="p">,</span> <span class="n">entity_type</span><span class="o">=</span><span class="n">Idea</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="s">&#39;graph.txt&#39;</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="s">&#39;./&#39;</span><span class="p">,</span>
+                 <span class="n">corpus_root</span><span class="o">=</span><span class="s">&#39;corpus/&#39;</span><span class="p">,</span> <span class="n">update_entropy</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                 <span class="n">update_occurrences</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">update_db</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span> 
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Performs the data mining for a single article. Does not generate edge data</span>
+<span class="sd">    using the frequent itemset mining algorithm or term entropy. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;mining article: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">article</span><span class="p">)</span>
+
+    <span class="n">occur_filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">inpho</span><span class="o">.</span><span class="n">corpus</span><span class="o">.</span><span class="n">occur_path</span><span class="p">,</span> <span class="n">article</span><span class="p">))</span>
+    <span class="n">sql_filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">inpho</span><span class="o">.</span><span class="n">corpus</span><span class="o">.</span><span class="n">sql_path</span><span class="p">,</span> <span class="n">article</span><span class="p">))</span>
+
+    <span class="n">doc_terms</span> <span class="o">=</span> <span class="n">doc_terms_list</span><span class="p">()</span>
+   
+    <span class="k">print</span> <span class="s">&quot;processing &quot;</span> <span class="o">+</span> <span class="n">article</span> <span class="o">+</span> <span class="s">&quot;...&quot;</span>
+    <span class="n">process_article</span><span class="p">(</span><span class="n">article</span><span class="p">,</span> <span class="n">entity_type</span><span class="o">=</span><span class="n">entity_type</span><span class="p">,</span>
+                    <span class="n">output_filename</span><span class="o">=</span><span class="n">occur_filename</span><span class="p">,</span> <span class="n">corpus_root</span><span class="o">=</span><span class="n">corpus_root</span><span class="p">)</span>
+
+    <span class="c"># This will create a python dictionary of dictionary from the occur file.</span>
+    <span class="n">occurrences</span> <span class="o">=</span> <span class="n">dm</span><span class="o">.</span><span class="n">occurs_in</span><span class="p">(</span><span class="n">occur_filename</span><span class="p">,</span> <span class="n">doc_terms</span><span class="p">)</span>
+
+    <span class="n">update_partial_graph</span><span class="p">(</span><span class="n">entity_type</span><span class="p">,</span> <span class="n">occurrences</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="update_partial_graph"><a class="viewcode-back" href="../../../corpus.html#inpho.corpus.sep.update_partial_graph">[docs]</a><span class="k">def</span> <span class="nf">update_partial_graph</span><span class="p">(</span><span class="n">entity_type</span><span class="p">,</span> <span class="n">occurrences</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Takes an entity type and a SQL filename and only updates part of the graph.</span>
+<span class="sd">    For use with single article statistical information.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="c"># Import SQL statements</span>
+    <span class="k">if</span> <span class="n">entity_type</span> <span class="o">==</span> <span class="n">Idea</span><span class="p">:</span>
+        <span class="n">table</span> <span class="o">=</span> <span class="s">&quot;idea_graph_edges&quot;</span>
+        <span class="nb">type</span> <span class="o">=</span> <span class="n">IdeaGraphEdge</span>
+    <span class="k">elif</span> <span class="n">entity_type</span> <span class="o">==</span> <span class="n">Thinker</span><span class="p">:</span>
+        <span class="n">table</span> <span class="o">=</span> <span class="s">&quot;thinker_graph_edges&quot;</span>
+        <span class="nb">type</span> <span class="o">=</span> <span class="n">ThinkerGraphEdge</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">table</span> <span class="o">=</span> <span class="s">&quot;idea_thinker_graph_edges&quot;</span>
+        <span class="nb">type</span> <span class="o">=</span> <span class="n">IdeaThinkerGraphEdge</span>
+
+    <span class="n">edges</span> <span class="o">=</span> <span class="n">Session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="nb">type</span><span class="p">)</span>
+    <span class="c"># filter edges query to only the key term</span>
+
+    <span class="k">for</span> <span class="n">ante</span><span class="p">,</span> <span class="n">occurs</span> <span class="ow">in</span> <span class="n">occurrences</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">cons</span><span class="p">,</span> <span class="n">occurs_in</span> <span class="ow">in</span> <span class="n">occurs</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+            <span class="c"># select the proper edge from result set</span>
+            <span class="c"># if edge does not exist, create it and add to session</span>
+            
+            <span class="c">#update edge</span>
+            <span class="n">edge</span><span class="o">.</span><span class="n">occurs_in</span> <span class="o">=</span> <span class="n">occurs_in</span>
+
+    <span class="c"># commit changes</span>
+    <span class="n">Session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+</div>
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">inpho.corpus</span>
+    <span class="n">corpus_root</span> <span class="o">=</span> <span class="n">inpho</span><span class="o">.</span><span class="n">corpus</span><span class="o">.</span><span class="n">path</span>
+
+    <span class="kn">from</span> <span class="nn">optparse</span> <span class="kn">import</span> <span class="n">OptionParser</span>
+
+    <span class="n">usage</span> <span class="o">=</span> <span class="s">&quot;usage: %prog [options] config_file&quot;</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">OptionParser</span><span class="p">(</span><span class="n">usage</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">set_defaults</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="s">&#39;all&#39;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s">&#39;complete&#39;</span><span class="p">,</span> <span class="n">update_entropy</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                        <span class="n">update_occurrences</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">update_db</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">article</span><span class="o">=</span><span class="bp">None</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span><span class="s">&quot;-a&quot;</span><span class="p">,</span> <span class="s">&quot;--all&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store_const&quot;</span><span class="p">,</span>
+                      <span class="n">dest</span><span class="o">=</span><span class="s">&#39;type&#39;</span><span class="p">,</span> <span class="n">const</span><span class="o">=</span><span class="s">&#39;all&#39;</span><span class="p">,</span>
+                      <span class="n">help</span><span class="o">=</span><span class="s">&quot;mine all edges [default]&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span><span class="s">&quot;-i&quot;</span><span class="p">,</span> <span class="s">&quot;--idea&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store_const&quot;</span><span class="p">,</span>
+                      <span class="n">dest</span><span class="o">=</span><span class="s">&#39;type&#39;</span><span class="p">,</span> <span class="n">const</span><span class="o">=</span><span class="s">&#39;idea&#39;</span><span class="p">,</span>
+                      <span class="n">help</span><span class="o">=</span><span class="s">&quot;mine only idea-idea edges&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span><span class="s">&quot;-t&quot;</span><span class="p">,</span> <span class="s">&quot;--thinker&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store_const&quot;</span><span class="p">,</span>
+                      <span class="n">dest</span><span class="o">=</span><span class="s">&#39;type&#39;</span><span class="p">,</span> <span class="n">const</span><span class="o">=</span><span class="s">&#39;thinker&#39;</span><span class="p">,</span>
+                      <span class="n">help</span><span class="o">=</span><span class="s">&quot;mine only thinker-thinker edges&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span><span class="s">&quot;--complete&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store_const&quot;</span><span class="p">,</span>
+                      <span class="n">dest</span><span class="o">=</span><span class="s">&#39;mode&#39;</span><span class="p">,</span> <span class="n">const</span><span class="o">=</span><span class="s">&#39;complete&#39;</span><span class="p">,</span>
+                      <span class="n">help</span><span class="o">=</span><span class="s">&quot;complete data mining process [default]&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span><span class="s">&quot;--update-db&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store_true&quot;</span><span class="p">,</span>
+                      <span class="n">dest</span><span class="o">=</span><span class="s">&#39;update_db&#39;</span><span class="p">,</span>
+                      <span class="n">help</span><span class="o">=</span><span class="s">&quot;updates the database with results&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span><span class="s">&quot;--entropy&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store_true&quot;</span><span class="p">,</span>
+                      <span class="n">dest</span><span class="o">=</span><span class="s">&#39;update_entropy&#39;</span><span class="p">,</span>
+                      <span class="n">help</span><span class="o">=</span><span class="s">&quot;data mining, with entropy updates&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span><span class="s">&quot;--with-occur&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store_true&quot;</span><span class="p">,</span>
+                      <span class="n">dest</span><span class="o">=</span><span class="s">&#39;update_occurrences&#39;</span><span class="p">,</span>
+                      <span class="n">help</span><span class="o">=</span><span class="s">&quot;data mining, with occurrence file generation&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span><span class="s">&quot;--occur&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store_const&quot;</span><span class="p">,</span>
+                      <span class="n">dest</span><span class="o">=</span><span class="s">&#39;mode&#39;</span><span class="p">,</span> <span class="n">const</span><span class="o">=</span><span class="s">&#39;occur&#39;</span><span class="p">,</span>
+                      <span class="n">help</span><span class="o">=</span><span class="s">&quot;occurrence file generation&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span><span class="s">&quot;--load&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store_const&quot;</span><span class="p">,</span>
+                      <span class="n">dest</span><span class="o">=</span><span class="s">&#39;mode&#39;</span><span class="p">,</span> <span class="n">const</span><span class="o">=</span><span class="s">&#39;load&#39;</span><span class="p">,</span>
+                      <span class="n">help</span><span class="o">=</span><span class="s">&quot;load data from sql files&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span><span class="s">&quot;--new&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store_const&quot;</span><span class="p">,</span>
+                      <span class="n">dest</span><span class="o">=</span><span class="s">&#39;mode&#39;</span><span class="p">,</span> <span class="n">const</span><span class="o">=</span><span class="s">&#39;new_entries&#39;</span><span class="p">,</span>
+                      <span class="n">help</span><span class="o">=</span><span class="s">&quot;print a list of new entries&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span><span class="s">&quot;--entry&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&#39;article&#39;</span><span class="p">,</span>
+                      <span class="n">help</span><span class="o">=</span><span class="s">&quot;process a single article&quot;</span><span class="p">)</span>
+    <span class="n">options</span><span class="p">,</span> <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+
+    <span class="n">filename_root</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">type</span>
+
+    <span class="k">if</span> <span class="n">options</span><span class="o">.</span><span class="n">article</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">options</span><span class="o">.</span><span class="n">mode</span> <span class="o">=</span> <span class="s">&#39;single&#39;</span>
+
+    <span class="n">entity_type</span> <span class="o">=</span> <span class="n">Entity</span>
+    <span class="k">if</span> <span class="n">options</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s">&#39;idea&#39;</span><span class="p">:</span>
+        <span class="n">entity_type</span> <span class="o">=</span> <span class="n">Idea</span>
+    <span class="k">elif</span> <span class="n">options</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s">&#39;thinker&#39;</span><span class="p">:</span>
+        <span class="n">entity_type</span> <span class="o">=</span> <span class="n">Thinker</span>
+    
+    <span class="k">if</span> <span class="n">options</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s">&#39;complete&#39;</span><span class="p">:</span>
+        <span class="n">complete_mining</span><span class="p">(</span><span class="n">entity_type</span><span class="p">,</span> 
+                        <span class="n">filename</span><span class="o">=</span><span class="n">filename_root</span><span class="p">,</span> 
+                        <span class="n">corpus_root</span><span class="o">=</span><span class="n">corpus_root</span><span class="p">,</span> 
+                        <span class="n">update_entropy</span><span class="o">=</span><span class="n">options</span><span class="o">.</span><span class="n">update_entropy</span><span class="p">,</span>
+                        <span class="n">update_occurrences</span><span class="o">=</span><span class="n">options</span><span class="o">.</span><span class="n">update_occurrences</span><span class="p">,</span>
+                        <span class="n">update_db</span><span class="o">=</span><span class="n">options</span><span class="o">.</span><span class="n">update_db</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">options</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s">&#39;single&#39;</span><span class="p">:</span>
+        <span class="n">mine_article</span><span class="p">(</span><span class="n">options</span><span class="o">.</span><span class="n">article</span><span class="p">,</span>
+                     <span class="n">entity_type</span><span class="p">,</span>
+                     <span class="n">filename</span><span class="o">=</span><span class="n">filename_root</span><span class="p">,</span> 
+                     <span class="n">corpus_root</span><span class="o">=</span><span class="n">corpus_root</span><span class="p">,</span> 
+                     <span class="n">update_entropy</span><span class="o">=</span><span class="n">options</span><span class="o">.</span><span class="n">update_entropy</span><span class="p">,</span>
+                     <span class="n">update_occurrences</span><span class="o">=</span><span class="n">options</span><span class="o">.</span><span class="n">update_occurrences</span><span class="p">,</span>
+                     <span class="n">update_db</span><span class="o">=</span><span class="n">options</span><span class="o">.</span><span class="n">update_db</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">options</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s">&#39;load&#39;</span><span class="p">:</span>
+        <span class="n">sql_filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">corpus_root</span> <span class="o">+</span> <span class="s">&quot;sql-&quot;</span> <span class="o">+</span> <span class="n">filename_root</span><span class="p">)</span>
+        <span class="n">update_graph</span><span class="p">(</span><span class="n">entity_type</span><span class="p">,</span> <span class="n">sql_filename</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">options</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s">&#39;occur&#39;</span><span class="p">:</span>
+        <span class="n">occur_filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="s">&quot;./occurrences.txt&quot;</span><span class="p">)</span>
+        <span class="n">process_articles</span><span class="p">(</span><span class="n">entity_type</span><span class="p">,</span> <span class="n">occur_filename</span><span class="p">,</span> <span class="n">corpus_root</span><span class="o">=</span><span class="n">corpus_root</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">options</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s">&#39;new_entries&#39;</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">new_entries</span><span class="p">():</span>
+            <span class="k">print</span> <span class="n">entry</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">InPhO v1.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Indiana University.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.8.
+    </div>
+  </body>
+</html>

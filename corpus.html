@@ -1,0 +1,322 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>corpus Documentation &mdash; InPhO v1.0 documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="InPhO v1.0 documentation" href="index.html" />
+    <link rel="next" title="dlv Documentation" href="dlv.html" />
+    <link rel="prev" title="Welcome to InPhO’s documentation!" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="dlv.html" title="dlv Documentation"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to InPhO’s documentation!"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">InPhO v1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="corpus-documentation">
+<h1>corpus Documentation<a class="headerlink" href="#corpus-documentation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-inpho.corpus.fuzzymatch">
+<span id="fuzzymatch"></span><h2>fuzzymatch<a class="headerlink" href="#module-inpho.corpus.fuzzymatch" title="Permalink to this headline">¶</a></h2>
+<p>Library for performing fuzzymatches and search pattern construction.</p>
+<p>When a new SEP article is published, an attempt is made to match article titles
+with a pre-existing InPhO Entity for use with the data mining. To do this we use
+fuzzymatching to search for variations in spellings.</p>
+<p>We also have processing functions for handling search strings with union and
+intersection clauses, covering such broad searches as &#8216;philosophies of the
+particular sciences&#8217;.</p>
+<p>The methods in this file could use significant attention, as they are mostly
+extracted from their context in a legacy interface.</p>
+<dl class="function">
+<dt id="inpho.corpus.fuzzymatch.convertSS">
+<tt class="descclassname">inpho.corpus.fuzzymatch.</tt><tt class="descname">convertSS</tt><big>(</big><em>choicestring</em>, <em>ioru</em><big>)</big><a class="reference internal" href="_modules/inpho/corpus/fuzzymatch.html#convertSS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#inpho.corpus.fuzzymatch.convertSS" title="Permalink to this definition">¶</a></dt>
+<dd><p>takes one of the output choices from setup_SSL(), as well as whether we are dealing with intersection or union
+returns a pair of string&#8211;[searchstring, searchpattern]
+where relevant, assume union by default (e.g. if ioru = anything other than &#8216;i&#8217;, union is implemented)
+get first three characters of string to see which option from setup_SSL() we have
+eventually replace choicestring in output with output from Jaimie&#8217;s function</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="inpho.corpus.fuzzymatch.fuzzymatch">
+<tt class="descclassname">inpho.corpus.fuzzymatch.</tt><tt class="descname">fuzzymatch</tt><big>(</big><em>string1</em>, <em>string2</em><big>)</big><a class="reference internal" href="_modules/inpho/corpus/fuzzymatch.html#fuzzymatch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#inpho.corpus.fuzzymatch.fuzzymatch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes two strings and performs a fuzzymatch on them. 
+Returns a (confidence, distance) tuple.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="inpho.corpus.fuzzymatch.fuzzymatch_all">
+<tt class="descclassname">inpho.corpus.fuzzymatch.</tt><tt class="descname">fuzzymatch_all</tt><big>(</big><em>string1</em><big>)</big><a class="reference internal" href="_modules/inpho/corpus/fuzzymatch.html#fuzzymatch_all"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#inpho.corpus.fuzzymatch.fuzzymatch_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes a string and returns all potential fuzzymatches from the Entity
+database. Matches are returned as a list of (entity,confidence) tuples.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-inpho.corpus.sep">
+<span id="sep"></span><h2>sep<a class="headerlink" href="#module-inpho.corpus.sep" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="inpho.corpus.sep.complete_mining">
+<tt class="descclassname">inpho.corpus.sep.</tt><tt class="descname">complete_mining</tt><big>(</big><em>entity_type=&lt;class 'inpho.model.idea.Idea'&gt;</em>, <em>filename='graph.txt'</em>, <em>root='./'</em>, <em>corpus_root='corpus/'</em>, <em>update_entropy=False</em>, <em>update_occurrences=False</em>, <em>update_db=False</em><big>)</big><a class="reference internal" href="_modules/inpho/corpus/sep.html#complete_mining"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#inpho.corpus.sep.complete_mining" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="inpho.corpus.sep.doc_terms_list">
+<tt class="descclassname">inpho.corpus.sep.</tt><tt class="descname">doc_terms_list</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/inpho/corpus/sep.html#doc_terms_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#inpho.corpus.sep.doc_terms_list" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="inpho.corpus.sep.extract_article_body">
+<tt class="descclassname">inpho.corpus.sep.</tt><tt class="descname">extract_article_body</tt><big>(</big><em>filename</em><big>)</big><a class="reference internal" href="_modules/inpho/corpus/sep.html#extract_article_body"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#inpho.corpus.sep.extract_article_body" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extracts the article body from the SEP article at the given filename. Some
+error handling is done to guarantee that this function returns at least the
+empty string. Check the error log.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="inpho.corpus.sep.filter_apriori_input">
+<tt class="descclassname">inpho.corpus.sep.</tt><tt class="descname">filter_apriori_input</tt><big>(</big><em>occur_filename</em>, <em>output_filename</em>, <em>entity_type=&lt;class 'inpho.model.idea.Idea'&gt;</em>, <em>doc_terms=None</em><big>)</big><a class="reference internal" href="_modules/inpho/corpus/sep.html#filter_apriori_input"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#inpho.corpus.sep.filter_apriori_input" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="inpho.corpus.sep.fuzzymatch_new">
+<tt class="descclassname">inpho.corpus.sep.</tt><tt class="descname">fuzzymatch_new</tt><big>(</big><big>)</big><a class="headerlink" href="#inpho.corpus.sep.fuzzymatch_new" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes the fuzzymatch data to the cache specified in the config file.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="inpho.corpus.sep.get_title">
+<tt class="descclassname">inpho.corpus.sep.</tt><tt class="descname">get_title</tt><big>(</big><em>sep_dir</em><big>)</big><a class="reference internal" href="_modules/inpho/corpus/sep.html#get_title"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#inpho.corpus.sep.get_title" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the title for the given sep_dir</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="inpho.corpus.sep.get_titles">
+<tt class="descclassname">inpho.corpus.sep.</tt><tt class="descname">get_titles</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/inpho/corpus/sep.html#get_titles"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#inpho.corpus.sep.get_titles" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a dictionary of { sep_dir : title } pairs.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="inpho.corpus.sep.mine_article">
+<tt class="descclassname">inpho.corpus.sep.</tt><tt class="descname">mine_article</tt><big>(</big><em>article</em>, <em>entity_type=&lt;class 'inpho.model.idea.Idea'&gt;</em>, <em>filename='graph.txt'</em>, <em>root='./'</em>, <em>corpus_root='corpus/'</em>, <em>update_entropy=False</em>, <em>update_occurrences=False</em>, <em>update_db=False</em><big>)</big><a class="reference internal" href="_modules/inpho/corpus/sep.html#mine_article"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#inpho.corpus.sep.mine_article" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs the data mining for a single article. Does not generate edge data
+using the frequent itemset mining algorithm or term entropy.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="inpho.corpus.sep.new_entries">
+<tt class="descclassname">inpho.corpus.sep.</tt><tt class="descname">new_entries</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/inpho/corpus/sep.html#new_entries"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#inpho.corpus.sep.new_entries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of all entries which do not have a corresponding InPhO Entity.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="inpho.corpus.sep.process_article">
+<tt class="descclassname">inpho.corpus.sep.</tt><tt class="descname">process_article</tt><big>(</big><em>article</em>, <em>terms=None</em>, <em>entity_type=&lt;class 'inpho.model.idea.Idea'&gt;</em>, <em>output_filename=None</em>, <em>corpus_root='corpus/'</em><big>)</big><a class="reference internal" href="_modules/inpho/corpus/sep.html#process_article"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#inpho.corpus.sep.process_article" title="Permalink to this definition">¶</a></dt>
+<dd><p>Processes a single article for apriori input.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="inpho.corpus.sep.process_articles">
+<tt class="descclassname">inpho.corpus.sep.</tt><tt class="descname">process_articles</tt><big>(</big><em>entity_type=&lt;class 'inpho.model.entity.Entity'&gt;</em>, <em>output_filename='output-all.txt'</em>, <em>corpus_root='corpus/'</em><big>)</big><a class="reference internal" href="_modules/inpho/corpus/sep.html#process_articles"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#inpho.corpus.sep.process_articles" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="inpho.corpus.sep.process_wrapper">
+<tt class="descclassname">inpho.corpus.sep.</tt><tt class="descname">process_wrapper</tt><big>(</big><em>args</em><big>)</big><a class="reference internal" href="_modules/inpho/corpus/sep.html#process_wrapper"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#inpho.corpus.sep.process_wrapper" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper function for article processing. Necessary for multiprocessing
+module support. See: <a class="reference external" href="http://docs.python.org/library/multiprocessing.html#multiprocessing.pool.multiprocessing.Pool.map">http://docs.python.org/library/multiprocessing.html#multiprocessing.pool.multiprocessing.Pool.map</a></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="inpho.corpus.sep.published">
+<tt class="descclassname">inpho.corpus.sep.</tt><tt class="descname">published</tt><big>(</big><em>sep_dir</em>, <em>log_root=None</em><big>)</big><a class="reference internal" href="_modules/inpho/corpus/sep.html#published"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#inpho.corpus.sep.published" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if the given article is published.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="inpho.corpus.sep.select_terms">
+<tt class="descclassname">inpho.corpus.sep.</tt><tt class="descname">select_terms</tt><big>(</big><em>entity_type=&lt;class 'inpho.model.idea.Idea'&gt;</em><big>)</big><a class="reference internal" href="_modules/inpho/corpus/sep.html#select_terms"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#inpho.corpus.sep.select_terms" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of all terms of a given entity type.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="inpho.corpus.sep.update_graph">
+<tt class="descclassname">inpho.corpus.sep.</tt><tt class="descname">update_graph</tt><big>(</big><em>entity_type</em>, <em>sql_filename</em><big>)</big><a class="reference internal" href="_modules/inpho/corpus/sep.html#update_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#inpho.corpus.sep.update_graph" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs a complete update of the database graph information, adding
+jweight, entropy and occurrence data from the sql file generated by
+complete_mining. This will remove ALL previous graph data.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="inpho.corpus.sep.update_partial_graph">
+<tt class="descclassname">inpho.corpus.sep.</tt><tt class="descname">update_partial_graph</tt><big>(</big><em>entity_type</em>, <em>occurrences</em><big>)</big><a class="reference internal" href="_modules/inpho/corpus/sep.html#update_partial_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#inpho.corpus.sep.update_partial_graph" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes an entity type and a SQL filename and only updates part of the graph.
+For use with single article statistical information.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-inpho.corpus.stats">
+<span id="stats"></span><h2>stats<a class="headerlink" href="#module-inpho.corpus.stats" title="Permalink to this headline">¶</a></h2>
+<p>Module containing statistical methods for the InPhO data mining process.</p>
+<dl class="function">
+<dt id="inpho.corpus.stats.apriori">
+<tt class="descclassname">inpho.corpus.stats.</tt><tt class="descname">apriori</tt><big>(</big><em>input_filename='output.txt'</em>, <em>output_filename='edges.txt'</em><big>)</big><a class="reference internal" href="_modules/inpho/corpus/stats.html#apriori"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#inpho.corpus.stats.apriori" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="inpho.corpus.stats.calculate_edge_weight">
+<tt class="descclassname">inpho.corpus.stats.</tt><tt class="descname">calculate_edge_weight</tt><big>(</big><em>edges</em>, <em>ents</em><big>)</big><a class="reference internal" href="_modules/inpho/corpus/stats.html#calculate_edge_weight"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#inpho.corpus.stats.calculate_edge_weight" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="inpho.corpus.stats.calculate_node_entropy">
+<tt class="descclassname">inpho.corpus.stats.</tt><tt class="descname">calculate_node_entropy</tt><big>(</big><em>edges</em><big>)</big><a class="reference internal" href="_modules/inpho/corpus/stats.html#calculate_node_entropy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#inpho.corpus.stats.calculate_node_entropy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="inpho.corpus.stats.get_document_occurrences">
+<tt class="descclassname">inpho.corpus.stats.</tt><tt class="descname">get_document_occurrences</tt><big>(</big><em>document</em>, <em>terms</em><big>)</big><a class="reference internal" href="_modules/inpho/corpus/stats.html#get_document_occurrences"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#inpho.corpus.stats.get_document_occurrences" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of terms occuring in the document. 
+Semantically equivalent to [term for term in terms if term in document]</p>
+<p>Primarily used by <a class="reference internal" href="#inpho.corpus.stats.get_sentence_occurrences" title="inpho.corpus.stats.get_sentence_occurrences"><tt class="xref py py-func docutils literal"><span class="pre">get_sentence_occurrences()</span></tt></a>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="inpho.corpus.stats.get_sentence_occurrences">
+<tt class="descclassname">inpho.corpus.stats.</tt><tt class="descname">get_sentence_occurrences</tt><big>(</big><em>document</em>, <em>terms</em>, <em>terms_present=None</em>, <em>remove_overlap=False</em>, <em>remove_duplicates=False</em><big>)</big><a class="reference internal" href="_modules/inpho/corpus/stats.html#get_sentence_occurrences"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#inpho.corpus.stats.get_sentence_occurrences" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of lists representing the terms occuring in each sentence.
+Semantically equivalent to: 
+[[term for term in terms if term in sent] for sent in document]</p>
+<p>Order of optional operations is: remove duplicates, remove overlap, 
+add doc terms, remove duplicate doc terms</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="inpho.corpus.stats.occurrences">
+<tt class="descclassname">inpho.corpus.stats.</tt><tt class="descname">occurrences</tt><big>(</big><em>document</em>, <em>terms</em>, <em>title=None</em>, <em>remove_overlap=False</em>, <em>format_for_file=False</em>, <em>output_filename=None</em><big>)</big><a class="reference internal" href="_modules/inpho/corpus/stats.html#occurrences"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#inpho.corpus.stats.occurrences" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="inpho.corpus.stats.occurs_in">
+<tt class="descclassname">inpho.corpus.stats.</tt><tt class="descname">occurs_in</tt><big>(</big><em>occur_filename='occurrences.txt'</em>, <em>doc_terms=None</em><big>)</big><a class="reference internal" href="_modules/inpho/corpus/stats.html#occurs_in"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#inpho.corpus.stats.occurs_in" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="inpho.corpus.stats.prepare_apriori_input">
+<tt class="descclassname">inpho.corpus.stats.</tt><tt class="descname">prepare_apriori_input</tt><big>(</big><em>occurrence_filename</em>, <em>terms</em>, <em>doc_terms=None</em><big>)</big><a class="reference internal" href="_modules/inpho/corpus/stats.html#prepare_apriori_input"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#inpho.corpus.stats.prepare_apriori_input" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prepares &#8220;shopping basket&#8221; input for the apriori miner from a file of
+sentence-lvel occurrences.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="inpho.corpus.stats.process_edges">
+<tt class="descclassname">inpho.corpus.stats.</tt><tt class="descname">process_edges</tt><big>(</big><em>graph_filename='output.txt'</em>, <em>edges_filename='edges.txt'</em>, <em>occur_filename='occurrences.txt'</em>, <em>doc_terms=None</em><big>)</big><a class="reference internal" href="_modules/inpho/corpus/stats.html#process_edges"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#inpho.corpus.stats.process_edges" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">corpus Documentation</a><ul>
+<li><a class="reference internal" href="#module-inpho.corpus.fuzzymatch">fuzzymatch</a></li>
+<li><a class="reference internal" href="#module-inpho.corpus.sep">sep</a></li>
+<li><a class="reference internal" href="#module-inpho.corpus.stats">stats</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Welcome to InPhO&#8217;s documentation!</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="dlv.html"
+                        title="next chapter">dlv Documentation</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/corpus.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="dlv.html" title="dlv Documentation"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to InPhO’s documentation!"
+             >previous</a> |</li>
+        <li><a href="index.html">InPhO v1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Indiana University.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.8.
+    </div>
+  </body>
+</html>

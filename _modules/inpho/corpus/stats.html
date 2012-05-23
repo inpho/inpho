@@ -1,0 +1,350 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>inpho.corpus.stats &mdash; InPhO v1.0 documentation</title>
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="InPhO v1.0 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">InPhO v1.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for inpho.corpus.stats</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Module containing statistical methods for the InPhO data mining process.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+
+<span class="c"># http://nltk.googlecode.com/svn/trunk/doc/api/nltk.tokenize.punkt.PunktSentenceTokenizer-class.html</span>
+<span class="kn">from</span> <span class="nn">nltk.tokenize</span> <span class="kn">import</span> <span class="n">PunktSentenceTokenizer</span> <span class="k">as</span> <span class="n">Tokenizer</span>
+
+<span class="kn">from</span> <span class="nn">inpho</span> <span class="kn">import</span> <span class="n">config</span>
+
+<div class="viewcode-block" id="get_document_occurrences"><a class="viewcode-back" href="../../../corpus.html#inpho.corpus.stats.get_document_occurrences">[docs]</a><span class="k">def</span> <span class="nf">get_document_occurrences</span><span class="p">(</span><span class="n">document</span><span class="p">,</span> <span class="n">terms</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns a list of terms occuring in the document. </span>
+<span class="sd">    Semantically equivalent to [term for term in terms if term in document]</span>
+
+<span class="sd">    Primarily used by :func:`get_sentence_occurrences()`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">occurrences</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="c"># iterate over terms to be scanned</span>
+    <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">terms</span><span class="p">:</span>
+        <span class="c"># build list of search patterns starting with label</span>
+        <span class="n">patterns</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;</span><span class="se">\b</span><span class="si">%s</span><span class="se">\b</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">term</span><span class="o">.</span><span class="n">label</span><span class="p">]</span>
+        <span class="n">patterns</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">term</span><span class="o">.</span><span class="n">searchpatterns</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">pattern</span> <span class="ow">in</span> <span class="n">patterns</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">document</span><span class="p">,</span> <span class="n">flags</span><span class="o">=</span><span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">):</span>
+                    <span class="n">occurrences</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">term</span><span class="p">)</span>
+                    <span class="k">break</span>
+            <span class="k">except</span> <span class="n">re</span><span class="o">.</span><span class="n">error</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s">&#39;Term </span><span class="si">%d</span><span class="s"> (</span><span class="si">%s</span><span class="s">) pattern &quot;</span><span class="si">%s</span><span class="s">&quot; failed&#39;</span> <span class="o">%</span> 
+                                <span class="p">(</span><span class="n">term</span><span class="o">.</span><span class="n">ID</span><span class="p">,</span> <span class="n">term</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="n">pattern</span><span class="p">))</span>
+                <span class="n">term</span><span class="o">.</span><span class="n">searchpatterns</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">occurrences</span>
+</div>
+<div class="viewcode-block" id="get_sentence_occurrences"><a class="viewcode-back" href="../../../corpus.html#inpho.corpus.stats.get_sentence_occurrences">[docs]</a><span class="k">def</span> <span class="nf">get_sentence_occurrences</span><span class="p">(</span><span class="n">document</span><span class="p">,</span> <span class="n">terms</span><span class="p">,</span> <span class="n">terms_present</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> 
+                             <span class="n">remove_overlap</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">remove_duplicates</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns a list of lists representing the terms occuring in each sentence.</span>
+<span class="sd">    Semantically equivalent to: </span>
+<span class="sd">    [[term for term in terms if term in sent] for sent in document]</span>
+
+<span class="sd">    Order of optional operations is: remove duplicates, remove overlap, </span>
+<span class="sd">    add doc terms, remove duplicate doc terms</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># get list of terms in the document to narrow sentence-level search</span>
+    <span class="k">if</span> <span class="n">terms_present</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">terms_present</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">get_document_occurrences</span><span class="p">(</span><span class="n">document</span><span class="p">,</span> <span class="n">terms</span><span class="p">))</span>
+
+    <span class="c"># Use a Tokenizer from NLTK to build a sentence list</span>
+    <span class="n">tokenizer</span> <span class="o">=</span> <span class="n">Tokenizer</span><span class="p">(</span><span class="n">document</span><span class="p">)</span>
+    <span class="n">sentences</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">tokenize</span><span class="p">(</span><span class="n">document</span><span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;scanning </span><span class="si">%d</span><span class="s"> sentences for </span><span class="si">%d</span><span class="s"> terms&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sentences</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">terms</span><span class="p">)))</span>
+    
+    <span class="c"># Create a list of lists containing the collection of terms which cooccurr</span>
+    <span class="c"># in a sentence</span>
+    <span class="n">occurrences</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">sentence</span> <span class="ow">in</span> <span class="n">sentences</span><span class="p">:</span>
+        <span class="n">sentence_occurrences</span> <span class="o">=</span> <span class="p">[]</span> 
+
+        <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">terms_present</span><span class="p">:</span>
+            <span class="c"># build list of search patterns starting with label</span>
+            <span class="n">patterns</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;</span><span class="se">\b</span><span class="si">%s</span><span class="se">\b</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">term</span><span class="o">.</span><span class="n">label</span><span class="p">]</span>
+            <span class="n">patterns</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">term</span><span class="o">.</span><span class="n">searchpatterns</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">pattern</span> <span class="ow">in</span> <span class="n">patterns</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="c"># search for any occurrence of term, stop when found</span>
+                    <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">sentence</span><span class="p">,</span> <span class="n">flags</span><span class="o">=</span><span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">):</span>
+                        <span class="n">sentence_occurrences</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">term</span><span class="p">)</span>
+                        <span class="k">break</span>
+                <span class="k">except</span> <span class="n">re</span><span class="o">.</span><span class="n">error</span><span class="p">:</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s">&#39;Term </span><span class="si">%d</span><span class="s"> (</span><span class="si">%s</span><span class="s">) pattern &quot;</span><span class="si">%s</span><span class="s">&quot; failed&#39;</span> <span class="o">%</span> 
+                                    <span class="p">(</span><span class="n">term</span><span class="o">.</span><span class="n">ID</span><span class="p">,</span> <span class="n">term</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="n">pattern</span><span class="p">))</span>
+                    <span class="n">term</span><span class="o">.</span><span class="n">searchpatterns</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span>
+
+        <span class="c"># remove duplicates</span>
+        <span class="k">if</span> <span class="n">remove_duplicates</span><span class="p">:</span>
+            <span class="n">sentence_occurrences</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">sentence_occurrences</span><span class="p">))</span>
+
+        <span class="c"># remove overlapping elements</span>
+        <span class="k">if</span> <span class="n">remove_overlap</span><span class="p">:</span>
+            <span class="n">to_remove</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+            
+            <span class="c"># build set of terms to remove</span>
+            <span class="k">for</span> <span class="n">inside</span> <span class="ow">in</span> <span class="n">sentence_occurrences</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">sentence_occurrences</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">term</span> <span class="o">!=</span> <span class="n">inside</span> <span class="ow">and</span>\
+                        <span class="n">inside</span><span class="o">.</span><span class="n">label</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">term</span><span class="o">.</span><span class="n">label</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                        <span class="n">to_remove</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">term</span><span class="p">)</span>
+
+            <span class="c"># remove terms</span>
+            <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">to_remove</span><span class="p">:</span>
+                <span class="n">sentence_occurrences</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">term</span><span class="p">)</span>
+
+        <span class="c"># add to list of sentences if any terms are found</span>
+        <span class="k">if</span> <span class="n">sentence_occurrences</span><span class="p">:</span>
+            <span class="n">occurrences</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sentence_occurrences</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">occurrences</span>
+</div>
+<div class="viewcode-block" id="occurrences"><a class="viewcode-back" href="../../../corpus.html#inpho.corpus.stats.occurrences">[docs]</a><span class="k">def</span> <span class="nf">occurrences</span><span class="p">(</span><span class="n">document</span><span class="p">,</span> <span class="n">terms</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">remove_overlap</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                <span class="n">format_for_file</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">output_filename</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="c"># grab document-level occurrences, reused in sentence occurrences and</span>
+    <span class="c"># summary sentence</span>
+    <span class="n">occurrences</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">get_document_occurrences</span><span class="p">(</span><span class="n">document</span><span class="p">,</span> <span class="n">terms</span><span class="p">))</span>
+
+    <span class="c"># grab sentence occurrences</span>
+    <span class="n">sentence_occurrences</span> <span class="o">=</span> <span class="n">get_sentence_occurrences</span><span class="p">(</span>
+        <span class="n">document</span><span class="p">,</span> <span class="n">terms</span><span class="p">,</span> <span class="n">terms_present</span><span class="o">=</span><span class="n">occurrences</span><span class="p">,</span>
+        <span class="n">remove_overlap</span><span class="o">=</span><span class="n">remove_overlap</span><span class="p">,</span> <span class="n">remove_duplicates</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">format_for_file</span><span class="p">:</span>
+        <span class="c"># return raw occurrences</span>
+        <span class="k">return</span> <span class="n">sentence_occurrences</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c"># format for file writing</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">sent_occur</span> <span class="ow">in</span> <span class="n">sentence_occurrences</span><span class="p">:</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">term</span><span class="o">.</span><span class="n">ID</span><span class="p">)</span> <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">sent_occur</span><span class="p">])</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="n">line</span> <span class="o">+</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span>
+            <span class="k">if</span> <span class="n">title</span><span class="p">:</span>
+                <span class="n">line</span> <span class="o">=</span> <span class="n">title</span> <span class="o">+</span> <span class="s">&#39; &#39;</span> <span class="o">+</span> <span class="n">line</span>
+            
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">output_filename</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">output_filename</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">writelines</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">lines</span>
+</div>
+<div class="viewcode-block" id="prepare_apriori_input"><a class="viewcode-back" href="../../../corpus.html#inpho.corpus.stats.prepare_apriori_input">[docs]</a><span class="k">def</span> <span class="nf">prepare_apriori_input</span><span class="p">(</span><span class="n">occurrence_filename</span><span class="p">,</span> <span class="n">terms</span><span class="p">,</span> <span class="n">doc_terms</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Prepares &quot;shopping basket&quot; input for the apriori miner from a file of</span>
+<span class="sd">    sentence-lvel occurrences.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="c"># build up terms, as they will occur in the file</span>
+    <span class="n">terms</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">term</span><span class="o">.</span><span class="n">ID</span><span class="p">)</span> <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">terms</span><span class="p">]</span>
+    <span class="n">summary</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">set</span><span class="p">)</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">occurrence_filename</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">lterms</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+            <span class="n">first</span> <span class="o">=</span> <span class="n">lterms</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>       <span class="c"># Save for doc_terms processing</span>
+
+            <span class="n">line</span> <span class="o">=</span> <span class="p">[</span><span class="n">term</span> <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">lterms</span> <span class="k">if</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">terms</span><span class="p">]</span>
+
+            <span class="c"># append doc_terms</span>
+            <span class="k">if</span> <span class="n">line</span> <span class="ow">and</span> <span class="n">doc_terms</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="c"># search for doc terms, remove duplicates, add to line</span>
+                <span class="n">key_terms</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">term</span><span class="o">.</span><span class="n">ID</span><span class="p">)</span> <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">doc_terms</span><span class="p">[</span><span class="n">first</span><span class="p">]]</span>
+                <span class="n">key_terms</span> <span class="o">=</span> <span class="p">[</span><span class="n">term</span> <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">key_terms</span> 
+                                 <span class="k">if</span> <span class="n">term</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">lterms</span> <span class="ow">and</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">terms</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">key_terms</span><span class="p">:</span>
+                    <span class="n">line</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">key_terms</span><span class="p">)</span>
+            
+            <span class="n">summary</span><span class="p">[</span><span class="n">first</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+
+            <span class="c"># do not add blank or singleton lines</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">line</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+                <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">line</span><span class="p">))</span>
+
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">summary</span><span class="o">.</span><span class="n">itervalues</span><span class="p">():</span>
+        <span class="n">line</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+        <span class="n">line</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">line</span><span class="p">))</span>
+    
+    <span class="k">return</span> <span class="n">lines</span>
+</div>
+<div class="viewcode-block" id="apriori"><a class="viewcode-back" href="../../../corpus.html#inpho.corpus.stats.apriori">[docs]</a><span class="k">def</span> <span class="nf">apriori</span><span class="p">(</span><span class="n">input_filename</span><span class="o">=</span><span class="s">&#39;output.txt&#39;</span><span class="p">,</span> <span class="n">output_filename</span><span class="o">=</span><span class="s">&#39;edges.txt&#39;</span><span class="p">):</span>
+    <span class="n">apriori_bin</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;corpus&#39;</span><span class="p">,</span> <span class="s">&#39;apriori_bin&#39;</span><span class="p">)</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="n">apriori_bin</span><span class="p">,</span> <span class="n">input_filename</span><span class="p">,</span> <span class="n">output_filename</span><span class="p">,</span>
+            <span class="s">&#39;0.00000000000000001&#39;</span><span class="p">,</span> <span class="s">&#39;0.00000000000000001&#39;</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="process_edges"><a class="viewcode-back" href="../../../corpus.html#inpho.corpus.stats.process_edges">[docs]</a><span class="k">def</span> <span class="nf">process_edges</span><span class="p">(</span><span class="n">graph_filename</span><span class="o">=</span><span class="s">&#39;output.txt&#39;</span><span class="p">,</span> <span class="n">edges_filename</span><span class="o">=</span><span class="s">&#39;edges.txt&#39;</span><span class="p">,</span>
+                  <span class="n">occur_filename</span><span class="o">=</span><span class="s">&#39;occurrences.txt&#39;</span><span class="p">,</span> <span class="n">doc_terms</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="c"># process occurrence and cooccurrence data</span>
+    <span class="n">graph</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">int</span><span class="p">))</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">graph_filename</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">ids</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+
+            <span class="k">for</span> <span class="n">ante</span> <span class="ow">in</span> <span class="n">ids</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">cons</span> <span class="ow">in</span> <span class="n">ids</span><span class="p">:</span>
+                    <span class="n">graph</span><span class="p">[</span><span class="n">ante</span><span class="p">][</span><span class="n">cons</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+    
+    <span class="n">occurrences</span> <span class="o">=</span> <span class="n">occurs_in</span><span class="p">(</span><span class="n">occur_filename</span><span class="p">,</span> <span class="n">doc_terms</span><span class="p">)</span>
+
+    <span class="n">edges</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">dict</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">edges_filename</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">ante</span><span class="p">,</span><span class="n">cons</span><span class="p">,</span><span class="n">confidence</span><span class="p">,</span><span class="n">jweight</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+            <span class="n">edges</span><span class="p">[(</span><span class="n">ante</span><span class="p">,</span><span class="n">cons</span><span class="p">)]</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;confidence&#39;</span><span class="p">:</span><span class="nb">float</span><span class="p">(</span><span class="n">confidence</span><span class="p">),</span> 
+                                  <span class="s">&#39;jweight&#39;</span><span class="p">:</span><span class="nb">float</span><span class="p">(</span><span class="n">jweight</span><span class="p">),</span>
+                                  <span class="s">&#39;occurs_in&#39;</span><span class="p">:</span><span class="n">occurrences</span><span class="p">[</span><span class="n">ante</span><span class="p">][</span><span class="n">cons</span><span class="p">],</span>
+                                  <span class="s">&#39;graph&#39;</span><span class="p">:</span><span class="n">graph</span><span class="p">[</span><span class="n">ante</span><span class="p">][</span><span class="n">cons</span><span class="p">]}</span>
+    <span class="k">return</span> <span class="n">edges</span>
+</div>
+<div class="viewcode-block" id="occurs_in"><a class="viewcode-back" href="../../../corpus.html#inpho.corpus.stats.occurs_in">[docs]</a><span class="k">def</span> <span class="nf">occurs_in</span><span class="p">(</span><span class="n">occur_filename</span><span class="o">=</span><span class="s">&#39;occurrences.txt&#39;</span><span class="p">,</span> <span class="n">doc_terms</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="n">occurrences</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">int</span><span class="p">))</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">occur_filename</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">lterms</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+            <span class="n">article</span> <span class="o">=</span> <span class="n">lterms</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="n">doc_terms</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">lterms</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+                    <span class="k">for</span> <span class="n">doc</span> <span class="ow">in</span> <span class="n">doc_terms</span><span class="p">[</span><span class="n">article</span><span class="p">]:</span>
+                        <span class="n">occurrences</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">doc</span><span class="o">.</span><span class="n">ID</span><span class="p">)][</span><span class="n">term</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">lterms</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+                    <span class="n">occurrences</span><span class="p">[</span><span class="n">article</span><span class="p">][</span><span class="n">term</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="n">occurrences</span>
+</div>
+<span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">log</span>
+<div class="viewcode-block" id="calculate_node_entropy"><a class="viewcode-back" href="../../../corpus.html#inpho.corpus.stats.calculate_node_entropy">[docs]</a><span class="k">def</span> <span class="nf">calculate_node_entropy</span><span class="p">(</span><span class="n">edges</span><span class="p">):</span>
+    <span class="n">probabilities</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">float</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">edge</span><span class="p">,</span><span class="n">properties</span> <span class="ow">in</span> <span class="n">edges</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+        <span class="n">ante</span><span class="p">,</span><span class="n">cons</span> <span class="o">=</span> <span class="n">edge</span>
+        <span class="n">probabilities</span><span class="p">[</span><span class="n">ante</span><span class="p">][</span><span class="n">cons</span><span class="p">]</span> <span class="o">=</span> <span class="n">properties</span><span class="p">[</span><span class="s">&#39;confidence&#39;</span><span class="p">]</span>
+    
+    <span class="n">ents</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">ante</span><span class="p">,</span><span class="n">conses</span> <span class="ow">in</span> <span class="n">probabilities</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+        <span class="n">total_prob</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">conses</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        <span class="n">normalized_probs</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="o">/</span> <span class="n">total_prob</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">conses</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
+
+        <span class="n">Hx</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="n">log</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">/</span> <span class="n">log</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">normalized_probs</span><span class="p">])</span>
+
+        <span class="n">ents</span><span class="p">[</span><span class="n">ante</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">Hx</span>
+
+    <span class="k">return</span> <span class="n">ents</span>
+</div>
+<div class="viewcode-block" id="calculate_edge_weight"><a class="viewcode-back" href="../../../corpus.html#inpho.corpus.stats.calculate_edge_weight">[docs]</a><span class="k">def</span> <span class="nf">calculate_edge_weight</span><span class="p">(</span><span class="n">edges</span><span class="p">,</span> <span class="n">ents</span><span class="p">):</span>
+    <span class="n">weights</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">ents</span><span class="p">:</span>
+        <span class="n">max_entropy</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">ents</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        <span class="k">for</span> <span class="n">edge</span><span class="p">,</span> <span class="n">properties</span> <span class="ow">in</span> <span class="n">edges</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+            <span class="n">ante</span><span class="p">,</span><span class="n">cons</span> <span class="o">=</span> <span class="n">edge</span>
+            <span class="n">entropy_diff</span> <span class="o">=</span> <span class="n">ents</span><span class="p">[</span><span class="n">ante</span><span class="p">]</span> <span class="o">-</span> <span class="n">ents</span><span class="p">[</span><span class="n">cons</span><span class="p">]</span>
+            <span class="n">entropy_norm</span> <span class="o">=</span> <span class="n">entropy_diff</span> <span class="o">/</span> <span class="n">max_entropy</span>
+            <span class="n">properties</span><span class="p">[</span><span class="s">&#39;weight&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">properties</span><span class="p">[</span><span class="s">&#39;jweight&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">entropy_norm</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">print</span> <span class="s">&quot;ERROR PROCESSING EDGES. NO ENTROPY VALUES.&quot;</span>
+
+    <span class="k">return</span> <span class="n">edges</span>    </div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">InPhO v1.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Indiana University.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.8.
+    </div>
+  </body>
+</html>

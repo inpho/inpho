@@ -1,0 +1,285 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>inpho.model.thinker &mdash; InPhO v1.0 documentation</title>
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="InPhO v1.0 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">InPhO v1.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for inpho.model.thinker</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">os.path</span>
+
+<span class="kn">from</span> <span class="nn">inpho.model.entity</span> <span class="kn">import</span> <span class="n">Entity</span>
+<span class="kn">from</span> <span class="nn">inpho.model.idea</span> <span class="kn">import</span> <span class="n">Idea</span>
+<span class="kn">import</span> <span class="nn">inpho.helpers</span>
+
+<span class="kn">from</span> <span class="nn">sqlalchemy.ext.associationproxy</span> <span class="kn">import</span> <span class="n">association_proxy</span>
+
+<div class="viewcode-block" id="Thinker"><a class="viewcode-back" href="../../../model.html#inpho.model.thinker.Thinker">[docs]</a><span class="k">class</span> <span class="nc">Thinker</span><span class="p">(</span><span class="n">Entity</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Simple Thinker class, has custom definitions for representation strings.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__setattr__</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&#39;&lt;Thinker </span><span class="si">%s</span><span class="s">: </span><span class="si">%s</span><span class="s">&gt;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ID</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Thinker.url"><a class="viewcode-back" href="../../../model.html#inpho.model.thinker.Thinker.url">[docs]</a>    <span class="k">def</span> <span class="nf">url</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filetype</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">inpho</span><span class="o">.</span><span class="n">helpers</span><span class="o">.</span><span class="n">url</span><span class="p">(</span><span class="n">controller</span><span class="o">=</span><span class="s">&quot;thinker&quot;</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ID</span><span class="p">,</span> 
+                                 <span class="n">action</span><span class="o">=</span><span class="n">action</span><span class="p">,</span> <span class="n">filetype</span><span class="o">=</span><span class="n">filetype</span><span class="p">)</span>
+</div>
+    <span class="n">aliases</span> <span class="o">=</span> <span class="n">association_proxy</span><span class="p">(</span><span class="s">&#39;alias&#39;</span><span class="p">,</span> <span class="s">&#39;value&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Thinker.json_struct"><a class="viewcode-back" href="../../../model.html#inpho.model.thinker.Thinker.json_struct">[docs]</a>    <span class="k">def</span> <span class="nf">json_struct</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sep_filter</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span><span class="n">extended</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">graph</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span><span class="n">glimit</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="n">struct</span> <span class="o">=</span> <span class="p">{</span> <span class="s">&#39;ID&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">ID</span><span class="p">,</span> 
+                  <span class="s">&#39;type&#39;</span> <span class="p">:</span> <span class="s">&#39;thinker&#39;</span><span class="p">,</span>
+                  <span class="s">&#39;label&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> 
+                  <span class="s">&#39;sep_dir&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">sep_dir</span><span class="p">,</span>
+                  <span class="s">&#39;url&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">()}</span>
+        <span class="k">if</span> <span class="n">extended</span><span class="p">:</span>
+            <span class="n">struct</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+                  <span class="s">&#39;aliases&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">aliases</span><span class="p">,</span>
+                  <span class="s">&#39;birth&#39;</span> <span class="p">:</span> <span class="p">{</span><span class="s">&#39;year&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">birth_year</span><span class="p">,</span>
+                             <span class="s">&#39;month&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">birth_month</span><span class="p">,</span>
+                             <span class="s">&#39;day&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">birth_day</span><span class="p">},</span>
+                  <span class="s">&#39;birth_string&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">birth_string</span><span class="p">,</span>
+                  <span class="s">&#39;death&#39;</span> <span class="p">:</span> <span class="p">{</span><span class="s">&#39;year&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">death_year</span><span class="p">,</span>
+                             <span class="s">&#39;month&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">death_month</span><span class="p">,</span>
+                             <span class="s">&#39;day&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">death_day</span><span class="p">},</span>
+                  <span class="s">&#39;death_string&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">death_string</span><span class="p">,</span>
+                  <span class="s">&#39;nationalities&#39;</span> <span class="p">:</span> <span class="p">[</span><span class="n">n</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">nationalities</span><span class="p">]</span> <span class="p">,</span>
+                  <span class="s">&#39;professions&#39;</span> <span class="p">:</span> <span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">professions</span><span class="p">]</span> <span class="p">,</span>
+                  <span class="s">&#39;teachers&#39;</span> <span class="p">:</span> <span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">ID</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">teachers</span><span class="p">],</span>
+                  <span class="s">&#39;students&#39;</span> <span class="p">:</span> <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">ID</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">students</span><span class="p">],</span>
+                  <span class="s">&#39;influenced_by&#39;</span> <span class="p">:</span> <span class="p">[</span><span class="n">i</span><span class="o">.</span><span class="n">ID</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">influenced_by</span><span class="p">],</span>
+                  <span class="s">&#39;influenced&#39;</span> <span class="p">:</span> <span class="p">[</span><span class="n">i</span><span class="o">.</span><span class="n">ID</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">influenced</span><span class="p">]})</span>
+            <span class="k">if</span> <span class="n">sep_filter</span><span class="p">:</span>
+                <span class="n">struct</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+                    <span class="s">&#39;related_ideas&#39;</span> <span class="p">:</span> <span class="p">[</span><span class="n">i</span><span class="o">.</span><span class="n">ID</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">related_ideas</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">Idea</span><span class="o">.</span><span class="n">sep_dir</span> <span class="o">!=</span> <span class="s">&#39;&#39;</span><span class="p">)[:</span><span class="n">limit</span><span class="o">-</span><span class="mi">1</span><span class="p">]]})</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">struct</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+                    <span class="s">&#39;related_ideas&#39;</span> <span class="p">:</span> <span class="p">[</span><span class="n">i</span><span class="o">.</span><span class="n">ID</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">related_ideas</span><span class="p">[:</span><span class="n">limit</span><span class="o">-</span><span class="mi">1</span><span class="p">]]})</span>
+
+
+        <span class="k">if</span> <span class="n">graph</span><span class="p">:</span>
+            <span class="n">struct</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+                <span class="s">&#39;it_in&#39;</span> <span class="p">:</span> <span class="p">[</span><span class="n">edge</span><span class="o">.</span><span class="n">json_struct</span><span class="p">()</span> 
+                               <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">it_in_edges</span><span class="p">[:</span><span class="n">glimit</span><span class="p">]],</span>
+                <span class="s">&#39;it_out&#39;</span> <span class="p">:</span> <span class="p">[</span><span class="n">edge</span><span class="o">.</span><span class="n">json_struct</span><span class="p">()</span> 
+                               <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">it_out_edges</span><span class="p">[:</span><span class="n">glimit</span><span class="p">]],</span>
+                <span class="s">&#39;tt_in&#39;</span> <span class="p">:</span> <span class="p">[</span><span class="n">edge</span><span class="o">.</span><span class="n">json_struct</span><span class="p">()</span> 
+                               <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tt_in_edges</span><span class="p">[:</span><span class="n">glimit</span><span class="p">]],</span>
+                <span class="s">&#39;tt_out&#39;</span> <span class="p">:</span> <span class="p">[</span><span class="n">edge</span><span class="o">.</span><span class="n">json_struct</span><span class="p">()</span> 
+                               <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tt_out_edges</span><span class="p">[:</span><span class="n">glimit</span><span class="p">]],</span>
+                <span class="p">})</span>
+
+        <span class="k">return</span> <span class="n">struct</span>
+</div>
+<div class="viewcode-block" id="Thinker.birth_sd"><a class="viewcode-back" href="../../../model.html#inpho.model.thinker.Thinker.birth_sd">[docs]</a>    <span class="k">def</span> <span class="nf">birth_sd</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">SplitDate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">birth_year</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">birth_month</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">birth_day</span><span class="p">)</span></div>
+<div class="viewcode-block" id="Thinker.death_sd"><a class="viewcode-back" href="../../../model.html#inpho.model.thinker.Thinker.death_sd">[docs]</a>    <span class="k">def</span> <span class="nf">death_sd</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">SplitDate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">death_year</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">death_month</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">death_day</span><span class="p">)</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Thinker.birth_string"><a class="viewcode-back" href="../../../model.html#inpho.model.thinker.Thinker.birth_string">[docs]</a>    <span class="k">def</span> <span class="nf">birth_string</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">birth_sd</span><span class="p">())</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Thinker.death_string"><a class="viewcode-back" href="../../../model.html#inpho.model.thinker.Thinker.death_string">[docs]</a>    <span class="k">def</span> <span class="nf">death_string</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">death_sd</span><span class="p">())</span>
+    </div>
+<div class="viewcode-block" id="Thinker.get_filename"><a class="viewcode-back" href="../../../model.html#inpho.model.thinker.Thinker.get_filename">[docs]</a>    <span class="k">def</span> <span class="nf">get_filename</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">corpus_path</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">corpus_path</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">sep_dir</span><span class="p">:</span>
+            <span class="n">filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">corpus_path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sep_dir</span><span class="p">,</span><span class="s">&#39;index.html&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+                <span class="n">filename</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">filename</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="k">return</span> <span class="n">filename</span>
+</div></div>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">date</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<div class="viewcode-block" id="SplitDate"><a class="viewcode-back" href="../../../model.html#inpho.model.thinker.SplitDate">[docs]</a><span class="k">class</span> <span class="nc">SplitDate</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; For use with ``sqlalchemy.orm.composite`` to represent our three-column</span>
+<span class="sd">    (month/date/year) dates and transform them into Python ``date`` objects.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">year</span><span class="p">,</span> <span class="n">month</span><span class="p">,</span> <span class="n">day</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">year</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">year</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">yearera</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s">&quot;(\d+) (BC|AD|BCE|CE)&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">year</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">yearera</span><span class="p">:</span>
+                <span class="n">year</span> <span class="o">=</span> <span class="n">yearera</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">era</span> <span class="o">=</span> <span class="n">yearera</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">era</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;BC&#39;</span><span class="p">,</span> <span class="s">&#39;BCE&#39;</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">year</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">year</span><span class="p">)</span><span class="o">*-</span><span class="mi">1</span>
+                <span class="k">elif</span> <span class="n">era</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;AD&#39;</span><span class="p">,</span> <span class="s">&#39;CE&#39;</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">year</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">year</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">year</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">month</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">month</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">month</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">month</span><span class="p">,</span> <span class="s">&quot;%B&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">month</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">month</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">day</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">day</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">day</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="k">def</span> <span class="nf">__composite_values__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">year</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">month</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">day</span>
+    
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">year</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">year</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="n">era</span> <span class="o">=</span> <span class="s">&quot;CE&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">era</span> <span class="o">=</span> <span class="s">&quot;BCE&quot;</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">year</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">month</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">day</span><span class="p">):</span>
+            <span class="k">return</span> <span class="s">&quot;</span><span class="si">%4d</span><span class="s">-</span><span class="si">%2d</span><span class="s">-</span><span class="si">%2d</span><span class="s"> </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">year</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">month</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">day</span><span class="p">,</span> 
+                                       <span class="n">era</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">year</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">month</span><span class="p">):</span>
+            <span class="k">return</span> <span class="s">&quot;</span><span class="si">%4d</span><span class="s">-</span><span class="si">%2d</span><span class="s"> </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">year</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">month</span><span class="p">,</span> <span class="n">era</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">year</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s">&quot;</span><span class="si">%4d</span><span class="s"> </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">year</span><span class="p">),</span> <span class="n">era</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">era</span><span class="p">)</span>
+
+    <span class="c"># weird bug in Python: bool(x) --&gt; x.__nonzero__() instead of x.__bool__()</span>
+    <span class="c"># http://mail.python.org/pipermail/python-3000/2006-November/004524.html</span>
+    <span class="k">def</span> <span class="nf">__nonzero__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">year</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">month</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">day</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">other</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">year</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">year</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">month</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">month</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">day</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">day</span>
+    
+
+</div>
+<div class="viewcode-block" id="Nationality"><a class="viewcode-back" href="../../../model.html#inpho.model.thinker.Nationality">[docs]</a><span class="k">class</span> <span class="nc">Nationality</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">pass</span>
+</div>
+<div class="viewcode-block" id="Profession"><a class="viewcode-back" href="../../../model.html#inpho.model.thinker.Profession">[docs]</a><span class="k">class</span> <span class="nc">Profession</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">pass</span>
+</div>
+<div class="viewcode-block" id="Alias"><a class="viewcode-back" href="../../../model.html#inpho.model.thinker.Alias">[docs]</a><span class="k">class</span> <span class="nc">Alias</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">pass</span>
+</div>
+<div class="viewcode-block" id="ThinkerEvaluation"><a class="viewcode-back" href="../../../model.html#inpho.model.thinker.ThinkerEvaluation">[docs]</a><span class="k">class</span> <span class="nc">ThinkerEvaluation</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Thinker Evaluation object for ORM, is initializable</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">ante_id</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+        <span class="n">cons_id</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+        <span class="n">uid</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+        <span class="n">degree</span><span class="o">=-</span><span class="mi">1</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ante_id</span> <span class="o">=</span> <span class="n">ante_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cons_id</span> <span class="o">=</span> <span class="n">cons_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">uid</span> <span class="o">=</span> <span class="n">uid</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">degree</span> <span class="o">=</span> <span class="n">degree</span>
+</div>
+<div class="viewcode-block" id="ThinkerTeacherEvaluation"><a class="viewcode-back" href="../../../model.html#inpho.model.thinker.ThinkerTeacherEvaluation">[docs]</a><span class="k">class</span> <span class="nc">ThinkerTeacherEvaluation</span><span class="p">(</span><span class="n">ThinkerEvaluation</span><span class="p">):</span>
+    <span class="k">pass</span>
+</div>
+<div class="viewcode-block" id="ThinkerInfluencedEvaluation"><a class="viewcode-back" href="../../../model.html#inpho.model.thinker.ThinkerInfluencedEvaluation">[docs]</a><span class="k">class</span> <span class="nc">ThinkerInfluencedEvaluation</span><span class="p">(</span><span class="n">ThinkerEvaluation</span><span class="p">):</span>
+    <span class="k">pass</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">InPhO v1.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Indiana University.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.8.
+    </div>
+  </body>
+</html>

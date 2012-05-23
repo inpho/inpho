@@ -1,0 +1,301 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>inpho.model.idea &mdash; InPhO v1.0 documentation</title>
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="InPhO v1.0 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">InPhO v1.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for inpho.model.idea</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">inpho.model.entity</span> <span class="kn">import</span> <span class="n">Entity</span>
+<span class="kn">import</span> <span class="nn">os.path</span>
+<span class="kn">import</span> <span class="nn">inpho.helpers</span>
+
+<div class="viewcode-block" id="Idea"><a class="viewcode-back" href="../../../model.html#inpho.model.idea.Idea">[docs]</a><span class="k">class</span> <span class="nc">Idea</span><span class="p">(</span><span class="n">Entity</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Simple Idea class, has custom definitions for representation strings.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">sep_dir</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="n">label</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">searchstring</span> <span class="o">=</span> <span class="n">label</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">searchpattern</span> <span class="o">=</span> <span class="s">&#39;(</span><span class="si">%s</span><span class="s">)&#39;</span> <span class="o">%</span> <span class="n">label</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sep_dir</span> <span class="o">=</span> <span class="n">sep_dir</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&#39;&lt;Idea </span><span class="si">%d</span><span class="s">: </span><span class="si">%s</span><span class="s">&gt;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ID</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Idea.url"><a class="viewcode-back" href="../../../model.html#inpho.model.idea.Idea.url">[docs]</a>    <span class="k">def</span> <span class="nf">url</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filetype</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">inpho</span><span class="o">.</span><span class="n">helpers</span><span class="o">.</span><span class="n">url</span><span class="p">(</span><span class="n">controller</span><span class="o">=</span><span class="s">&quot;idea&quot;</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ID</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="n">action</span><span class="p">,</span> 
+                                 <span class="n">filetype</span><span class="o">=</span><span class="n">filetype</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Idea.json_struct"><a class="viewcode-back" href="../../../model.html#inpho.model.idea.Idea.json_struct">[docs]</a>    <span class="k">def</span> <span class="nf">json_struct</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sep_filter</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">extended</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">graph</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">glimit</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="n">struct</span> <span class="o">=</span> <span class="p">{</span> <span class="s">&#39;ID&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">ID</span><span class="p">,</span> 
+                  <span class="s">&#39;type&#39;</span> <span class="p">:</span> <span class="s">&#39;idea&#39;</span><span class="p">,</span>
+                  <span class="s">&#39;label&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> 
+                  <span class="s">&#39;sep_dir&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">sep_dir</span><span class="p">,</span>
+                  <span class="s">&#39;url&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">()}</span>
+        <span class="k">if</span> <span class="n">extended</span><span class="p">:</span>
+            <span class="n">struct</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+                  <span class="s">&#39;nodes&#39;</span> <span class="p">:</span> <span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">ID</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">],</span>
+                  <span class="s">&#39;instances&#39;</span> <span class="p">:</span> <span class="p">[</span><span class="n">ins</span><span class="o">.</span><span class="n">ID</span> <span class="k">for</span> <span class="n">ins</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">instances</span><span class="p">],</span>
+                  <span class="s">&#39;classes&#39;</span> <span class="p">:</span> <span class="p">[</span><span class="n">child</span><span class="o">.</span><span class="n">idea</span><span class="o">.</span><span class="n">ID</span> <span class="k">for</span> <span class="n">ins</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span> 
+                                             <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">ins</span><span class="o">.</span><span class="n">children</span><span class="p">],</span>
+                  <span class="s">&#39;links&#39;</span> <span class="p">:</span> <span class="p">[</span><span class="n">ins</span><span class="o">.</span><span class="n">ID</span> <span class="k">for</span> <span class="n">ins</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">links</span><span class="p">]})</span>
+            <span class="k">if</span> <span class="n">sep_filter</span><span class="p">:</span>
+                <span class="n">struct</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+                  <span class="s">&#39;hyponyms&#39;</span> <span class="p">:</span> <span class="p">[</span><span class="n">ins</span><span class="o">.</span><span class="n">ID</span> <span class="k">for</span> <span class="n">ins</span> <span class="ow">in</span>
+                  <span class="bp">self</span><span class="o">.</span><span class="n">hyponyms</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">Entity</span><span class="o">.</span><span class="n">sep_dir</span> <span class="o">!=</span> <span class="s">&#39;&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">:</span><span class="n">limit</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="p">],</span>
+                  <span class="s">&#39;occurrences&#39;</span> <span class="p">:</span> <span class="p">[</span><span class="n">ins</span><span class="o">.</span><span class="n">ID</span> <span class="k">for</span> <span class="n">ins</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">occurrences</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">Entity</span><span class="o">.</span><span class="n">sep_dir</span> <span class="o">!=</span> <span class="s">&#39;&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">:</span><span class="n">limit</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="p">],</span>
+                  <span class="s">&#39;related&#39;</span> <span class="p">:</span> <span class="p">[</span><span class="n">ins</span><span class="o">.</span><span class="n">ID</span> <span class="k">for</span> <span class="n">ins</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">related</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">Entity</span><span class="o">.</span><span class="n">sep_dir</span> <span class="o">!=</span> <span class="s">&#39;&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">:</span><span class="n">limit</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="p">],</span>
+                  <span class="s">&#39;related_thinkers&#39;</span> <span class="p">:</span> <span class="p">[</span><span class="n">ins</span><span class="o">.</span><span class="n">ID</span> <span class="k">for</span> <span class="n">ins</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">related_thinkers</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">Entity</span><span class="o">.</span><span class="n">sep_dir</span> <span class="o">!=</span> <span class="s">&#39;&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">:</span><span class="n">limit</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="p">]})</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">struct</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+                  <span class="s">&#39;hyponyms&#39;</span> <span class="p">:</span> <span class="p">[</span><span class="n">ins</span><span class="o">.</span><span class="n">ID</span> <span class="k">for</span> <span class="n">ins</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">hyponyms</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">limit</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="p">],</span>
+                  <span class="s">&#39;occurrences&#39;</span> <span class="p">:</span> <span class="p">[</span><span class="n">ins</span><span class="o">.</span><span class="n">ID</span> <span class="k">for</span> <span class="n">ins</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">occurrences</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">limit</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="p">],</span>
+                  <span class="s">&#39;related&#39;</span> <span class="p">:</span> <span class="p">[</span><span class="n">ins</span><span class="o">.</span><span class="n">ID</span> <span class="k">for</span> <span class="n">ins</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">related</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">limit</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="p">],</span>
+                  <span class="s">&#39;related_thinkers&#39;</span> <span class="p">:</span> <span class="p">[</span><span class="n">ins</span><span class="o">.</span><span class="n">ID</span> <span class="k">for</span> <span class="n">ins</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">related_thinkers</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">limit</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="p">]})</span>
+        <span class="k">if</span> <span class="n">graph</span><span class="p">:</span>
+            <span class="n">struct</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+                <span class="s">&#39;entropy&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">entropy</span><span class="p">,</span>
+                <span class="s">&#39;it_in&#39;</span> <span class="p">:</span> <span class="p">[</span><span class="n">edge</span><span class="o">.</span><span class="n">json_struct</span><span class="p">()</span> 
+                               <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">it_in_edges</span><span class="p">[:</span><span class="n">glimit</span><span class="p">]],</span>
+                <span class="s">&#39;it_out&#39;</span> <span class="p">:</span> <span class="p">[</span><span class="n">edge</span><span class="o">.</span><span class="n">json_struct</span><span class="p">()</span> 
+                               <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">it_out_edges</span><span class="p">[:</span><span class="n">glimit</span><span class="p">]],</span>
+                <span class="s">&#39;ii_in&#39;</span> <span class="p">:</span> <span class="p">[</span><span class="n">edge</span><span class="o">.</span><span class="n">json_struct</span><span class="p">()</span> 
+                               <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ii_in_edges</span><span class="p">[:</span><span class="n">glimit</span><span class="p">]],</span>
+                <span class="s">&#39;ii_out&#39;</span> <span class="p">:</span> <span class="p">[</span><span class="n">edge</span><span class="o">.</span><span class="n">json_struct</span><span class="p">()</span> 
+                               <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ii_out_edges</span><span class="p">[:</span><span class="n">glimit</span><span class="p">]],</span>
+                <span class="p">})</span>
+
+        <span class="k">return</span> <span class="n">struct</span>
+</div>
+<div class="viewcode-block" id="Idea.web_search_string"><a class="viewcode-back" href="../../../model.html#inpho.model.idea.Idea.web_search_string">[docs]</a>    <span class="k">def</span> <span class="nf">web_search_string</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># generates search string for search engines</span>
+        <span class="n">search_string</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">searchstring</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">searchstring</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&quot;&lt;u&gt;&quot;</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">searchstring</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&quot;&lt;i&gt;&quot;</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">):</span> 
+            <span class="n">search_string</span> <span class="o">=</span> <span class="n">search_string</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&quot;&lt;u&gt;&quot;</span><span class="p">,</span> <span class="s">&quot;</span><span class="se">\&quot;</span><span class="s"> + </span><span class="se">\&quot;</span><span class="s">&quot;</span><span class="p">)</span>  <span class="c">#union</span>
+            <span class="n">search_string</span> <span class="o">=</span> <span class="n">search_string</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&quot;&lt;i&gt;&quot;</span><span class="p">,</span> <span class="s">&quot;</span><span class="se">\&quot;</span><span class="s"> | </span><span class="se">\&quot;</span><span class="s">&quot;</span><span class="p">)</span>  <span class="c">#disjunct</span>
+        
+        <span class="n">search_string</span> <span class="o">=</span> <span class="s">&quot;</span><span class="se">\&quot;</span><span class="s">&quot;</span> <span class="o">+</span> <span class="n">search_string</span> <span class="o">+</span> <span class="s">&quot;</span><span class="se">\&quot;</span><span class="s">&quot;</span>
+
+        <span class="k">return</span> <span class="n">search_string</span>
+</div>
+<div class="viewcode-block" id="Idea.get_filename"><a class="viewcode-back" href="../../../model.html#inpho.model.idea.Idea.get_filename">[docs]</a>    <span class="k">def</span> <span class="nf">get_filename</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">corpus_path</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">corpus_path</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">sep_dir</span><span class="p">:</span>
+            <span class="n">filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">corpus_path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sep_dir</span><span class="p">,</span><span class="s">&#39;index.html&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+                <span class="n">filename</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">filename</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="k">return</span> <span class="n">filename</span>
+    </div>
+<div class="viewcode-block" id="Idea.path_to_root"><a class="viewcode-back" href="../../../model.html#inpho.model.idea.Idea.path_to_root">[docs]</a>    <span class="k">def</span> <span class="nf">path_to_root</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the shortest direct path to the root node.&quot;&quot;&quot;</span>
+        <span class="n">nodes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">[:]</span>
+        <span class="k">if</span> <span class="n">nodes</span><span class="p">:</span>
+            <span class="n">paths</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">path_to_root</span><span class="p">(),</span> <span class="n">nodes</span><span class="p">)</span>
+            <span class="n">best</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">paths</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">best</span>
+
+        <span class="c"># otherwise look at the instances</span>
+        <span class="n">nodes</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">instance_of</span><span class="p">:</span>
+            <span class="n">nodes</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">nodes</span><span class="p">[:])</span>
+
+        <span class="k">if</span> <span class="n">nodes</span><span class="p">:</span>
+            <span class="n">paths</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">path_to_root</span><span class="p">(),</span> <span class="n">nodes</span><span class="p">)</span>
+            <span class="n">best</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">paths</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">best</span>
+
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&quot;Idea is not an instance or node&quot;</span><span class="p">)</span>
+        </div>
+<div class="viewcode-block" id="Idea.paths_to_root"><a class="viewcode-back" href="../../../model.html#inpho.model.idea.Idea.paths_to_root">[docs]</a>    <span class="k">def</span> <span class="nf">paths_to_root</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="nb">max</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a list of paths and alternate paths to root using links&quot;&quot;&quot;</span>
+        <span class="n">nodes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">[:]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">instance_of</span><span class="p">:</span>
+            <span class="n">nodes</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">nodes</span><span class="p">[:])</span>
+        
+        <span class="n">paths</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">path_to_root</span><span class="p">()]</span>
+        <span class="n">npaths</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">paths_to_root</span><span class="p">(),</span> <span class="n">nodes</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">npaths</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="nb">max</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="nb">max</span><span class="p">)</span> <span class="ow">and</span> <span class="n">n</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">paths</span><span class="p">:</span>
+                <span class="n">paths</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">paths</span>
+	
+    </div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="Idea.path_length"><a class="viewcode-back" href="../../../model.html#inpho.model.idea.Idea.path_length">[docs]</a>    <span class="k">def</span> <span class="nf">path_length</span><span class="p">(</span><span class="n">path1</span><span class="p">,</span> <span class="n">path2</span><span class="p">,</span> <span class="n">best</span><span class="o">=</span><span class="mi">20</span><span class="p">):</span>
+        <span class="n">dist</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">dist2</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">path1</span><span class="p">:</span>
+            <span class="n">dist</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">dist2</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">path2</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="n">s</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">dist</span> <span class="o">+</span> <span class="n">dist2</span>
+                <span class="n">dist2</span> <span class="o">+=</span> <span class="mi">1</span>
+                
+                <span class="k">if</span> <span class="n">dist</span><span class="o">+</span><span class="n">dist2</span> <span class="o">&gt;</span> <span class="n">best</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">False</span>
+        
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&quot;Path not found&quot;</span><span class="p">)</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="Idea.path"><a class="viewcode-back" href="../../../model.html#inpho.model.idea.Idea.path">[docs]</a>    <span class="k">def</span> <span class="nf">path</span><span class="p">(</span><span class="n">path1</span><span class="p">,</span> <span class="n">path2</span><span class="p">,</span> <span class="n">stop</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">path1</span><span class="p">:</span>
+            <span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">j</span><span class="p">,</span><span class="n">n</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">path2</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">stop</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">+</span><span class="n">j</span> <span class="o">&gt;</span> <span class="n">stop</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">False</span>
+
+                <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="n">s</span><span class="p">:</span>
+                    <span class="n">p2</span> <span class="o">=</span> <span class="n">path2</span><span class="p">[:</span><span class="n">j</span><span class="p">]</span>
+                    <span class="n">p2</span><span class="o">.</span><span class="n">reverse</span><span class="p">()</span>
+                    <span class="n">path</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">p2</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="n">path</span>
+
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&quot;Path not found&quot;</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="Idea.shortest_path"><a class="viewcode-back" href="../../../model.html#inpho.model.idea.Idea.shortest_path">[docs]</a>    <span class="k">def</span> <span class="nf">shortest_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">alt_paths</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path_to_root</span><span class="p">(),</span> <span class="n">node</span><span class="o">.</span><span class="n">path_to_root</span><span class="p">())</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">alt_paths</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">path</span>
+
+        <span class="n">best</span> <span class="o">=</span> <span class="n">path</span>
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">paths_to_root</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">best</span><span class="p">)):</span>
+            <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">paths_to_root</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">best</span><span class="p">)):</span>
+                <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">best</span><span class="p">))</span>
+                <span class="k">if</span> <span class="n">path</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">best</span><span class="p">):</span>
+                    <span class="n">best</span> <span class="o">=</span> <span class="n">path</span>
+        
+        <span class="k">return</span> <span class="n">best</span> 
+</div>
+<div class="viewcode-block" id="Idea.get_related_idea_ids"><a class="viewcode-back" href="../../../model.html#inpho.model.idea.Idea.get_related_idea_ids">[docs]</a>    <span class="k">def</span> <span class="nf">get_related_idea_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">recur</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>    
+        <span class="k">if</span> <span class="n">n</span><span class="p">:</span>
+            <span class="n">ns</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">related</span><span class="p">[:</span><span class="n">n</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ns</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">related</span><span class="p">[:]</span>
+        <span class="n">ids</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="n">ids</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ID</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">ns</span><span class="p">:</span>
+            <span class="n">ids</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">ID</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">recur</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">ns</span><span class="p">:</span>
+                <span class="n">ids2</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">get_related_idea_ids</span><span class="p">(</span><span class="n">n</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">recur</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+                <span class="k">for</span> <span class="nb">id</span> <span class="ow">in</span> <span class="n">ids2</span><span class="p">:</span>
+                    <span class="n">ids</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="nb">id</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ids</span>
+</div></div>
+<div class="viewcode-block" id="IdeaEvaluation"><a class="viewcode-back" href="../../../model.html#inpho.model.idea.IdeaEvaluation">[docs]</a><span class="k">class</span> <span class="nc">IdeaEvaluation</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Idea Evaluation object for ORM, is initializable</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">id</span><span class="p">,</span> <span class="n">id2</span><span class="p">,</span> <span class="n">uid</span><span class="p">,</span> <span class="n">relatedness</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">generality</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">hyperrank</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">hyporank</span><span class="o">=-</span><span class="mi">1</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ante_id</span> <span class="o">=</span> <span class="nb">id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cons_id</span> <span class="o">=</span> <span class="n">id2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">uid</span> <span class="o">=</span> <span class="n">uid</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">relatedness</span> <span class="o">=</span> <span class="n">relatedness</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">generality</span> <span class="o">=</span> <span class="n">generality</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hyperrank</span> <span class="o">=</span> <span class="n">hyperrank</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hyporank</span> <span class="o">=</span> <span class="n">hyporank</span>
+</div>
+<div class="viewcode-block" id="AnonIdeaEvaluation"><a class="viewcode-back" href="../../../model.html#inpho.model.idea.AnonIdeaEvaluation">[docs]</a><span class="k">class</span> <span class="nc">AnonIdeaEvaluation</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Idea Evaluation object for ORM, is initializable</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">id</span><span class="p">,</span> <span class="n">id2</span><span class="p">,</span> <span class="n">ip</span><span class="p">,</span> <span class="n">relatedness</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">generality</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">hyperrank</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">hyporank</span><span class="o">=-</span><span class="mi">1</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ante_id</span> <span class="o">=</span> <span class="nb">id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cons_id</span> <span class="o">=</span> <span class="n">id2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ip</span> <span class="o">=</span> <span class="n">ip</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">relatedness</span> <span class="o">=</span> <span class="n">relatedness</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">generality</span> <span class="o">=</span> <span class="n">generality</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hyperrank</span> <span class="o">=</span> <span class="n">hyperrank</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hyporank</span> <span class="o">=</span> <span class="n">hyporank</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">InPhO v1.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Indiana University.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.8.
+    </div>
+  </body>
+</html>

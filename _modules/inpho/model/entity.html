@@ -1,0 +1,644 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>inpho.model.entity &mdash; InPhO v1.0 documentation</title>
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="InPhO v1.0 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">InPhO v1.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for inpho.model.entity</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">os.path</span>
+<span class="kn">import</span> <span class="nn">string</span>
+<span class="kn">from</span> <span class="nn">urllib</span> <span class="kn">import</span> <span class="n">quote_plus</span>
+
+<span class="kn">import</span> <span class="nn">inpho.helpers</span>
+
+<span class="kn">from</span> <span class="nn">sqlalchemy.ext.associationproxy</span> <span class="kn">import</span> <span class="n">association_proxy</span>
+<span class="kn">import</span> <span class="nn">inflect</span>
+<span class="n">p</span> <span class="o">=</span> <span class="n">inflect</span><span class="o">.</span><span class="n">engine</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Entity"><a class="viewcode-back" href="../../../model.html#inpho.model.entity.Entity">[docs]</a><span class="k">class</span> <span class="nc">Entity</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="Entity.url"><a class="viewcode-back" href="../../../model.html#inpho.model.entity.Entity.url">[docs]</a>    <span class="k">def</span> <span class="nf">url</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filetype</span><span class="o">=</span><span class="s">&#39;html&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&#39;view&#39;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">inpho</span><span class="o">.</span><span class="n">helpers</span><span class="o">.</span><span class="n">url</span><span class="p">(</span><span class="n">controller</span><span class="o">=</span><span class="s">&quot;entity&quot;</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ID</span><span class="p">,</span> 
+                                 <span class="n">action</span><span class="o">=</span><span class="n">action</span><span class="p">,</span> <span class="n">filetype</span><span class="o">=</span><span class="n">filetype</span><span class="p">)</span>
+</div>
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&#39;&lt;Entity </span><span class="si">%d</span><span class="s">: </span><span class="si">%s</span><span class="s">&gt;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ID</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Entity.json_struct"><a class="viewcode-back" href="../../../model.html#inpho.model.entity.Entity.json_struct">[docs]</a>    <span class="k">def</span> <span class="nf">json_struct</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sep_filter</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">extended</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Dictionary structure used with a :class:`JSONEncoder` &quot;&quot;&quot;</span>
+        <span class="n">struct</span> <span class="o">=</span> <span class="p">{</span> <span class="s">&#39;ID&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">ID</span><span class="p">,</span> 
+                  <span class="s">&#39;type&#39;</span> <span class="p">:</span> <span class="s">&#39;entity&#39;</span><span class="p">,</span>
+                  <span class="s">&#39;label&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> 
+                  <span class="s">&#39;sep_dir&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">sep_dir</span><span class="p">,</span>
+                  <span class="s">&#39;url&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">()}</span>
+        <span class="k">return</span> <span class="n">struct</span>
+    </div>
+<div class="viewcode-block" id="Entity.json"><a class="viewcode-back" href="../../../model.html#inpho.model.entity.Entity.json">[docs]</a>    <span class="k">def</span> <span class="nf">json</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Returns the object&#39;s utf8-encoded JSON representation &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">ExtJsonEncoder</span><span class="p">(</span><span class="n">sort_keys</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">ensure_ascii</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> 
+                              <span class="n">skipkeys</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">json_struct</span><span class="p">())</span>
+    </div>
+<div class="viewcode-block" id="Entity.web_search_string"><a class="viewcode-back" href="../../../model.html#inpho.model.entity.Entity.web_search_string">[docs]</a>    <span class="k">def</span> <span class="nf">web_search_string</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># generates search string for search engines</span>
+        
+        <span class="n">search_string</span> <span class="o">=</span> <span class="s">&quot;</span><span class="se">\&quot;</span><span class="s">&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">+</span> <span class="s">&quot;</span><span class="se">\&quot;</span><span class="s">&quot;</span>
+        <span class="k">return</span> <span class="n">search_string</span>
+    </div>
+<div class="viewcode-block" id="Entity.get_filename"><a class="viewcode-back" href="../../../model.html#inpho.model.entity.Entity.get_filename">[docs]</a>    <span class="k">def</span> <span class="nf">get_filename</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">corpus_path</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">corpus_path</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">sep_dir</span><span class="p">:</span>
+            <span class="n">filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">corpus_path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sep_dir</span><span class="p">,</span><span class="s">&#39;index.html&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+                <span class="n">filename</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">filename</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="k">return</span> <span class="n">filename</span>
+    </div>
+    <span class="n">searchpatterns</span> <span class="o">=</span> <span class="n">association_proxy</span><span class="p">(</span><span class="s">&#39;_spatterns&#39;</span><span class="p">,</span> <span class="s">&#39;searchpattern&#39;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Entity.google_url"><a class="viewcode-back" href="../../../model.html#inpho.model.entity.Entity.google_url">[docs]</a>    <span class="k">def</span> <span class="nf">google_url</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">google</span> <span class="o">=</span> <span class="s">&quot;http://www.google.com/search?q=&quot;</span>
+        <span class="n">google</span> <span class="o">+=</span> <span class="n">quote_plus</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">&quot;utf-8&quot;</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">google</span> 
+    </div>
+<div class="viewcode-block" id="Entity.pluralize"><a class="viewcode-back" href="../../../model.html#inpho.model.entity.Entity.pluralize">[docs]</a>    <span class="k">def</span> <span class="nf">pluralize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">pluralpatterns</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c">#returns a list of pluralizations for each search pattern</span>
+        <span class="k">if</span> <span class="ow">not</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">&#39;\&lt;i\&gt;&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">searchstring</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">&#39;\&lt;u\&gt;&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">searchstring</span><span class="p">)):</span>
+            <span class="c">#print &quot;no intersection or union \n&quot;</span>
+            
+            <span class="n">words</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot; &quot;</span><span class="p">)</span>
+    
+        
+            <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>    
+            <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">plurals</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+            
+            <span class="n">secondtolast</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">thirdtolast</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">fourthtolast</span> <span class="o">=</span> <span class="p">[]</span>
+    
+            <span class="c">#for each loop marks each possible plural with &quot;1&quot; in array &quot;plurals&quot;</span>
+        
+            <span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">words</span><span class="p">:</span>
+                <span class="n">wordtemp</span> <span class="o">=</span> <span class="n">words</span>
+                <span class="c">#print &quot;word is &quot; + word + &quot;\n&quot;</span>
+                <span class="c">#print &quot;i is &quot; + str(i)</span>
+                <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s">&#39;in$|of$|or$|and$|for$|on$|about$|to$&#39;</span><span class="p">,</span> <span class="n">word</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">plurals</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+                        <span class="c">#print &quot;setting word before &quot; + word </span>
+                        <span class="n">count</span><span class="o">+=</span><span class="mi">1</span>
+                <span class="n">i</span><span class="o">+=</span><span class="mi">1</span>
+                <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">12</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&quot;We try not to allow labels longer than twelve words long; things get really messy.  Please go back and find a shorter label.&quot;</span><span class="p">)</span>
+            
+            
+            <span class="c">#last word always candidate for pluralization</span>
+            <span class="c">#print &quot;i is &quot; + str(i) + &quot;and plurals is &quot; + &quot;\n&quot;</span>
+            <span class="c">#print plurals</span>
+            <span class="n">i</span><span class="o">-=</span><span class="mi">1</span>
+            <span class="n">plurals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>    
+            <span class="c">#print &quot;plurals is &quot;</span>
+            <span class="c">#print plurals</span>
+            <span class="c">#print &quot;\n&quot;    </span>
+    
+            <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">count</span><span class="o">+=</span><span class="mi">1</span>
+            <span class="c">#count now equals total number of words which need to be pluralized</span>
+            
+            <span class="n">anothercount</span><span class="o">=</span><span class="mi">0</span>    
+    
+            <span class="c">#singularize everything</span>
+            <span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">words</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">plurals</span><span class="p">[</span><span class="n">anothercount</span><span class="p">]</span> <span class="ow">is</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">wordtemp</span> <span class="o">=</span> <span class="n">words</span>
+                    <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;ies$&#39;</span><span class="p">,</span><span class="s">&#39;y&#39;</span><span class="p">,</span> <span class="n">word</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">&#39;descartes$&#39;</span><span class="p">,</span> <span class="n">word</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;ypes$&#39;</span><span class="p">,</span> <span class="s">&#39;ype&#39;</span><span class="p">,</span> <span class="n">word</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">&#39;tus$&#39;</span><span class="p">,</span> <span class="n">word</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;([ea])nges$&#39;</span><span class="p">,</span> <span class="s">&#39;</span><span class="se">\1</span><span class="s">nge&#39;</span><span class="p">,</span> <span class="n">word</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;([aeiou])cles$&#39;</span><span class="p">,</span> <span class="s">&#39;</span><span class="se">\1</span><span class="s">cle&#39;</span><span class="p">,</span> <span class="n">word</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;bles$&#39;</span><span class="p">,</span> <span class="s">&#39;ble&#39;</span><span class="p">,</span> <span class="n">word</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;ues$&#39;</span><span class="p">,</span> <span class="s">&#39;ue&#39;</span><span class="p">,</span> <span class="n">word</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;nces$&#39;</span><span class="p">,</span> <span class="s">&#39;nce&#39;</span><span class="p">,</span> <span class="n">word</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">&#39;ous$&#39;</span><span class="p">,</span> <span class="n">word</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">&#39;sis$&#39;</span><span class="p">,</span> <span class="n">word</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;xes$&#39;</span><span class="p">,</span> <span class="s">&#39;x&#39;</span><span class="p">,</span> <span class="n">word</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;([aeiou])(.)es$&#39;</span><span class="p">,</span> <span class="s">&#39;</span><span class="se">\1\2</span><span class="s">e&#39;</span><span class="p">,</span> <span class="n">word</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;ces$&#39;</span><span class="p">,</span> <span class="s">&#39;ce&#39;</span><span class="p">,</span> <span class="n">word</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;es$&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">word</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">&#39;ss$&#39;</span><span class="p">,</span> <span class="n">word</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">&#39;s$&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">word</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">compare</span><span class="p">(</span><span class="n">word</span><span class="p">,</span> <span class="n">wordtemp</span><span class="p">[</span><span class="n">anothercount</span><span class="p">]):</span>
+                        <span class="n">words</span><span class="p">[</span><span class="n">anothercount</span><span class="p">]</span> <span class="o">=</span> <span class="n">word</span>
+                <span class="n">anothercount</span><span class="o">+=</span><span class="mi">1</span>    
+    
+            <span class="n">maxi</span><span class="o">=</span><span class="mi">1</span>        
+            <span class="n">maxj</span><span class="o">=</span><span class="mi">1</span>        
+            <span class="n">maxk</span><span class="o">=</span><span class="mi">1</span>
+            <span class="n">maxl</span><span class="o">=</span><span class="mi">1</span>
+    
+            <span class="k">if</span> <span class="n">count</span> <span class="ow">is</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">maxi</span> <span class="o">=</span> <span class="mi">2</span>
+            <span class="k">elif</span> <span class="n">count</span> <span class="ow">is</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">maxi</span> <span class="o">=</span> <span class="mi">2</span>
+                <span class="n">maxj</span> <span class="o">=</span> <span class="mi">2</span>
+            <span class="k">elif</span> <span class="n">count</span> <span class="ow">is</span> <span class="mi">3</span><span class="p">:</span>
+                <span class="n">maxi</span> <span class="o">=</span> <span class="mi">2</span>
+                <span class="n">maxj</span> <span class="o">=</span> <span class="mi">2</span>
+                <span class="n">maxk</span> <span class="o">=</span> <span class="mi">2</span>
+            <span class="k">elif</span> <span class="n">count</span> <span class="ow">is</span> <span class="mi">4</span><span class="p">:</span>
+                <span class="n">maxi</span> <span class="o">=</span> <span class="mi">2</span>
+                <span class="n">maxj</span> <span class="o">=</span> <span class="mi">2</span>
+                <span class="n">maxk</span> <span class="o">=</span> <span class="mi">2</span>
+                <span class="n">maxl</span> <span class="o">=</span> <span class="mi">2</span>
+            
+            <span class="n">pluralcount</span> <span class="o">=</span> <span class="mi">0</span>    
+            <span class="n">wordstemp</span> <span class="o">=</span> <span class="n">words</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">lastcount</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+            <span class="n">prevcount</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+    
+            <span class="c">#cycle through each possible combination of singulars and plurals and create list of standard pluralizations</span>
+            <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">maxl</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">maxk</span><span class="p">):</span>
+                    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">maxj</span><span class="p">):</span>
+                        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">maxi</span><span class="p">):</span>
+                            <span class="c">#print &quot;appending string.join(wordstemp) to pluralpatterns which is &quot; + string.join(wordstemp) + &quot;\n&quot;</span>
+                            <span class="c">#print &quot;i, j, k, l is &quot; + str(i) + str(j) + str(k) + str(l) + &quot;\n&quot;</span>
+                            <span class="n">pluralpatterns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">string</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">wordstemp</span><span class="p">))</span>
+                            <span class="n">pluralcount</span><span class="o">+=</span><span class="mi">1</span>
+                            
+                            <span class="c">#zoom in @plurals array to last plural</span>
+                            <span class="n">a</span> <span class="o">=</span> <span class="mi">0</span>
+                            <span class="n">lastcount</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+                            <span class="k">for</span> <span class="n">pluralentry</span> <span class="ow">in</span> <span class="n">plurals</span><span class="p">:</span>
+                                <span class="c">#print &quot;checking pluralentry &quot; + str(pluralentry) + &quot;\n&quot;</span>
+                                <span class="k">if</span> <span class="n">pluralentry</span> <span class="ow">is</span> <span class="mi">1</span><span class="p">:</span>
+                                    <span class="n">lastcount</span> <span class="o">=</span> <span class="n">a</span>
+                                <span class="n">a</span><span class="o">+=</span><span class="mi">1</span>
+                        
+                            <span class="c">#toggle last plural candidate from singular to plural</span>
+                            <span class="n">wordstemp</span><span class="p">[</span><span class="n">lastcount</span><span class="p">]</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">plural</span><span class="p">(</span><span class="n">wordstemp</span><span class="p">[</span><span class="n">lastcount</span><span class="p">])</span>        
+                        
+                        <span class="c">#reset last plural to singular if needed--e.g., if j = 1 and maxj = 2</span>
+                        <span class="k">if</span> <span class="n">j</span> <span class="ow">is</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">maxj</span> <span class="ow">is</span> <span class="mi">2</span><span class="p">:</span>
+                            <span class="c">#print &quot;resetting $wordstemp[$lastcount] to $words[$lastcount]\n&quot;;</span>
+                            
+                            <span class="c">#print &quot;I&#39;m in this part of the loop\n&quot;</span>
+                            <span class="n">wordstemp</span><span class="p">[</span><span class="n">lastcount</span><span class="p">]</span> <span class="o">=</span> <span class="n">words</span><span class="p">[</span><span class="n">lastcount</span><span class="p">]</span>            
+                    
+                            <span class="c">#find next to last plural</span>
+                            <span class="n">a</span> <span class="o">=</span> <span class="mi">0</span>
+                            <span class="n">lastcount</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+                    
+                            <span class="k">for</span> <span class="n">pluralentry</span> <span class="ow">in</span> <span class="n">plurals</span><span class="p">:</span>
+                                <span class="k">if</span> <span class="n">pluralentry</span> <span class="ow">is</span> <span class="mi">1</span><span class="p">:</span>
+                                    <span class="n">secondtolast</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+                                <span class="n">a</span><span class="o">+=</span><span class="mi">1</span>
+                            <span class="n">secondtolast</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+                            <span class="n">lastcounttemp</span> <span class="o">=</span> <span class="n">secondtolast</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+                            <span class="k">if</span> <span class="n">lastcounttemp</span> <span class="ow">or</span> <span class="n">lastcounttemp</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                                <span class="n">lastcount</span> <span class="o">=</span> <span class="n">lastcounttemp</span>
+                            <span class="c">#print &quot;in 2nd loop, lastcounttemp = $lastcounttemp and word to be pluralized = $wordstemp[$lastcounttemp]\n&quot;;</span>
+                        
+                            <span class="c">#toggle 2nd to last plural (if any)</span>
+                            <span class="k">if</span> <span class="n">lastcount</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                                <span class="n">wordstemp</span><span class="p">[</span><span class="n">lastcount</span><span class="p">]</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">plural</span><span class="p">(</span><span class="n">wordstemp</span><span class="p">[</span><span class="n">lastcount</span><span class="p">])</span>
+                        
+                        
+                    <span class="c">#reset 2nd-to-last plural to singular if needed--e.g. if k = 1 and maxk = 2</span>
+                    <span class="k">if</span> <span class="n">k</span> <span class="ow">is</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">maxk</span> <span class="ow">is</span> <span class="mi">2</span><span class="p">:</span>
+                        <span class="n">prevcount</span> <span class="o">=</span> <span class="n">lastcount</span>
+                        <span class="n">a</span> <span class="o">=</span> <span class="mi">0</span>
+                        <span class="n">lastcount</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+                        <span class="k">if</span> <span class="n">prevcount</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                            <span class="n">wordstemp</span><span class="p">[</span><span class="n">prevcount</span><span class="p">]</span> <span class="o">=</span> <span class="n">words</span><span class="p">[</span><span class="n">prevcount</span><span class="p">]</span>
+                    
+                            <span class="c">#find 3rd plural</span>
+                        
+                            <span class="k">for</span> <span class="n">pluralentry</span> <span class="ow">in</span> <span class="n">plurals</span><span class="p">:</span>
+                                <span class="k">if</span> <span class="n">pluralentry</span> <span class="ow">is</span> <span class="mi">1</span><span class="p">:</span>
+                                    <span class="n">thirdtolast</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+                                    <span class="n">a</span><span class="o">+=</span><span class="mi">1</span>
+                            <span class="n">thirdtolast</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+                            <span class="n">thirdtolast</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+                            <span class="n">lastcounttemp</span> <span class="o">=</span> <span class="n">thirdtolast</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+                            <span class="k">if</span> <span class="n">lastcounttemp</span> <span class="ow">or</span> <span class="n">lastcounttemp</span> <span class="ow">is</span> <span class="mi">0</span><span class="p">:</span> 
+                                <span class="n">lastcount</span> <span class="o">=</span> <span class="n">lastcounttemp</span>
+                    
+                        <span class="c">#toggle 3rd plural (if any)</span>
+                        <span class="k">if</span> <span class="n">lastcount</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                            <span class="n">wordstemp</span><span class="p">[</span><span class="n">lastcount</span><span class="p">]</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">plural</span><span class="p">(</span><span class="n">wordstemp</span><span class="p">[</span><span class="n">lastcount</span><span class="p">])</span>
+                                
+                    
+                <span class="c">#reset 3rd-to-last plural to singular if needed -- e.g. if l = 1 and maxl = 2</span>
+                <span class="k">if</span> <span class="n">l</span> <span class="ow">is</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">maxl</span> <span class="ow">is</span> <span class="mi">2</span><span class="p">:</span>
+                    <span class="n">prevcount</span> <span class="o">=</span> <span class="n">lastcount</span>
+                    <span class="n">a</span> <span class="o">=</span> <span class="mi">0</span>
+                    <span class="n">lastcount</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+                    <span class="k">if</span> <span class="n">prevcount</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                        <span class="n">wordstemp</span><span class="p">[</span><span class="n">prevcount</span><span class="p">]</span> <span class="o">=</span> <span class="n">words</span><span class="p">[</span><span class="n">prevcount</span><span class="p">]</span>
+                        
+                        <span class="c">#find 4th plural</span>
+                        <span class="k">for</span> <span class="n">pluralentry</span> <span class="ow">in</span> <span class="n">plurals</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="n">pluralentry</span> <span class="ow">is</span> <span class="mi">1</span><span class="p">:</span>
+                                <span class="n">fourthtolast</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+                            <span class="n">a</span><span class="o">+=</span><span class="mi">1</span>    
+    
+                        <span class="n">fourthtolast</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+                        <span class="n">fourthtolast</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+                        <span class="n">fourthtolast</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+                        <span class="n">lastcounttemp</span> <span class="o">=</span> <span class="n">fourthtolast</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+                        <span class="k">if</span> <span class="n">lastcounttemp</span> <span class="ow">or</span> <span class="n">lastcounttemp</span> <span class="ow">is</span> <span class="mi">0</span><span class="p">:</span>
+                            <span class="n">lastcount</span> <span class="o">=</span> <span class="n">lastcounttemp</span>
+            
+                <span class="k">if</span> <span class="n">lastcount</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                    <span class="n">wordstemp</span><span class="p">[</span><span class="n">lastcount</span><span class="p">]</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">plural</span><span class="p">(</span><span class="n">wordstemp</span><span class="p">[</span><span class="n">lastcount</span><span class="p">])</span>
+    
+        <span class="k">else</span><span class="p">:</span>
+        <span class="c">#now generate nonstandard pluralizations for searchstrings involving intersection or union</span>
+            <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">&quot;\&lt;i\&gt;&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">searchstring</span><span class="p">):</span>
+                <span class="c">#print &quot;intersection\n&quot;</span>
+                <span class="n">m</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">&quot;(.+)\&lt;i\&gt;(.+)&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">searchstring</span><span class="p">)</span>
+                <span class="n">first</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">second</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+    
+                <span class="n">firsttemp</span> <span class="o">=</span> <span class="n">first</span>
+                <span class="n">secondtemp</span> <span class="o">=</span> <span class="n">second</span>
+    
+                <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;ies$&#39;</span><span class="p">,</span><span class="s">&#39;y&#39;</span><span class="p">,</span> <span class="n">first</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">&#39;descartes$&#39;</span><span class="p">,</span> <span class="n">first</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;ypes$&#39;</span><span class="p">,</span> <span class="s">&#39;ype&#39;</span><span class="p">,</span> <span class="n">first</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">&#39;tus$&#39;</span><span class="p">,</span> <span class="n">first</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;([ea])nges$&#39;</span><span class="p">,</span> <span class="s">&#39;</span><span class="se">\1</span><span class="s">nge&#39;</span><span class="p">,</span> <span class="n">first</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;([aeiou])cles$&#39;</span><span class="p">,</span> <span class="s">&#39;</span><span class="se">\1</span><span class="s">cle&#39;</span><span class="p">,</span> <span class="n">first</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;bles$&#39;</span><span class="p">,</span> <span class="s">&#39;ble&#39;</span><span class="p">,</span> <span class="n">first</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;ues$&#39;</span><span class="p">,</span> <span class="s">&#39;ue&#39;</span><span class="p">,</span> <span class="n">first</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;nces$&#39;</span><span class="p">,</span> <span class="s">&#39;nce&#39;</span><span class="p">,</span> <span class="n">first</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">&#39;ous$&#39;</span><span class="p">,</span> <span class="n">first</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">&#39;sis$&#39;</span><span class="p">,</span> <span class="n">first</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;xes$&#39;</span><span class="p">,</span> <span class="s">&#39;x&#39;</span><span class="p">,</span> <span class="n">first</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;([aeiou])(.)es$&#39;</span><span class="p">,</span> <span class="s">&#39;</span><span class="se">\1\2</span><span class="s">e&#39;</span><span class="p">,</span> <span class="n">first</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;ces$&#39;</span><span class="p">,</span> <span class="s">&#39;ce&#39;</span><span class="p">,</span> <span class="n">first</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;es$&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">first</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">&#39;ss$&#39;</span><span class="p">,</span> <span class="n">first</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">&#39;s$&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">first</span><span class="p">)</span>
+                <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;ies$&#39;</span><span class="p">,</span><span class="s">&#39;y&#39;</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">&#39;descartes$&#39;</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;ypes$&#39;</span><span class="p">,</span> <span class="s">&#39;ype&#39;</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">&#39;tus$&#39;</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;([ea])nges$&#39;</span><span class="p">,</span> <span class="s">&#39;</span><span class="se">\1</span><span class="s">nge&#39;</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;([aeiou])cles$&#39;</span><span class="p">,</span> <span class="s">&#39;</span><span class="se">\1</span><span class="s">cle&#39;</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;bles$&#39;</span><span class="p">,</span> <span class="s">&#39;ble&#39;</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;ues$&#39;</span><span class="p">,</span> <span class="s">&#39;ue&#39;</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;nces$&#39;</span><span class="p">,</span> <span class="s">&#39;nce&#39;</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">&#39;ous$&#39;</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">&#39;sis$&#39;</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;xes$&#39;</span><span class="p">,</span> <span class="s">&#39;x&#39;</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;([aeiou])(.)es$&#39;</span><span class="p">,</span> <span class="s">&#39;</span><span class="se">\1\2</span><span class="s">e&#39;</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;ces$&#39;</span><span class="p">,</span> <span class="s">&#39;ce&#39;</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;es$&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">&#39;ss$&#39;</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">&#39;s$&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span>
+                        
+                <span class="c">#undo depluralization if unsuccessful</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">compare</span><span class="p">(</span><span class="n">firsttemp</span><span class="p">,</span> <span class="n">first</span><span class="p">)):</span>
+                    <span class="n">first</span> <span class="o">=</span> <span class="n">firsttemp</span>
+                
+                <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">compare</span><span class="p">(</span><span class="n">secondtemp</span><span class="p">,</span> <span class="n">second</span><span class="p">)):</span>
+                    <span class="n">second</span> <span class="o">=</span> <span class="n">secondtemp</span>
+    
+                <span class="n">singularfirst</span> <span class="o">=</span> <span class="n">first</span>
+                
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span>
+                    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span>
+                        <span class="n">newstring</span> <span class="o">=</span> <span class="s">&quot;(( &quot;</span> <span class="o">+</span> <span class="n">first</span> <span class="o">+</span> <span class="s">&quot;( | .+ )&quot;</span> <span class="o">+</span> <span class="n">second</span> <span class="o">+</span> <span class="s">&quot; )|( &quot;</span> <span class="o">+</span> <span class="n">second</span> <span class="o">+</span> <span class="s">&quot;( | .+ )&quot;</span> <span class="o">+</span> <span class="n">first</span> <span class="o">+</span> <span class="s">&quot; ))&quot;</span>
+                        <span class="n">pluralpatterns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">newstring</span><span class="p">);</span>
+                        
+                        <span class="c">#pluralize first</span>
+                        <span class="n">splitstring</span> <span class="o">=</span> <span class="n">first</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot; &quot;</span><span class="p">)</span>
+                        <span class="n">pluralword</span> <span class="o">=</span> <span class="n">splitstring</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+                        <span class="n">pluralword</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">plural</span><span class="p">(</span><span class="n">pluralword</span><span class="p">)</span>
+                        <span class="n">splitstring</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pluralword</span><span class="p">)</span>
+                        <span class="n">first</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">splitstring</span><span class="p">)</span>
+                    <span class="n">first</span> <span class="o">=</span> <span class="n">singularfirst</span>
+                    <span class="c">#pluralize second</span>
+                    <span class="n">splitstring2</span> <span class="o">=</span> <span class="n">second</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot; &quot;</span><span class="p">)</span>
+                    <span class="k">print</span> <span class="s">&quot;splitstring2 is &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">splitstring2</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span>
+                    <span class="n">pluralword2</span> <span class="o">=</span> <span class="n">splitstring2</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+                    <span class="n">pluralword2</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">plural</span><span class="p">(</span><span class="n">pluralword2</span><span class="p">)</span>
+                    <span class="n">splitstring2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pluralword2</span><span class="p">)</span>
+                    <span class="n">second</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">splitstring2</span><span class="p">)</span>
+    
+            <span class="k">elif</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">&quot;\&lt;u\&gt;&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">searchstring</span><span class="p">):</span>
+                <span class="c">#print &quot;union\n&quot;</span>
+                <span class="n">m</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">&quot;(.+)\&lt;u\&gt;(.+)&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">searchstring</span><span class="p">)</span>
+                <span class="n">first</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">second</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+    
+                <span class="n">firsttemp</span> <span class="o">=</span> <span class="n">first</span>
+                <span class="n">secondtemp</span> <span class="o">=</span> <span class="n">second</span>
+    
+                <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;ies$&#39;</span><span class="p">,</span><span class="s">&#39;y&#39;</span><span class="p">,</span> <span class="n">first</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">&#39;descartes$&#39;</span><span class="p">,</span> <span class="n">first</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;ypes$&#39;</span><span class="p">,</span> <span class="s">&#39;ype&#39;</span><span class="p">,</span> <span class="n">first</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">&#39;tus$&#39;</span><span class="p">,</span> <span class="n">first</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;([ea])nges$&#39;</span><span class="p">,</span> <span class="s">&#39;</span><span class="se">\1</span><span class="s">nge&#39;</span><span class="p">,</span> <span class="n">first</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;([aeiou])cles$&#39;</span><span class="p">,</span> <span class="s">&#39;</span><span class="se">\1</span><span class="s">cle&#39;</span><span class="p">,</span> <span class="n">first</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;bles$&#39;</span><span class="p">,</span> <span class="s">&#39;ble&#39;</span><span class="p">,</span> <span class="n">first</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;ues$&#39;</span><span class="p">,</span> <span class="s">&#39;ue&#39;</span><span class="p">,</span> <span class="n">first</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;nces$&#39;</span><span class="p">,</span> <span class="s">&#39;nce&#39;</span><span class="p">,</span> <span class="n">first</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">&#39;ous$&#39;</span><span class="p">,</span> <span class="n">first</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">&#39;sis$&#39;</span><span class="p">,</span> <span class="n">first</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;xes$&#39;</span><span class="p">,</span> <span class="s">&#39;x&#39;</span><span class="p">,</span> <span class="n">first</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;([aeiou])(.)es$&#39;</span><span class="p">,</span> <span class="s">&#39;</span><span class="se">\1\2</span><span class="s">e&#39;</span><span class="p">,</span> <span class="n">first</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;ces$&#39;</span><span class="p">,</span> <span class="s">&#39;ce&#39;</span><span class="p">,</span> <span class="n">first</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;es$&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">first</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">&#39;ss$&#39;</span><span class="p">,</span> <span class="n">first</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">&#39;s$&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">first</span><span class="p">)</span>
+                <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;ies$&#39;</span><span class="p">,</span><span class="s">&#39;y&#39;</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">&#39;descartes$&#39;</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;ypes$&#39;</span><span class="p">,</span> <span class="s">&#39;ype&#39;</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">&#39;tus$&#39;</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;([ea])nges$&#39;</span><span class="p">,</span> <span class="s">&#39;</span><span class="se">\1</span><span class="s">nge&#39;</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;([aeiou])cles$&#39;</span><span class="p">,</span> <span class="s">&#39;</span><span class="se">\1</span><span class="s">cle&#39;</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;bles$&#39;</span><span class="p">,</span> <span class="s">&#39;ble&#39;</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;ues$&#39;</span><span class="p">,</span> <span class="s">&#39;ue&#39;</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;nces$&#39;</span><span class="p">,</span> <span class="s">&#39;nce&#39;</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">&#39;ous$&#39;</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">&#39;sis$&#39;</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;xes$&#39;</span><span class="p">,</span> <span class="s">&#39;x&#39;</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;([aeiou])(.)es$&#39;</span><span class="p">,</span> <span class="s">&#39;</span><span class="se">\1\2</span><span class="s">e&#39;</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;ces$&#39;</span><span class="p">,</span> <span class="s">&#39;ce&#39;</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;es$&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">&#39;ss$&#39;</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">&#39;s$&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span>
+                        
+                <span class="c">#undo depluralization if unsuccessful</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">compare</span><span class="p">(</span><span class="n">firsttemp</span><span class="p">,</span> <span class="n">first</span><span class="p">)):</span>
+                    <span class="n">first</span> <span class="o">=</span> <span class="n">firsttemp</span>
+                
+                <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">compare</span><span class="p">(</span><span class="n">secondtemp</span><span class="p">,</span> <span class="n">second</span><span class="p">)):</span>
+                    <span class="n">second</span> <span class="o">=</span> <span class="n">secondtemp</span>
+    
+                <span class="n">singularfirst</span> <span class="o">=</span> <span class="n">first</span>
+                
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span>
+                    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span>
+                        <span class="n">newstring</span> <span class="o">=</span> <span class="s">&quot;( &quot;</span> <span class="o">+</span> <span class="n">first</span> <span class="o">+</span> <span class="s">&quot; )|( &quot;</span> <span class="o">+</span> <span class="n">second</span> <span class="o">+</span> <span class="s">&quot; )&quot;</span>
+                        <span class="n">pluralpatterns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">newstring</span><span class="p">);</span>
+                        
+                        <span class="c">#pluralize first</span>
+                        <span class="n">splitstring</span> <span class="o">=</span> <span class="n">first</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot; &quot;</span><span class="p">)</span>
+                        <span class="n">pluralword</span> <span class="o">=</span> <span class="n">splitstring</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+                        <span class="n">pluralword</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">plural</span><span class="p">(</span><span class="n">pluralword</span><span class="p">)</span>
+                        <span class="n">splitstring</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pluralword</span><span class="p">)</span>
+                        <span class="n">first</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">splitstring</span><span class="p">)</span>
+                    <span class="n">first</span> <span class="o">=</span> <span class="n">singularfirst</span>
+                    <span class="c">#pluralize second</span>
+                    <span class="n">splitstring2</span> <span class="o">=</span> <span class="n">second</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot; &quot;</span><span class="p">)</span>
+                    <span class="n">pluralword2</span> <span class="o">=</span> <span class="n">splitstring2</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+                    <span class="n">pluralword2</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">plural</span><span class="p">(</span><span class="n">pluralword2</span><span class="p">)</span>
+                    <span class="n">splitstring2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pluralword2</span><span class="p">)</span>
+                    <span class="n">second</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">splitstring2</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">pluralpatterns</span>
+    </div>
+<div class="viewcode-block" id="Entity.setup_SPL"><a class="viewcode-back" href="../../../model.html#inpho.model.entity.Entity.setup_SPL">[docs]</a>    <span class="k">def</span> <span class="nf">setup_SPL</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c">#code to generate search pattern list to disambiguate ands to intersections or unions</span>
+        <span class="n">search_pattern_list</span> <span class="o">=</span> <span class="p">[]</span>
+    
+        <span class="c">#check to see whether label contains an and to be disambiguated</span>
+        <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">&#39; and &#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">):</span>
+            <span class="n">andsplit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39; and &#39;</span><span class="p">)</span>
+            <span class="n">search_pattern_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">andsplit</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s">&#39;&amp;cap&#39;</span> <span class="o">+</span> <span class="n">andsplit</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">search_pattern_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">andsplit</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s">&#39;&amp;cup&#39;</span> <span class="o">+</span> <span class="n">andsplit</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        
+        <span class="n">search_pattern_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">)</span>
+    
+        <span class="k">return</span> <span class="n">search_pattern_list</span>
+    </div>
+<div class="viewcode-block" id="Entity.setup_SSL"><a class="viewcode-back" href="../../../model.html#inpho.model.entity.Entity.setup_SSL">[docs]</a>    <span class="k">def</span> <span class="nf">setup_SSL</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">exit</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="n">search_string_list</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="c">#Rewriting code to account for 8 options:</span>
+        <span class="c">#1. &lt;idea&gt;</span>
+        <span class="c">#2. &lt;idea&gt; [with &#39;in &lt;area&gt;&#39; dropped]</span>
+        <span class="c">#3. &lt;adj1&gt; and &lt;adj2&gt; &lt;idea&gt;                    (= &lt;adj1 idea&gt; and &lt;adj2 idea&gt;)     </span>
+        <span class="c">#4. &lt;idea1&gt; and &lt;idea2&gt; </span>
+        <span class="c">#5. &lt;adj&gt; &lt;idea1&gt; and &lt;idea2&gt;                  (= &lt;adj idea1&gt; and &lt;adj idea2&gt;)</span>
+        <span class="c">#6. </span>
+        <span class="c">#7. &lt;idea1&gt; and &lt;idea2&gt; in &lt;area&gt;            (= &lt;idea1&gt; and &lt;idea2&gt; and &lt;area&gt;</span>
+        <span class="c">#8. &lt;adj&gt; &lt;idea1&gt; and &lt;idea2&gt; in &lt;area&gt;      (= &lt;adj idea1&gt; and &lt;adj idea2&gt; and &lt;area&gt;)</span>
+        <span class="c">#9. &lt;idea&gt; in &lt;area1&gt; and &lt;area2&gt;            (= &lt;idea&gt; and &lt;area1&gt; and &lt;area2&gt; )</span>
+        <span class="c">#10. &lt;idea&gt; in &lt;adj&gt; &lt;area1&gt; and &lt;area2&gt;      (= &lt;idea&gt; and &lt;adj area1&gt; and &lt;adj area2&gt;)</span>
+        <span class="c">#11. &lt;phrase&gt; &lt;idea1&gt;, &lt;idea2&gt;, and &lt;idea3&gt;   = &lt;phrase idea1&gt; and &lt;phrase idea2&gt; and &lt;phrase idea3&gt;</span>
+    
+        <span class="c">#code for Option 1 (consult key above)</span>
+        <span class="c">#exact input is always a default option</span>
+        <span class="n">search_string_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;1: &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">)</span>
+    
+        <span class="c">#first split by &quot;in&quot;, if applicable; I never need to combine processing of idea clause and area clause;</span>
+        <span class="c">#I can process them independently and then just tack on area clause at end as conjunction</span>
+        <span class="c">#note that there will always be something in insplit[0], not necessarily in insplit[1]</span>
+        
+        <span class="c">#initialize strings and lists used in decision structures</span>
+        <span class="n">insplit</span> <span class="o">=</span> <span class="p">[</span><span class="bp">None</span><span class="p">,</span> <span class="bp">None</span><span class="p">]</span>
+    
+        <span class="n">ideaandsplit</span> <span class="o">=</span> <span class="p">[</span><span class="bp">None</span><span class="p">,</span> <span class="bp">None</span><span class="p">]</span>
+        
+        <span class="n">simpleand</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="n">ideaandphrase</span> <span class="o">=</span> <span class="bp">None</span>
+        
+        <span class="n">option4</span> <span class="o">=</span> <span class="bp">None</span>
+    
+        <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">&#39; in &#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">):</span>
+            <span class="n">insplit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39; in &#39;</span><span class="p">)</span>
+            <span class="c">#allow option to drop area if desired</span>
+            
+            <span class="c">#Code for Option #2; allow dropping of &quot;area&quot; of desired or redundant</span>
+            <span class="n">search_string_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;2: &#39;</span> <span class="o">+</span> <span class="n">insplit</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            
+        <span class="c">#now the idea phrase is in splitstring[0] and the area phrase is in splitstring[1]; I can process them identically</span>
+        <span class="c">#and just combine at the end</span>
+        <span class="c">#Code for Option 3 and Option 4</span>
+        
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">insplit</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="n">insplit</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span>
+    
+        <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">&#39; and &#39;</span><span class="p">,</span> <span class="n">insplit</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="n">ideaandsplit</span> <span class="o">=</span> <span class="n">insplit</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39; and &#39;</span><span class="p">)</span>
+            
+            <span class="c">#convert string idea1, idea2 to list, to use pop</span>
+            <span class="n">idea1</span> <span class="o">=</span> <span class="n">ideaandsplit</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">)</span>
+            <span class="n">idea2</span> <span class="o">=</span> <span class="n">ideaandsplit</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">)</span>
+    
+            <span class="c">#Option 3:  add simple conjunction to options</span>
+            <span class="n">simpleand</span> <span class="o">=</span> <span class="n">idea1</span> <span class="o">+</span> <span class="p">[</span><span class="s">&#39;&lt;and&gt;&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">idea2</span>
+            <span class="n">search_string_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;3: &#39;</span> <span class="o">+</span> <span class="s">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">simpleand</span><span class="p">))</span>
+            
+            <span class="c">#get adj phrase, if any, from idea1</span>
+            <span class="c">#add Option 4, distributing adjective, saving Option 4 in ideaandphrase to reuse in Option 6</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">idea1</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">noun</span> <span class="o">=</span> <span class="n">idea1</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+                <span class="n">adjphrase</span> <span class="o">=</span> <span class="n">idea1</span>
+                <span class="n">temp</span> <span class="o">=</span> <span class="n">adjphrase</span> <span class="o">+</span> <span class="n">idea2</span>
+                <span class="n">option4</span> <span class="o">=</span> <span class="n">ideaandsplit</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="s">&#39;&lt;and&gt;&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">temp</span>
+                <span class="n">search_string_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;4: &#39;</span> <span class="o">+</span> <span class="s">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">option4</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">idea2</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">noun</span> <span class="o">=</span> <span class="n">idea2</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+                <span class="n">adj1</span> <span class="o">=</span> <span class="n">idea1</span>
+                <span class="n">adj2</span> <span class="o">=</span> <span class="n">idea2</span>
+                <span class="n">option4</span> <span class="o">=</span> <span class="n">adj1</span> <span class="o">+</span> <span class="p">[</span><span class="n">noun</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="s">&#39;&lt;and&gt;&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">adj2</span> <span class="o">+</span> <span class="p">[</span><span class="n">noun</span><span class="p">]</span>
+                <span class="n">search_string_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;5: &#39;</span> <span class="o">+</span> <span class="s">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">option4</span><span class="p">))</span>
+            
+        <span class="n">areaphrase</span> <span class="o">=</span> <span class="bp">None</span>
+        
+        <span class="c">#process area phrase in the same way, if there is something in the second part of insplit and there is an &#39;and&#39; in the area phrase</span>
+        <span class="c">#for Options 6-10</span>
+        <span class="k">if</span> <span class="n">insplit</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">and</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">&#39; and &#39;</span><span class="p">,</span> <span class="n">insplit</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+            <span class="n">areaandsplit</span> <span class="o">=</span> <span class="n">insplit</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39; and &#39;</span><span class="p">)</span>
+    
+            <span class="c">#convert string area1, area2 to list, to use pop</span>
+            <span class="n">area1</span> <span class="o">=</span> <span class="n">areaandsplit</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">)</span>
+            <span class="n">area2</span> <span class="o">=</span> <span class="n">areaandsplit</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">)</span>
+            
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">area1</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="c">#print &quot;we have a adj noun1 and noun2 situation&quot;</span>
+                <span class="n">noun2</span> <span class="o">=</span> <span class="n">area1</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+                <span class="n">adjphrase2</span> <span class="o">=</span> <span class="n">area1</span>
+                <span class="n">temp</span> <span class="o">=</span> <span class="n">adjphrase2</span> <span class="o">+</span> <span class="n">area2</span>
+                <span class="n">areaphrase</span> <span class="o">=</span> <span class="n">areaandsplit</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="s">&#39;&lt;and&gt;&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">temp</span>
+            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">area2</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="c">#print &quot;we have a adj1 and adj2 noun situation&quot;</span>
+                <span class="n">noun2</span> <span class="o">=</span> <span class="n">area2</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+                <span class="n">adj1</span> <span class="o">=</span> <span class="n">area1</span>
+                <span class="n">adj2</span> <span class="o">=</span> <span class="n">area2</span>
+                <span class="n">areaphrase</span> <span class="o">=</span> <span class="n">adj1</span> <span class="o">+</span> <span class="p">[</span><span class="n">noun2</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="s">&#39;&lt;and&gt;&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">adj2</span> <span class="o">+</span> <span class="p">[</span><span class="n">noun2</span><span class="p">]</span>
+                
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">areaphrase</span> <span class="o">=</span> <span class="n">areaandsplit</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">)</span>
+            <span class="c">#now the completed area name is stored in list areaphrase</span>
+            <span class="c">#print &quot;areaphrase is &quot; </span>
+            <span class="c">#print areaphrase</span>
+    
+        <span class="c">#If there is an area, add option to naively add as conjunct; also add complex area phrase if applicable</span>
+        <span class="k">if</span> <span class="n">insplit</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="c">#Option 6; area but no and anywhere</span>
+            <span class="n">option6</span> <span class="o">=</span> <span class="n">insplit</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s">&#39; &lt;and&gt; &#39;</span> <span class="o">+</span> <span class="n">insplit</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">search_string_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;6: &#39;</span> <span class="o">+</span> <span class="n">option6</span><span class="p">)</span>
+    
+            <span class="c">#Option 7</span>
+            <span class="k">if</span> <span class="n">simpleand</span><span class="p">:</span>
+                <span class="n">option7</span> <span class="o">=</span> <span class="n">simpleand</span> <span class="o">+</span> <span class="p">[</span><span class="s">&#39;&lt;and&gt;&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">insplit</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">)</span>
+                <span class="n">search_string_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;7: &#39;</span> <span class="o">+</span> <span class="s">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">option7</span><span class="p">))</span>
+            
+            <span class="c">#Option 8</span>
+            <span class="k">if</span> <span class="n">option4</span><span class="p">:</span>
+                <span class="n">option8</span> <span class="o">=</span> <span class="n">option4</span> <span class="o">+</span> <span class="p">[</span><span class="s">&#39;&lt;and&gt;&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">insplit</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">)</span>
+                <span class="n">search_string_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;8: &#39;</span> <span class="o">+</span> <span class="s">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">option8</span><span class="p">))</span>
+            
+            <span class="c">#Option 9</span>
+            <span class="k">if</span> <span class="n">areaphrase</span><span class="p">:</span>
+                <span class="n">option9</span> <span class="o">=</span> <span class="n">insplit</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="s">&#39;&lt;and&gt;&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">areaphrase</span>
+                <span class="n">search_string_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;9: &#39;</span><span class="o">+</span> <span class="s">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">option9</span><span class="p">))</span>
+            
+            <span class="c">#Option 10</span>
+            <span class="k">if</span> <span class="n">simpleand</span> <span class="ow">and</span> <span class="n">areaphrase</span><span class="p">:</span>
+                <span class="n">option10</span> <span class="o">=</span> <span class="n">simpleand</span> <span class="o">+</span> <span class="p">[</span><span class="s">&#39;&lt;and&gt;&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">areaphrase</span>
+                <span class="n">search_string_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;10: &#39;</span> <span class="o">+</span> <span class="s">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">option10</span><span class="p">))</span>
+            
+        <span class="c">#print &quot;label before re.search is &quot; + self.label</span>
+        <span class="n">label</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&quot; and&quot;</span><span class="p">,</span> <span class="s">&quot;&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">)</span>
+        <span class="c">#split the idea up into components separated by and</span>
+        <span class="n">commasplit</span> <span class="o">=</span> <span class="n">label</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;,&#39;</span><span class="p">)</span>
+        
+        <span class="c">#Option 11-14</span>
+        <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">&#39;,&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">):</span>
+            <span class="c">#delete the extraneous and</span>
+            <span class="c">#print &quot;it is triggering this&quot;</span>
+            <span class="n">label</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&quot; and&quot;</span><span class="p">,</span> <span class="s">&quot;&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">)</span>
+            <span class="c">#split the idea up into components separated by and</span>
+            <span class="n">commasplit</span> <span class="o">=</span> <span class="n">label</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;,&#39;</span><span class="p">)</span>
+            
+            <span class="c">#Option 11, simplest option:  just A and B and C</span>
+            <span class="n">search_string_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;11: &#39;</span> <span class="o">+</span> <span class="s">&quot; &lt;and&gt;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">commasplit</span><span class="p">))</span>
+            
+            <span class="c">#Option 12, if an adj phrase is present, distribute</span>
+            <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">&quot; &quot;</span><span class="p">,</span> <span class="n">commasplit</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+                <span class="n">adjphrase</span> <span class="o">=</span> <span class="n">commasplit</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">)</span>
+                <span class="n">joinedphrase1</span> <span class="o">=</span> <span class="s">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">adjphrase</span><span class="p">)</span>
+                <span class="n">noun1</span> <span class="o">=</span> <span class="n">adjphrase</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+                <span class="n">commasplit</span> <span class="o">=</span> <span class="n">commasplit</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+                <span class="k">for</span> <span class="n">noun</span> <span class="ow">in</span> <span class="n">commasplit</span><span class="p">:</span>
+                    <span class="n">joinedphrase1</span> <span class="o">=</span> <span class="n">joinedphrase1</span> <span class="o">+</span> <span class="s">&quot; &lt;and&gt; &quot;</span> <span class="o">+</span> <span class="s">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">adjphrase</span><span class="p">)</span> <span class="o">+</span> <span class="n">noun</span>
+                <span class="n">search_string_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;12: &#39;</span> <span class="o">+</span> <span class="n">joinedphrase1</span><span class="p">)</span>
+                
+            
+            <span class="c">#Option 14, if a prefix phrase is present at end, distribute inphrase to all</span>
+            <span class="n">commasplit</span> <span class="o">=</span> <span class="n">label</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;,&#39;</span><span class="p">)</span>
+            <span class="n">last</span> <span class="o">=</span> <span class="n">commasplit</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">&quot; in &quot;</span><span class="p">,</span> <span class="n">last</span><span class="p">):</span>
+                <span class="n">lastnoun</span> <span class="o">=</span> <span class="n">last</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39; in &#39;</span><span class="p">)</span>
+                <span class="n">inphrase</span> <span class="o">=</span> <span class="n">lastnoun</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+                <span class="n">commasplit</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lastnoun</span><span class="o">.</span><span class="n">pop</span><span class="p">())</span>
+                <span class="n">joinedphrase2</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
+                <span class="k">for</span> <span class="n">noun</span> <span class="ow">in</span> <span class="n">commasplit</span><span class="p">:</span>
+                    <span class="n">joinedphrase2</span> <span class="o">=</span> <span class="n">joinedphrase2</span> <span class="o">+</span> <span class="s">&quot; &lt;and&gt;&quot;</span> <span class="o">+</span> <span class="n">noun</span> <span class="o">+</span> <span class="s">&quot; in &quot;</span> <span class="o">+</span> <span class="n">inphrase</span>
+                <span class="n">joinedphrase2</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&quot;^ &lt;and&gt;&quot;</span><span class="p">,</span> <span class="s">&quot;&quot;</span><span class="p">,</span> <span class="n">joinedphrase2</span><span class="p">)</span>
+                <span class="n">search_string_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;13: &#39;</span> <span class="o">+</span> <span class="n">joinedphrase2</span><span class="p">)</span>
+                
+                <span class="c">#Option 14 = both 12 and 13</span>
+                <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">&quot; &quot;</span><span class="p">,</span> <span class="n">commasplit</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+                    <span class="n">joined1</span> <span class="o">=</span> <span class="n">joinedphrase1</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot; &lt;and&gt; &quot;</span><span class="p">)</span>
+                    <span class="n">joinedphrase3</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
+                    <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">joined1</span><span class="p">:</span>
+                        <span class="n">joinedphrase3</span> <span class="o">=</span> <span class="n">joinedphrase3</span> <span class="o">+</span> <span class="s">&quot; &lt;and&gt; &quot;</span> <span class="o">+</span> <span class="n">entry</span> <span class="o">+</span> <span class="s">&quot; in &quot;</span> <span class="o">+</span> <span class="n">inphrase</span>
+                    <span class="n">joinedphrase3</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&quot;^ &lt;and&gt; &quot;</span><span class="p">,</span> <span class="s">&quot;&quot;</span><span class="p">,</span> <span class="n">joinedphrase3</span><span class="p">)</span>
+                    <span class="n">inphrase</span> <span class="o">=</span> <span class="s">&quot; in &quot;</span> <span class="o">+</span> <span class="n">inphrase</span> <span class="o">+</span> <span class="s">&quot;$&quot;</span>
+                    <span class="n">joinedphrase3</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">inphrase</span><span class="p">,</span> <span class="s">&quot;&quot;</span><span class="p">,</span> <span class="n">joinedphrase3</span><span class="p">)</span>
+                    <span class="n">search_string_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;14: &#39;</span> <span class="o">+</span> <span class="n">joinedphrase3</span><span class="p">)</span>
+        
+        <span class="c">#option 13:  thinker&#39;s (views on) X</span>
+        
+        <span class="n">commasplit</span> <span class="o">=</span> <span class="n">label</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;,&#39;</span><span class="p">)</span>
+        <span class="c">#print &quot;commasplit[0] is &quot; + commasplit[0]</span>
+            
+        <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\&#39;</span><span class="s">s* views on &#39;</span><span class="p">,</span> <span class="n">commasplit</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\&#39;</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">commasplit</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\&#39;</span><span class="s">s views on &#39;</span><span class="p">,</span> <span class="n">commasplit</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+                <span class="n">possesssplit</span> <span class="o">=</span> <span class="n">commasplit</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\&#39;</span><span class="s">s views on&#39;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\&#39;</span><span class="s"> views on &#39;</span><span class="p">,</span> <span class="n">commasplit</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+                <span class="n">possesssplit</span> <span class="o">=</span> <span class="n">commasplit</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\&#39;</span><span class="s"> views on&#39;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\&#39;</span><span class="s">s &#39;</span><span class="p">,</span> <span class="n">commasplit</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+                <span class="n">possesssplit</span> <span class="o">=</span> <span class="n">commasplit</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\&#39;</span><span class="s">s&#39;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\&#39;</span><span class="s"> &#39;</span><span class="p">,</span> <span class="n">commasplit</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+                <span class="n">possesssplit</span> <span class="o">=</span> <span class="n">commasplit</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\&#39;</span><span class="s">&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">exit</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">exit</span><span class="p">:</span>
+                <span class="n">commasplit</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">possesssplit</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">joinedphrase4</span> <span class="o">=</span> <span class="n">possesssplit</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">noun</span> <span class="ow">in</span> <span class="n">commasplit</span><span class="p">:</span>
+                    <span class="n">joinedphrase4</span> <span class="o">=</span> <span class="n">joinedphrase4</span> <span class="o">+</span> <span class="s">&quot; &lt;and&gt;&quot;</span> <span class="o">+</span> <span class="n">noun</span>
+                <span class="n">search_string_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;15: &#39;</span><span class="o">+</span> <span class="n">joinedphrase4</span><span class="p">)</span>
+                        
+
+        <span class="k">return</span> <span class="n">search_string_list</span>
+</div></div>
+<div class="viewcode-block" id="Searchpattern"><a class="viewcode-back" href="../../../model.html#inpho.model.entity.Searchpattern">[docs]</a><span class="k">class</span> <span class="nc">Searchpattern</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">searchpattern</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">searchpattern</span> <span class="o">=</span> <span class="n">searchpattern</span>
+</div>
+<div class="viewcode-block" id="Alias"><a class="viewcode-back" href="../../../model.html#inpho.model.entity.Alias">[docs]</a><span class="k">class</span> <span class="nc">Alias</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">pass</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">InPhO v1.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Indiana University.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.8.
+    </div>
+  </body>
+</html>
