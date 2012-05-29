@@ -94,6 +94,7 @@ class Date(object):
                     return [int(iso_string[0:4]), int(iso_string[4:6]), 0]
             else:            
                 return [int(iso_string[0:4]), 0, 0]
+
         if iso_string:
             if '/' in iso_string:
                 date_list = iso_string.split('/')
@@ -120,6 +121,6 @@ class Date(object):
                 month = date_list[1]
                 day = date_list[2]
 
-                date = Date(entity_id, relation_id, year, month, day, 0, 0, 0)
+                date = Date(entity_id, relation_id, year, month, day, None, None, None)
 
         return date
