@@ -3,9 +3,9 @@ import logging
 import os.path
 import time
 from urllib import quote_plus
+from urllib2 import Request, urlopen, URLError, HTTPError
 
 import inpho.helpers
-from inpho.lib.url import URLopener
 from inpho.model.entity import Entity
 
 from sqlalchemy.ext.associationproxy import association_proxy
@@ -41,24 +41,22 @@ class Journal(Entity):
 
         # attempt to open the URL, capture exceptions as failure
         try:
-            request = URLopener().open(self.URL.encode('utf-8'))
-        except (IOError, HTTPException) as e:
+            request = Request(self.URL.encode('utf-8'),
+                headers={'User-Agent' : 
+                ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10.6; rv:2.0.1)"
+                 "Gecko/20100101 Firefox/4.0.1")})
+            response = urlopen(request, timeout=15)
+        except (URLError, HTTPError, IOError, HTTPException) as e:
             logging.warning("URL failed w/exception! [%s] %s" % (self.URL, e))
             return False
 
-        # Get HTTP status code
-        status = request.getcode()
+        self.last_accessed = time.time()
 
         # If there is a redirect, fix the url
-        if status == 302:
-            self.URL = request.geturl()
+        if self.URL != response.geturl():
+            self.URL = response.geturl()
 
-        # Update the last accessed time
-        if status <= 307:
-            self.last_accessed = time.time()
-            return True
-        else:
-            return False
+        return True
 
     @property
     def last_accessed_str(self, format="%x %X %Z"):
