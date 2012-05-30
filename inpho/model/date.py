@@ -85,42 +85,39 @@ class Date(object):
         '''
         parses an iso_string into a date object                    
         '''
-        def foo(iso_string):
-            string_length = len(iso_string)
-            if string_length > 4:
-                if string_length == 8:
-                    return [int(iso_string[0:4]), int(iso_string[4:6]), int(iso_string[6:8])]
-                else:    
-                    return [int(iso_string[0:4]), int(iso_string[4:6]), 0]
-            else:            
-                return [int(iso_string[0:4]), 0, 0]
+        def parse_date(iso_string):
+            bce = (iso_string[0] == '-')
 
-        if iso_string:
-            if '/' in iso_string:
-                date_list = iso_string.split('/')
-                begin_date_string = date_list[0]
-                end_date_string = date_list[1]
-                begin_date_list = foo(begin_date_string)
-                end_date_list = foo(end_date_string)
-                year = begin_date_list[0]
-                if year >= 0:
-                    year += 1
-                month = begin_date_list[1]
-                day = begin_date_list[2]
-                year_end = end_date_list[0]
-                if year_end >= 0:
-                    year_end += 1
-                month_end = end_date_list[1]
-                day_end = end_date_list[2]
-                date = Date(entity_id, relation_id, year, month, day, year_end, month_end, day_end)
+            if bce:
+                iso_string = iso_string[1:]
+
+            if len(iso_string) == 8:
+                date = [int(iso_string[0:4]), int(iso_string[4:6]), int(iso_string[6:8])]
+            elif len(iso_string) == 6:
+                date = [int(iso_string[0:4]), int(iso_string[4:6]), 0]
+            elif len(iso_string) == 4:
+                date = [int(iso_string[0:4]), 0, 0]
             else:
-                date_list = foo(iso_string)
-                year = date_list[0]
-                if year >= 0:
-                    year += 1
-                month = date_list[1]
-                day = date_list[2]
+                raise Exception("Invalid date string")
+            
+            if bce:
+                date[0] *= -1
+            else:
+                date[0] += 1
 
-                date = Date(entity_id, relation_id, year, month, day, None, None, None)
+            return date
+
+        if '/' in iso_string:
+            begin, end = iso_string.split('/')
+            begin = parse_date(begin)
+            end = parse_date(end)
+        else:
+            begin = parse_date(iso_string)
+            end = [None, None, None]
+
+        year, month, day = begin
+        year_end, month_end, day_end = end
+
+        date = Date(entity_id, relation_id, year, month, day, year_end, month_end, day_end)
 
         return date
