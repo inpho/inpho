@@ -7,7 +7,6 @@ import sqlalchemy
 __all__ = ["Autotest"]
 
 class Autotest(unittest2.TestCase):
-
     def __init__(self, testname, server):
         """
         Initialized with the server host to test on.
@@ -17,6 +16,14 @@ class Autotest(unittest2.TestCase):
 
     def setUp(self):
         self.conn = httplib.HTTPConnection(self.server)
+
+    # Each test function's docstring should be written in this format:
+    # TITLE
+    # DESCRIPTION
+    # URL* being tested
+    #
+    # * The url should only be complete if it is not on the server. Otherwise,
+    # it should just be the path after the server host in the url.
 
     def test_sep_crossRef(self):
         """
