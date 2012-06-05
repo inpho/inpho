@@ -46,7 +46,9 @@ class Date(object):
             if day:
                 string += str(day) + ", "
 
-        string += str(year)
+        string += str(abs(year))
+        if year < 0:
+            string += " B.C.E."
         return string
 
     def __repr__(self):
