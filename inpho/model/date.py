@@ -55,32 +55,17 @@ class Date(object):
         '''
         parses a date object into an iso_string                   
         '''
-        date = [self.year, self.month, self.day, self.year_end, self.month_end, self.day_end]
-        new_date = []
-        for element in date:
-            if element:
-                if (element is self.year) or (element is self.year_end):
-                    if element < 0:
-                        if len(str(abs(element))) < 4:
-                            new_date.append(str(element).zfill(5))
-                        else:
-                            new_date.append(str(element))
-                    else:
-                        if len(str(abs(element))) < 4:
-                            new_date.append(str(element - 1).zfill(4))
-                        else:
-                            new_date.append(str(element - 1))
-                elif (((element is self.month) or (element is self.month_end) or 
-                       (element is self.day) or (element is self.day_end)) and 
-                      (len(str(abs(element))) < 2)):
-                    new_date.append(str(element).zfill(2))
-                else:
-                    new_date.append(str(element))
-        new_date_length = len(new_date)
-        if new_date_length > 3:
-            return '/'.join([(''.join(new_date[0:3])), (''.join(new_date[3:new_date_length]))])
-        else:
-            return ''.join(new_date[0:new_date_length])
+        def parse_date(year, month, day):
+            sign = '-' if year < 0 else ''
+            if year > 0:
+                year -= 1
+            return "%s%04d%02d%02d" % (sign, abs(year), month, day)
+
+        s = parse_date(self.year, self.month, self.day)
+        if self.year_end:
+            s += '/' + parse_date(self.year_end, self.month_end, self.day_end)
+
+        return s
         
     @staticmethod
     def convert_from_iso(entity_id, relation_id, iso_string):
