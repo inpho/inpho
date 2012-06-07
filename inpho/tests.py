@@ -19,7 +19,7 @@ class Autotest(unittest2.TestCase):
 
     # Each test function's docstring should be written in this format:
     # TITLE
-    # DESCRIPTION
+    # DESCRIPTION 
     # URL* being tested
     #
     # * The url should only be complete if it is not on the server. Otherwise,
@@ -39,7 +39,7 @@ class Autotest(unittest2.TestCase):
     def test_entity_json(self):
         """
         Entity JSON
-        Verify that https://inpho.cogs.indiana.edu/entity.json returns HTTP 200
+        Verify that /entity.json returns HTTP 200
         /entity.json
         """
         self.conn.request("GET", "/entity")
@@ -49,7 +49,7 @@ class Autotest(unittest2.TestCase):
     def test_idea_json(self):
         """
         Idea JSON
-        Verify that https://inpho.cogs.indiana.edu/idea.json returns HTTP 200
+        Verify that /idea.json returns HTTP 200
         /idea.json
         """
         self.conn.request("GET", "/idea")
@@ -59,7 +59,7 @@ class Autotest(unittest2.TestCase):
     def test_thinker_json(self):
         """
         Thinker JSON
-        Verify that https://inpho.cogs.indiana.edu/thinker.json returns HTTP 200
+        Verify that /thinker.json returns HTTP 200
         /thinker.json
         """
         self.conn.request("GET", "/thinker")
@@ -69,7 +69,7 @@ class Autotest(unittest2.TestCase):
     def test_journal_json(self):
         """
         Journal JSON
-        Verify that https://inpho.cogs.indiana.edu/journal.json returns HTTP 200
+        Verify that /journal.json returns HTTP 200
         /journal.json
         """
         self.conn.request("GET", "/journal")
@@ -79,7 +79,7 @@ class Autotest(unittest2.TestCase):
     def test_taxonomy_json(self):
         """
         Taxonomy JSON
-        Verify that https://inpho.cogs.indiana.edu/taxonomy.json returns HTTP 200
+        Verify that /taxonomy.json returns HTTP 200
         /taxonomy.json
         """
         self.conn.request("GET", "/taxonomy")
