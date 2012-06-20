@@ -216,9 +216,12 @@ mapper(Entity, entity_table,
            'alias':relation(Alias),
            'dates':relation(Date, backref='entity'),
            #'spatterns':relation(Searchpattern),
-           '_spatterns':relation(Searchpattern, cascade="all,delete-orphan")
+           #'_spatterns':relation(Searchpattern, backref='entity', cascade="all,delete-orphan")
       })
-mapper(Searchpattern, searchpatterns_table)
+mapper(Searchpattern, searchpatterns_table,
+       properties={
+           'entity':relation(Entity, backref="_spatterns", uselist=False)
+        })
 mapper(Alias, alias_table)
 mapper(Date, date_table)
 

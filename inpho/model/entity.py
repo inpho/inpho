@@ -546,7 +546,8 @@ class Entity(object):
         return search_string_list
 
 class Searchpattern(object):
-    def __init__(self, searchpattern):
+    def __init__(self, id, searchpattern):
+        self.target_id = id
         self.searchpattern = searchpattern
 
 class Alias(object):

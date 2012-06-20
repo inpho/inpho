@@ -189,23 +189,18 @@ def process_wrapper(args):
 def process_articles(entity_type=Entity, output_filename='output-all.txt',
                      corpus_root='corpus/'):
     terms = select_terms(entity_type)
+    
     Session.expunge_all()
     Session.close()
 
     # fix search patterns
     for term in terms:
-        newpatterns = []
-        for pattern in term.searchpatterns:
-            if '(' in pattern and ')' in pattern:
-                pattern = pattern.replace('( ', '(\\b')
-                pattern = pattern.replace(' )', '\\b)')
-            else:
-                pattern = '\\b%s\\b' % pattern.strip()
-
-            newpatterns.append(pattern)
-
+        newpatterns = ['\\b%s\\b' % pattern.replace(' * ', '( |.+ )') 
+                            for pattern in term.searchpatterns2]
+        newpatterns.append('\\b%s\\b' % term.label)
         term.searchpatterns = newpatterns
-
+        print newpatterns
+    
     
     articles = Session.query(Entity.sep_dir).filter(Entity.sep_dir!=None)
     articles = articles.filter(Entity.sep_dir!='')

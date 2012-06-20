@@ -25,8 +25,7 @@ def get_document_occurrences(document, terms):
     # iterate over terms to be scanned
     for term in terms:
         # build list of search patterns starting with label
-        patterns = ['\b%s\b' % term.label]
-        patterns.extend(term.searchpatterns)
+        patterns = term.searchpatterns
         for pattern in patterns:
             try:
                 if re.search(pattern, document, flags=re.IGNORECASE):
@@ -66,8 +65,7 @@ def get_sentence_occurrences(document, terms, terms_present=None,
 
         for term in terms_present:
             # build list of search patterns starting with label
-            patterns = ['\b%s\b' % term.label]
-            patterns.extend(term.searchpatterns)
+            patterns = term.searchpatterns
 
             for pattern in patterns:
                 try:
