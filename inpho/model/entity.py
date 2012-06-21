@@ -51,7 +51,14 @@ class Entity(object):
         return filename
     
     searchpatterns = association_proxy('_spatterns', 'searchpattern')
-
+    
+    @property
+    def patterns(self):
+        newpatterns = ['\\b%s\\b' % pattern.replace(' * ', '( |.+ )') 
+                            for pattern in self.searchpatterns]
+        newpatterns.append('\\b%s\\b' % self.label)
+        return newpatterns
+        
     @property
     def google_url(self):
         google = "http://www.google.com/search?q="
