@@ -143,10 +143,18 @@ def prepare_apriori_input(occurrence_filename, terms, doc_terms=None):
     with open(occurrence_filename) as f:
         lines = []
         for line in f:
+            # get the list of terms, saving the article head for later addition
+            # of document terms
             lterms = line.split()
-            first = lterms[0]       # Save for doc_terms processing
+            first = lterms[0]
 
+            # filter the list of occurrences to only those that occur in the
+            # subset of terms we are data mining. This allows us to reuse 1
+            # occurrence file for idea-idea, idea-thinker, & thinker-thinker
+            # relations.
             line = [term for term in lterms if term in terms]
+
+            # TODO: Insert filter for overlapping search patterns.
 
             # append doc_terms
             if line and doc_terms is not None:
@@ -154,9 +162,11 @@ def prepare_apriori_input(occurrence_filename, terms, doc_terms=None):
                 key_terms = [str(term.ID) for term in doc_terms[first]]
                 key_terms = [term for term in key_terms 
                                  if term not in lterms and term in terms]
+
                 if key_terms:
                     line.extend(key_terms)
-            
+
+            # update the document summary line
             summary[first].update(line)
 
             # do not add blank or singleton lines
