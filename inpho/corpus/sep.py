@@ -171,7 +171,7 @@ def process_article(article, terms=None, entity_type=Idea, output_filename=None,
         logging.info("processing: %s %s" % (article, filename))
         doc = extract_article_body(filename)
         lines = dm.occurrences(doc, terms, title=article,
-                               remove_overlap=True,
+                               remove_overlap=False,
                                format_for_file=True,
                                output_filename=output_filename)
     else:
@@ -189,23 +189,9 @@ def process_wrapper(args):
 def process_articles(entity_type=Entity, output_filename='output-all.txt',
                      corpus_root='corpus/'):
     terms = select_terms(entity_type)
+    
     Session.expunge_all()
     Session.close()
-
-    # fix search patterns
-    for term in terms:
-        newpatterns = []
-        for pattern in term.searchpatterns:
-            if '(' in pattern and ')' in pattern:
-                pattern = pattern.replace('( ', '(\\b')
-                pattern = pattern.replace(' )', '\\b)')
-            else:
-                pattern = '\\b%s\\b' % pattern.strip()
-
-            newpatterns.append(pattern)
-
-        term.searchpatterns = newpatterns
-
     
     articles = Session.query(Entity.sep_dir).filter(Entity.sep_dir!=None)
     articles = articles.filter(Entity.sep_dir!='')

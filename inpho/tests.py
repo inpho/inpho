@@ -7,26 +7,40 @@ import sqlalchemy
 __all__ = ["Autotest"]
 
 class Autotest(unittest2.TestCase):
-    def getPassedTests(self):
-        return passed
+    def __init__(self, testname, server):
+        """
+        Initialized with the server host to test on.
+        """
+        super(Autotest, self).__init__(testname)
+        self.server = server
 
     def setUp(self):
-        self.conn = httplib.HTTPConnection("inphodev.cogs.indiana.edu:8087")
+        self.conn = httplib.HTTPConnection(self.server)
+
+    # Each test function's docstring should be written in this format:
+    # TITLE
+    # DESCRIPTION 
+    # URL* being tested
+    #
+    # * The url should only be complete if it is not on the server. Otherwise,
+    # it should just be the path after the server host in the url.
 
     def test_sep_crossRef(self):
         """
         SEP Cross-References
         Verify that SEP Cross-Reference at http://plato.stanford.edu/~inpho/crossref.php still works
+        http://plato.stanford.edu/~inpho/crossref.php
         """
         self.conn = httplib.HTTPConnection("plato.stanford.edu")
         self.conn.request("GET", "/~inpho/crossref.php")
         result = self.conn.getresponse()
         self.assertLessEqual(result.status, 200)
-
+        
     def test_entity_json(self):
         """
         Entity JSON
-        Verify that https://inpho.cogs.indiana.edu/entity.json returns HTTP 200
+        Verify that /entity.json returns HTTP 200
+        /entity.json
         """
         self.conn.request("GET", "/entity")
         result = self.conn.getresponse()
@@ -35,7 +49,8 @@ class Autotest(unittest2.TestCase):
     def test_idea_json(self):
         """
         Idea JSON
-        Verify that https://inpho.cogs.indiana.edu/idea.json returns HTTP 200
+        Verify that /idea.json returns HTTP 200
+        /idea.json
         """
         self.conn.request("GET", "/idea")
         result = self.conn.getresponse()
@@ -44,7 +59,8 @@ class Autotest(unittest2.TestCase):
     def test_thinker_json(self):
         """
         Thinker JSON
-        Verify that https://inpho.cogs.indiana.edu/thinker.json returns HTTP 200
+        Verify that /thinker.json returns HTTP 200
+        /thinker.json
         """
         self.conn.request("GET", "/thinker")
         result = self.conn.getresponse()
@@ -53,7 +69,8 @@ class Autotest(unittest2.TestCase):
     def test_journal_json(self):
         """
         Journal JSON
-        Verify that https://inpho.cogs.indiana.edu/journal.json returns HTTP 200
+        Verify that /journal.json returns HTTP 200
+        /journal.json
         """
         self.conn.request("GET", "/journal")
         result = self.conn.getresponse()
@@ -62,7 +79,8 @@ class Autotest(unittest2.TestCase):
     def test_taxonomy_json(self):
         """
         Taxonomy JSON
-        Verify that https://inpho.cogs.indiana.edu/taxonomy.json returns HTTP 200
+        Verify that /taxonomy.json returns HTTP 200
+        /taxonomy.json
         """
         self.conn.request("GET", "/taxonomy")
         result = self.conn.getresponse()
@@ -72,6 +90,7 @@ class Autotest(unittest2.TestCase):
         """
         Search Box
         Verify autocomplete works. Easy test: "time"
+        /entity.json?q=time
         """
         self.conn.request("GET", "/entity.json?q=time")
         result = self.conn.getresponse()
@@ -84,6 +103,7 @@ class Autotest(unittest2.TestCase):
         """
         OWL
         Verify log-generating script works
+        /owl
         """
         #OWL script
         node_q = Session.query(Node)
@@ -107,6 +127,7 @@ class Autotest(unittest2.TestCase):
         """
         Evaluation UI
         Verify user is able to Enable evaluations, choose an item, choose a setting, and submit an evaluation.
+        /idea/1488
         """
         #make user eval using POST
         #look for develper tools (use google chrome or new firefox)
@@ -121,6 +142,7 @@ class Autotest(unittest2.TestCase):
         """
         Evaluation Database
         Verify evaluation submissions append to database
+        /idea/1488
         """
         #being able to delete user eval
         self.conn.request("GET", "/idea/1488/relatedness/1793?_method=DELETE")
@@ -135,6 +157,7 @@ class Autotest(unittest2.TestCase):
         """
         SEP Publishing list
         Verify items are not already in database. Check sep_dir fields.
+        /admin
         """
         new = sep.new_entries()
         entries_in_db = 0
@@ -143,7 +166,3 @@ class Autotest(unittest2.TestCase):
                 entries_in_db += 1
                 print entry
         self.assertEqual(entries_in_db, 0)
-
-if __name__ == '__main__':
-   suite = unittest2.TestLoader().loadTestsFromTestCase(Autotest)
-   unittest2.TextTestRunner(verbosity=2).run(suite)

@@ -25,9 +25,7 @@ def get_document_occurrences(document, terms):
     # iterate over terms to be scanned
     for term in terms:
         # build list of search patterns starting with label
-        patterns = ['\b%s\b' % term.label]
-        patterns.extend(term.searchpatterns)
-        for pattern in patterns:
+        for pattern in term.patterns:
             try:
                 if re.search(pattern, document, flags=re.IGNORECASE):
                     occurrences.append(term)
@@ -35,7 +33,6 @@ def get_document_occurrences(document, terms):
             except re.error:
                 logging.warning('Term %d (%s) pattern "%s" failed' % 
                                 (term.ID, term.label, pattern))
-                term.searchpatterns.remove(pattern)
 
     return occurrences
 
@@ -66,10 +63,7 @@ def get_sentence_occurrences(document, terms, terms_present=None,
 
         for term in terms_present:
             # build list of search patterns starting with label
-            patterns = ['\b%s\b' % term.label]
-            patterns.extend(term.searchpatterns)
-
-            for pattern in patterns:
+            for pattern in term.patterns:
                 try:
                     # search for any occurrence of term, stop when found
                     if re.search(pattern, sentence, flags=re.IGNORECASE):
@@ -78,7 +72,6 @@ def get_sentence_occurrences(document, terms, terms_present=None,
                 except re.error:
                     logging.warning('Term %d (%s) pattern "%s" failed' % 
                                     (term.ID, term.label, pattern))
-                    term.searchpatterns.remove(pattern)
 
         # remove duplicates
         if remove_duplicates:
@@ -150,10 +143,18 @@ def prepare_apriori_input(occurrence_filename, terms, doc_terms=None):
     with open(occurrence_filename) as f:
         lines = []
         for line in f:
+            # get the list of terms, saving the article head for later addition
+            # of document terms
             lterms = line.split()
-            first = lterms[0]       # Save for doc_terms processing
+            first = lterms[0]
 
+            # filter the list of occurrences to only those that occur in the
+            # subset of terms we are data mining. This allows us to reuse 1
+            # occurrence file for idea-idea, idea-thinker, & thinker-thinker
+            # relations.
             line = [term for term in lterms if term in terms]
+
+            # TODO: Insert filter for overlapping search patterns.
 
             # append doc_terms
             if line and doc_terms is not None:
@@ -161,9 +162,11 @@ def prepare_apriori_input(occurrence_filename, terms, doc_terms=None):
                 key_terms = [str(term.ID) for term in doc_terms[first]]
                 key_terms = [term for term in key_terms 
                                  if term not in lterms and term in terms]
+
                 if key_terms:
                     line.extend(key_terms)
-            
+
+            # update the document summary line
             summary[first].update(line)
 
             # do not add blank or singleton lines
