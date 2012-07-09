@@ -64,6 +64,38 @@ class Entity(object):
         google = "http://www.google.com/search?q="
         google += quote_plus(self.label.encode("utf-8"))
         return google 
+
+    def new_pluralize(self):
+        """
+        Returns a list of all possible pluralizations
+
+        >>> Session.query(Entity).get(2428)
+        >>> entity.new_pluralize()
+        ['philosophy of law', 'philosophy of laws', 'philosophies of law', 'philosophies of laws']
+        """
+        combinations = list()
+        plurals = dict()
+
+        words = self.label.split()
+
+        # build up a dictionary of pluralizations to reuse - this way p.plural()
+        # isn't being called multiple times per word.
+        for word in words:
+            wordtemp = word
+            # process stoplist
+            if word in ['in', 'of', 'or', 'and', 'for', 'on', 'about', 'to']:
+                plurals[wordtemp] = [word]
+            else:
+                # singularize the words
+                re.sub('ies$','y', word) or re.search('descartes$', word) or re.sub('ypes$', 'ype', word) or re.search('tus$', word) or re.sub('([ea])nges$', '\1nge', word) or re.sub('([aeiou])cles$', '\1cle', word) or re.sub('bles$', 'ble', word) or re.sub('ues$', 'ue', word) or re.sub('nces$', 'nce', word) or re.search('ous$', word) or re.search('sis$', word) or re.sub('xes$', 'x', word) or re.sub('([aeiou])(.)es$', '\1\2e', word) or re.sub('ces$', 'ce', word) or re.sub('es$', '', word) or re.search('ss$', word) or re.search('s$', '', word)
+                plurals[wordtemp] = [word]
+                plurals[wordtemp].append(p.plural(word))
+
+        # TODO: Create a list of all possible combinations of pluralizations
+
+        return combinations
+
+
     
     def pluralize(self):
         pluralpatterns = []
