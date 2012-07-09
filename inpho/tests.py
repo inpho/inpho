@@ -7,16 +7,6 @@ import sqlalchemy
 __all__ = ["Autotest"]
 
 class Autotest(unittest2.TestCase):
-    def __init__(self, testname, server):
-        """
-        Initialized with the server host to test on.
-        """
-        super(Autotest, self).__init__(testname)
-        self.server = server
-
-    def setUp(self):
-        self.conn = httplib.HTTPConnection(self.server)
-
     # Each test function's docstring should be written in this format:
     # TITLE
     # DESCRIPTION 
@@ -24,6 +14,18 @@ class Autotest(unittest2.TestCase):
     #
     # * The url should only be complete if it is not on the server. Otherwise,
     # it should just be the path after the server host in the url.
+    def __init__(self, methodName='runTest', host='https://inpho.cogs.indiana.edu/'):
+        """
+        Override of init to allow for a parameter for the inpho host.
+        """
+        super(Autotest, self).__init__(methodName)
+        self.host = host
+
+    def getPassedTests(self):
+        return passed
+
+    def setUp(self):
+        self.conn = httplib.HTTPConnection(self.host)
 
     def test_sep_crossRef(self):
         """
@@ -42,7 +44,7 @@ class Autotest(unittest2.TestCase):
         Verify that /entity.json returns HTTP 200
         /entity.json
         """
-        self.conn.request("GET", "/entity")
+        self.conn.request("GET", "/entity.json")
         result = self.conn.getresponse()
         self.assertLessEqual(result.status, 400)
 
@@ -52,7 +54,52 @@ class Autotest(unittest2.TestCase):
         Verify that /idea.json returns HTTP 200
         /idea.json
         """
-        self.conn.request("GET", "/idea")
+        self.conn.request("GET", "/idea.json")
+        result = self.conn.getresponse()
+        self.assertLessEqual(result.status, 400)
+    
+    def test_idea_first_order_json(self):
+        """
+        Idea First-Order JSON
+        Verify that https://inpho.cogs.indiana.edu/idea/646/first_order.json returns HTTP 200
+        """
+        self.conn.request("GET", "/idea/646/first_order.json")
+        result = self.conn.getresponse()
+        self.assertLessEqual(result.status, 400)
+    
+    def test_idea_occurrences_json(self):
+        """
+        Idea Occurrences JSON
+        Verify that https://inpho.cogs.indiana.edu/idea/646/occurrences.json returns HTTP 200
+        """
+        self.conn.request("GET", "/idea/646/occurrences.json")
+        result = self.conn.getresponse()
+        self.assertLessEqual(result.status, 400)
+    
+    def test_idea_related_json(self):
+        """
+        Idea Related JSON
+        Verify that https://inpho.cogs.indiana.edu/idea/646/related.json returns HTTP 200
+        """
+        self.conn.request("GET", "/idea/646/related.json")
+        result = self.conn.getresponse()
+        self.assertLessEqual(result.status, 400)
+    
+    def test_idea_hyponyms_json(self):
+        """
+        Idea Hyponyms JSON
+        Verify that https://inpho.cogs.indiana.edu/idea/646/hyponyms.json returns HTTP 200
+        """
+        self.conn.request("GET", "/idea/646/hyponyms.json")
+        result = self.conn.getresponse()
+        self.assertLessEqual(result.status, 400)
+    
+    def test_idea_evaluated_json(self):
+        """
+        Idea evaluated JSON
+        Verify that https://inpho.cogs.indiana.edu/idea/646/evaluated.json returns HTTP 200
+        """
+        self.conn.request("GET", "/idea/646/evaluated.json")
         result = self.conn.getresponse()
         self.assertLessEqual(result.status, 400)
 
@@ -62,7 +109,7 @@ class Autotest(unittest2.TestCase):
         Verify that /thinker.json returns HTTP 200
         /thinker.json
         """
-        self.conn.request("GET", "/thinker")
+        self.conn.request("GET", "/thinker.json")
         result = self.conn.getresponse()
         self.assertLessEqual(result.status, 400)
 
@@ -72,7 +119,7 @@ class Autotest(unittest2.TestCase):
         Verify that /journal.json returns HTTP 200
         /journal.json
         """
-        self.conn.request("GET", "/journal")
+        self.conn.request("GET", "/journal.json")
         result = self.conn.getresponse()
         self.assertLessEqual(result.status, 400)
 
@@ -82,7 +129,7 @@ class Autotest(unittest2.TestCase):
         Verify that /taxonomy.json returns HTTP 200
         /taxonomy.json
         """
-        self.conn.request("GET", "/taxonomy")
+        self.conn.request("GET", "/taxonomy.json")
         result = self.conn.getresponse()
         self.assertLessEqual(result.status, 400)
 
@@ -166,3 +213,8 @@ class Autotest(unittest2.TestCase):
                 entries_in_db += 1
                 print entry
         self.assertEqual(entries_in_db, 0)
+
+if __name__ == '__main__':
+   suite = unittest2.TestLoader().loadTestsFromTestCase(Autotest)
+   suite.setUp(server='https://inpho.cogs.indiana.edu')
+   unittest2.TextTestRunner(verbosity=2).run(suite)
