@@ -2,10 +2,11 @@ from httplib import HTTPException
 import logging
 import os.path
 import time
-from inpho.lib.url import URLopener
+from urllib import quote_plus
+from urllib2 import Request, urlopen, URLError, HTTPError
 
-from inpho.model.entity import Entity
 import inpho.helpers
+from inpho.model.entity import Entity
 
 from sqlalchemy.ext.associationproxy import association_proxy
 
@@ -25,8 +26,8 @@ class Journal(Entity):
     def __str__(self):
         return self.label
     
-    def url(self, filetype=None, action=None):
-        return inpho.helpers.url(controller="journal", id=self.ID, 
+    def url(self, filetype=None, action=None, id2=None):
+        return inpho.helpers.url(controller="journal", id=self.ID, id2=id2,
                                  action=action, filetype=filetype)
 
     abbrs = association_proxy('abbreviations', 'value')
@@ -40,28 +41,32 @@ class Journal(Entity):
 
         # attempt to open the URL, capture exceptions as failure
         try:
-            request = URLopener().open(self.URL)
-        except (IOError, HTTPException) as e:
+            request = Request(self.URL.encode('utf-8'),
+                headers={'User-Agent' : 
+                ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10.6; rv:2.0.1)"
+                 "Gecko/20100101 Firefox/4.0.1")})
+            response = urlopen(request, timeout=15)
+        except (URLError, HTTPError, IOError, HTTPException) as e:
             logging.warning("URL failed w/exception! [%s] %s" % (self.URL, e))
             return False
 
-        # Get HTTP status code
-        status = request.getcode()
+        self.last_accessed = time.time()
 
         # If there is a redirect, fix the url
-        if status == 302:
-            self.URL = request.geturl()
+        if self.URL != response.geturl():
+            self.URL = response.geturl()
 
-        # Update the last accessed time
-        if status <= 307:
-            self.last_accessed = time.time()
-            return True
-        else:
-            return False
+        return True
 
     @property
     def last_accessed_str(self, format="%x %X %Z"):
         return time.strftime(format, time.gmtime(self.last_accessed))
+
+    @property
+    def ISSN_google_url(self):
+        google = "http://www.google.com/search?q="
+        google += quote_plus("%s %s" % (self.label.encode("utf-8"), self.ISSN))
+        return google 
 
     def json_struct(self, sep_filter=True, limit=10, extended=True):
         struct = { 'ID' : self.ID, 

@@ -10,9 +10,9 @@ class Node(Entity):
     def __str__(self):
         return self.label.encode('utf-8')
     
-    def url(self, filetype='html', action='view'):
+    def url(self, filetype='html', action='view', id2=None):
         return inpho.helpers.url(controller="taxonomy", id=self.ID, 
-                                 action=action, filetype=filetype)
+                                 action=action, id2=id2, filetype=filetype)
 
     def json_struct(self, sep_filter=True, limit=10, extended=True):
         struct = { 'ID' : self.ID, 

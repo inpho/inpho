@@ -34,6 +34,7 @@ class Thinker(Entity):
                   'type' : 'thinker',
                   'label' : self.label, 
                   'sep_dir' : self.sep_dir,
+                  'wiki' : self.wiki,
                   'url' : self.url()}
         if extended:
             struct.update({

@@ -14,9 +14,12 @@ if __name__ == "__main__":
     # raise an error.  If it's been inaccessible for four weeks, raise an 
     # error.
 
-    journal_list = Session.query(Journal).all()
+    journal_list = Session.query(Journal).filter(Journal.last_accessed<(time.time()-2419200)).all()
     for journal in journal_list:
+        orig_time = journal.last_accessed
         valid = journal.check_url()
+        Session.commit()
+
         if not valid:
             errormsg = "As of {0}, the journal {1} had a bad URL: {2}"
             print >> sys.stderr, errormsg.format(time.strftime("%Y-%m-%d %H:%M:%S"), journal.name, journal.URL)
@@ -26,7 +29,8 @@ if __name__ == "__main__":
             errormsg = "As of {0}, the journal {1} has been inaccessible for four weeks."
             print >> sys.stderr, errormsg.format(time.strftime("%Y-%m-%d %H:%M:%S"), journal.name)
 
-        Session.commit()
-        Session.flush()
+        if journal.last_accessed != orig_time:
+            print "%s has a new access time of %f->%f"\
+                % (journal.name, orig_time, journal.last_accessed)
 
     print "Succesfully checked {0} journal URLS.".format(len(journal_list))
