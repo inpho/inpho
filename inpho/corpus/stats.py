@@ -11,6 +11,25 @@ from collections import defaultdict
 from nltk.tokenize import PunktSentenceTokenizer as Tokenizer
 
 from inpho import config
+from inpho.model import *
+from collections import defaultdict
+
+def get_overlaps():
+    overlap = defaultdict(set)
+    patterns = Session.query(Searchpattern).join(Searchpattern.entity).filter(Entity.typeID==3).all()
+    for pattern in patterns:
+        # get overlapping patterns
+        overlaps = Session.query(Searchpattern).filter(Searchpattern.searchpattern.like('%'+pattern.searchpattern+'%')).all()
+
+        # store each overlap
+        for pattern2 in overlaps:
+            overlap[pattern.target_id].add(pattern2.target_id)
+
+    return overlap
+
+def print_overlaps(overlap):
+    for key, value in overlap.items():
+        print key, value
 
 def get_document_occurrences(document, terms):
     """
@@ -131,6 +150,19 @@ def occurrences(document, terms, title=None, remove_overlap=False,
 
         return lines
 
+def remove_overlaps(term_IDs, line, overlaps):
+    to_remove = set()
+
+    for id in term_IDs:
+        for term in line:
+            if term.ID != id and term.ID in overlaps[id]:
+                to_remove.add(term)
+    
+    for term in to_remove:
+        line.remove(term)
+
+    return line
+
 def prepare_apriori_input(occurrence_filename, terms, doc_terms=None):
     '''
     Prepares "shopping basket" input for the apriori miner from a file of
@@ -155,6 +187,7 @@ def prepare_apriori_input(occurrence_filename, terms, doc_terms=None):
             line = [term for term in lterms if term in terms]
 
             # TODO: Insert filter for overlapping search patterns.
+            overlaps_removed = remove_overlaps(terms, line, get_overlaps())
 
             # append doc_terms
             if line and doc_terms is not None:
