@@ -91,9 +91,7 @@ class Entity(object):
                 plurals[wordtemp] = [word]
                 plurals[wordtemp].append(p.plural(word))
 
-        # TODO: Create a list of all possible combinations of pluralizations
-
-        return combinations
+        return inpho.helpers.make_combinations("", words, 0, plurals, combinations)
 
 
     

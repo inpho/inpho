@@ -43,5 +43,23 @@ def url(controller, id=None, action=None, id2=None, filetype=None, **kwargs):
 
     return url
 
+def make_combinations(combo, words, index, plurals, combinations):
+    """
+    Recursive helper function to compile the list of combinations for new_pluralize()
+    """
+
+    if index == len(words):
+        # Append to list of combos if at the end of the list of words
+        combinations.append(combo)
+    else:
+        # Otherwise, loop through the possibilities of the next word
+        if index > 0:
+            combo += " "
+        for plural in plurals[words[index]]:
+            make_combinations(combo + str(plural), words, index + 1, plurals, combinations)
+    
+    if index == 0:
+        return combinations
+
 class ArgumentError(Exception):
     pass
