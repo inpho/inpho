@@ -1,3 +1,13 @@
+"""
+inpho.model.idea contains the SQLAlchemy objects representing concepts in an
+ontology. It also contains the idea evaluation objects.
+
+By executing this file as a script with the ``--export`` flag and an optional
+``-f`` flag specifying an output filename, a list of all concepts in the
+database is constructed.
+"""
+
+
 from inpho.model.entity import Entity
 import os.path
 import inpho.helpers
@@ -208,3 +218,36 @@ class AnonIdeaEvaluation(object):
         self.generality = generality
         self.hyperrank = hyperrank
         self.hyporank = hyporank
+
+# Export functionality
+if __name__ == '__main__':
+    from argparse import ArgumentParser
+    from codecs import open
+    import os.path
+    import sys
+
+    # NOTE: despite Idea being defined in this module, it must be reimported
+    # from inpho.model so that it is properly bound to the model.
+    from inpho.model import Session, Idea
+
+    # configure argument parser
+    parser = ArgumentParser(description='CLI for Idea objects.')
+    parser.add_argument('--export', dest='export', action='store_true')
+    parser.add_argument('-f', dest='filename', action='store')
+
+    # parse arguments
+    args = parser.parse_args()
+
+    # if export mode is enabled, export the IDs and labels
+    if args.export:
+        # write to file, or to standard out
+        if args.filename:
+            f = open(args.filename, 'w', encoding='utf-8')
+        else: 
+            f = sys.stdout
+
+        for id, label in Session.query(Idea.ID, Idea.label).all():
+            # NOTE: can be rewritten with csv module, but unicode issues
+            # surround us on all sides...
+            print >>f, "%s,%s" % (id, label)
+
