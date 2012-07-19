@@ -1,12 +1,34 @@
+"""
+The ``inpho.taxonomy`` module contains the Node class which is the basis of any
+concept heirarchy. It also provides several functions to import and export a
+taxonomy from various file formats, including DLV and plain-text. These formats
+depend on a particular term list and corresponding IDs.
+"""
+
 from collections import defaultdict
 import re
 
 from inpho.model import Session, Entity
 
+__all__ = ["Node", "from_dlv"]
+
 class Node(object):
     """
-    Class to represent an InPhO taxonomy
+    Class to represent a taxonomy node, and by extension an entire taxonomy.
+
+    Parameters
+    ----------
+    value : any
+        The datum stored in the Node. May be a label or an ORM-mapped object.
+        Default value is `None`, enabling null nodes containing only structural
+        information.
+    spine : boolean
+        The optional spine property can be used as a tag. Within the context of
+        the dynamic ontology framework, spine is used to specify whether the
+        taxonomic link was part of the seed taxonomy or the extensions made by
+        the answer set program. The default value is `None`. 
     """
+
     def __init__(self, value=None, spine=None):
         self.value = value
         self.spine = spine
@@ -23,12 +45,6 @@ class Node(object):
     def __iter__(self):
         return self.next()
 
-    def pretty(self, level=0, indent=4):
-        print "%(indent)s%(value)s" % {'indent' : " " * indent * level,
-                                 'value' : self.value}
-        for child in self.children:
-            child.pretty(level+1, indent)
- 
     def next(self):
         """ A recursive generator that prints the depth-first traversal. """
         yield self 
@@ -38,10 +54,19 @@ class Node(object):
 
     @property
     def children(self):
+        """
+        Returns a frozenset of the Node's children.
+        """
+        # TODO: Examine greater memory efficiency
+        # TODO: Better way to create read-only property?
         return frozenset(self._children)
 
     @property
     def edges(self):
+        """ 
+        Returns a list of all edges in the taxonomy in 
+        (parent.value, child.value) tuples. 
+        """
         edges = [(self.value, node.value) for node in self.children]
         for node in self.children:
             edges.extend(node.edges)
@@ -51,6 +76,24 @@ class Node(object):
     def root(self):
         """ Returns the root parent node. """
         return self.parent.root if self.parent else self
+
+    def pretty(self, level=0, indent=4):
+        """
+        Pretty-print function for a taxonomy.
+
+        Parameters
+        ----------
+        level : int
+            Indentation level. Default value is 0, with the assumption that no
+            arguments mean you are calling this function from the taxonomy root.
+        indent : int
+            Number of spaces per indentation level. Default is 4. 
+        """
+        print "%(indent)s%(value)s" % {'indent' : " " * indent * level,
+                                 'value' : self.value}
+        for child in self.children:
+            child.pretty(level+1, indent)
+ 
 
     def graft(self, child):
         """ Appends the Node as a child. """
@@ -69,7 +112,7 @@ class Node(object):
 
     def fragment(self):
         """ 
-        Removes this Node from its parent and returning a free-standing tree.
+        Removes this Node from its parent and returns it as a free-standing tree.
         """
         if self.parent is not None:
             return self.parent.prune(self)
@@ -81,7 +124,7 @@ class Node(object):
         return siblings
 
     def search(self, needle):
-        """ Search the tree with root self for needle. """
+        """ Search the tree for the value needle. """
         return self.search_dfs(needle)
 
     def search_dfs(self, needle):
@@ -111,7 +154,7 @@ class Node(object):
 
     def path_to(self, target):
         """
-        Finds a path between the node self and the node target.
+        Finds a path between the Node self and the Node target.
         """
 
         ## Get the list of nodes from self to root and from target to root.
@@ -205,3 +248,4 @@ def from_dlv(filename, load_obj=False):
             root.graft(node)
 
     return root
+
