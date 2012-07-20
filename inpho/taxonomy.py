@@ -109,7 +109,11 @@ class Node(object):
         Removes the given child Node. 
         Raises KeyError if child is not found in children.
         """
-        self._children.remove(child)
+        try:
+            self._children.remove(child)
+        except ValueError:
+            raise KeyError(str(child) + " not in children")
+
         child.parent = None
         return child
 
@@ -120,6 +124,7 @@ class Node(object):
         if self.parent is not None:
             return self.parent.prune(self)
 
+    @property
     def siblings(self):
         """ Returns the list of siblings """
         siblings = list(self.parent.children)
