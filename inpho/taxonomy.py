@@ -9,8 +9,9 @@ from collections import defaultdict
 import re
 
 from inpho.model import Session, Entity
+from inpho.model import Node as ModelNode
 
-__all__ = ["Node", "from_dlv"]
+__all__ = ["Node", "from_dlv", "from_pretty"]
 
 class Node(object):
     """
@@ -33,7 +34,7 @@ class Node(object):
         self.value = value
         self.spine = spine
         self.parent = None
-        self._children = set()
+        self._children = [] 
         self.links = set()
 
     def __repr__(self):
@@ -59,7 +60,7 @@ class Node(object):
         """
         # TODO: Examine greater memory efficiency
         # TODO: Better way to create read-only property?
-        return frozenset(self._children)
+        return self._children
 
     @property
     def edges(self):
@@ -89,15 +90,17 @@ class Node(object):
         indent : int
             Number of spaces per indentation level. Default is 4. 
         """
-        print "%(indent)s%(value)s" % {'indent' : " " * indent * level,
-                                 'value' : self.value}
+        lines = ["%(indent)s%(value)s" % {'indent' : " " * indent * level,
+                                 'value' : self.value}]
         for child in self.children:
-            child.pretty(level+1, indent)
+            lines.extend(child.pretty(level+1, indent))
+
+        return lines
  
 
     def graft(self, child):
         """ Appends the Node as a child. """
-        self._children.add(child)
+        self._children.append(child)
         child.parent = self
         return self
 
@@ -249,3 +252,39 @@ def from_dlv(filename, load_obj=False):
 
     return root
 
+def from_pretty(filename, load_obj=False, indent_len=4):
+    # set up taxonomy structure
+    nodes = defaultdict(Node)
+
+    # intialize loop parameters
+    branch = None
+    value = None
+    indent = 0
+
+    # Process pretty-print file
+    with open(filename) as f:
+        for line in f:
+            # calculate indent of current line
+            line_indent = len(line) - len(line.lstrip())
+            
+            # if identation goes down, traverse up the tree
+            if line_indent < indent:
+                levels = (indent - line_indent) / indent_len
+                for x in range(levels):
+                    branch = branch.parent
+            # if indentation goes up, move the graft point to the previous Node
+            elif line_indent > indent:
+                # value will pull from the old value
+                branch = nodes[value]
+            # set indentation
+            indent = line_indent
+           
+            # create new node
+            value = line.strip()
+            nodes[value] = Node(value)
+            if branch is None:
+                branch = nodes[value]
+            else:
+                branch = branch.graft(nodes[value])
+
+    return branch.root
