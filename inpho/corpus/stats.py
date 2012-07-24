@@ -150,13 +150,13 @@ def occurrences(document, terms, title=None, remove_overlap=False,
 
         return lines
 
-def remove_overlaps(term_IDs, line, overlaps):
+def remove_overlaps(line, overlaps):
     to_remove = set()
 
-    for id in term_IDs:
-        for term in line:
-            if term.ID != id and term.ID in overlaps[id]:
-                to_remove.add(term)
+    for id in line:
+        for id2 in line:
+            if id2 != id and int(id2) in overlaps[int(id)]:
+                to_remove.add(id)
     
     for term in to_remove:
         line.remove(term)
@@ -171,7 +171,8 @@ def prepare_apriori_input(occurrence_filename, terms, doc_terms=None):
     # build up terms, as they will occur in the file
     terms = [str(term.ID) for term in terms]
     summary = defaultdict(set)
-
+    overlaps = get_overlaps()
+    
     with open(occurrence_filename) as f:
         lines = []
         for line in f:
@@ -186,9 +187,9 @@ def prepare_apriori_input(occurrence_filename, terms, doc_terms=None):
             # relations.
             line = [term for term in lterms if term in terms]
 
-            # TODO: Insert filter for overlapping search patterns.
-            overlaps_removed = remove_overlaps(terms, line, get_overlaps())
-
+            # filter for overlapping search patterns.
+            line = remove_overlaps(line, overlaps)
+            
             # append doc_terms
             if line and doc_terms is not None:
                 # search for doc terms, remove duplicates, add to line
