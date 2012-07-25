@@ -136,8 +136,7 @@ class Autotest(unittest2.TestCase):
     def test_search_box(self):
         """
         Search Box
-        Verify autocomplete works. Easy test: "time"
-        /entity.json?q=time
+        Verify autocomplete works. Easy test: /entity.json?q=time
         """
         self.conn.request("GET", "/entity.json?q=time")
         result = self.conn.getresponse()
@@ -149,8 +148,7 @@ class Autotest(unittest2.TestCase):
     def test_owl(self):
         """
         OWL
-        Verify log-generating script works
-        /owl
+        Verify log-generating script works at /owl
         """
         #OWL script
         node_q = Session.query(Node)
@@ -173,8 +171,7 @@ class Autotest(unittest2.TestCase):
     def test_ui_eval(self):
         """
         Evaluation UI
-        Verify user is able to Enable evaluations, choose an item, choose a setting, and submit an evaluation.
-        /idea/1488
+        Verify user is able to Enable evaluations, choose an item, choose a setting, and submit an evaluation. Test at /idea/1488
         """
         #make user eval using POST
         #look for develper tools (use google chrome or new firefox)
@@ -188,8 +185,7 @@ class Autotest(unittest2.TestCase):
     def test_database_eval(self):
         """
         Evaluation Database
-        Verify evaluation submissions append to database
-        /idea/1488
+        Verify evaluation submissions append to database at /idea/1488
         """
         #being able to delete user eval
         self.conn.request("GET", "/idea/1488/relatedness/1793?_method=DELETE")
@@ -203,8 +199,7 @@ class Autotest(unittest2.TestCase):
     def test_sep_publishing_list(self):
         """
         SEP Publishing list
-        Verify items are not already in database. Check sep_dir fields.
-        /admin
+        Verify items are not already in database. Check sep_dir fields in /admin
         """
         new = sep.new_entries()
         entries_in_db = 0
