@@ -41,7 +41,7 @@ class Journal(Entity):
 
         # attempt to open the URL, capture exceptions as failure
         try:
-            request = Request(self.URL.encode('utf-8'),
+            request = Request(self.URL,
                 headers={'User-Agent' : 
                 ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10.6; rv:2.0.1)"
                  "Gecko/20100101 Firefox/4.0.1")})
