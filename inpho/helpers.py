@@ -56,7 +56,7 @@ def make_combinations(combo, words, index, plurals, combinations):
         if index > 0:
             combo += " "
         for plural in plurals[words[index]]:
-            make_combinations(combo + str(plural), words, index + 1, plurals, combinations)
+            make_combinations(combo + unicode(plural), words, index + 1, plurals, combinations)
     
     if index == 0:
         return combinations
