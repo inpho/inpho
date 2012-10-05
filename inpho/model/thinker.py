@@ -29,7 +29,8 @@ class Thinker(Entity):
                                  action=action, id2=id2, filetype=filetype)
 
     aliases = association_proxy('alias', 'value')
-    
+
+    # Triple Generation Code
     def rdf(self, graph):
         graph.add((rdf.inpho['thinker'], rdf.rdf['type'], rdf.foaf['person']))
         graph.add((rdf.inpho['thinker'], rdf.rdfs['subClassOf'], rdf.inpho['entity']))
@@ -42,6 +43,7 @@ class Thinker(Entity):
         
         return graph
 
+    # Make graph of Triples
     def graph(self, graph=None):
         if graph == None:
             graph = rdf.make_graph()
