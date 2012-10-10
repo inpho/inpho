@@ -1,3 +1,4 @@
+from inpho.lib import rdf
 from httplib import HTTPException
 import logging
 import os.path
@@ -29,6 +30,26 @@ class Journal(Entity):
     def url(self, filetype=None, action=None, id2=None):
         return inpho.helpers.url(controller="journal", id=self.ID, id2=id2,
                                  action=action, filetype=filetype)
+    # Triple Generation Code
+    def rdf(self, graph):
+        graph.add((rdf.inpho['journal'], rdf.rdf['type'], rdf.foaf['person']))
+        graph.add((rdf.inpho['journal'], rdf.rdfs['subClassOf'], rdf.inpho['entity']))
+        
+        graph.add((rdf.t['t' + str(self.ID)], rdf.rdf['type'], rdf.inpho['journal']))
+        graph.add((rdf.t['t' + str(self.ID)], rdf.foaf['name'], rdf.Literal(self.label)))
+        graph.add((rdf.t['t' + str(self.ID)], rdf.owl['sameAs'], rdf.e['e' + str(self.ID)]))
+        
+        return graph
+
+    # Make graph of Triples
+    def graph(self, graph=None):
+        if graph == None:
+            graph = rdf.make_graph()
+
+        graph = self.rdf(graph)
+
+        return graph
+
 
     abbrs = association_proxy('abbreviations', 'value')
     queries = association_proxy('query', 'value')
