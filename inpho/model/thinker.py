@@ -1,5 +1,6 @@
 import os.path
 
+from inpho.lib import rdf
 from inpho.model.entity import Entity
 from inpho.model.idea import Idea
 import inpho.helpers
@@ -28,6 +29,28 @@ class Thinker(Entity):
                                  action=action, id2=id2, filetype=filetype)
 
     aliases = association_proxy('alias', 'value')
+
+    # Triple Generation Code
+    def rdf(self, graph):
+        graph.add((rdf.inpho['thinker'], rdf.rdf['type'], rdf.foaf['person']))
+        graph.add((rdf.inpho['thinker'], rdf.rdfs['subClassOf'], rdf.inpho['entity']))
+        
+        graph.add((rdf.t['t' + str(self.ID)], rdf.rdf['type'], rdf.inpho['thinker']))
+        graph.add((rdf.t['t' + str(self.ID)], rdf.foaf['name'], rdf.Literal(self.label)))
+        graph.add((rdf.t['t' + str(self.ID)], rdf.owl['sameAs'], rdf.e['e' + str(self.ID)]))
+        if self.wiki:
+            graph.add((rdf.t['t' + str(self.ID)], rdf.owl['sameAs'], rdf.db[self.wiki]))
+        
+        return graph
+
+    # Make graph of Triples
+    def graph(self, graph=None):
+        if graph == None:
+            graph = rdf.make_graph()
+
+        graph = self.rdf(graph)
+
+        return graph
 
     def json_struct(self, sep_filter=True, limit=10,extended=True,graph=False,glimit=None):
         struct = { 'ID' : self.ID, 
