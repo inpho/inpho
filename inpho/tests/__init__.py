@@ -45,7 +45,7 @@ class Autotest(unittest2.TestCase):
         self.conn.request("GET", "/entity.json")
         result = self.conn.getresponse()
         self.assertLessEqual(result.status, 400)
-
+    
     def test_idea_json(self):
         """
         Idea JSON
@@ -106,6 +106,51 @@ class Autotest(unittest2.TestCase):
         Verify that /thinker.json returns HTTP 200
         """
         self.conn.request("GET", "/thinker.json")
+        result = self.conn.getresponse()
+        self.assertLessEqual(result.status, 400)
+
+    def test_specific_entity_json(self):
+        """
+        Specific Entity JSON
+        Verify that /entity/646.json returns HTTP 200
+        """
+        self.conn.request("GET", "/entity/646.json")
+        result = self.conn.getresponse()
+        self.assertLessEqual(result.status, 400)
+
+    def test_specific_thinker_json(self):
+        """
+        Specific Thinker JSON
+        Verify that /thinker/3724.json returns HTTP 200
+        """
+        self.conn.request("GET", "/thinker/3724.json")
+        result = self.conn.getresponse()
+        self.assertLessEqual(result.status, 400)
+
+    def test_specific_idea_json(self):
+        """
+        Specific Idea JSON
+        Verify that /idea/646.json returns HTTP 200
+        """
+        self.conn.request("GET", "/idea/646.json")
+        result = self.conn.getresponse()
+        self.assertLessEqual(result.status, 400)
+
+    def test_specific_school_of_thought_json(self):
+        """
+        Specific School of Thought JSON
+        Verify that /school_of_thought/5433.json returns HTTP 200
+        """
+        self.conn.request("GET", "/school_of_thought/5433.json")
+        result = self.conn.getresponse()
+        self.assertLessEqual(result.status, 400)
+
+    def test_specific_work_json(self):
+        """
+        Specific Work JSON
+        Verify that /work/5416.json returns HTTP 200
+        """
+        self.conn.request("GET", "/work/5416.json")
         result = self.conn.getresponse()
         self.assertLessEqual(result.status, 400)
 
