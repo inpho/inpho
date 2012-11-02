@@ -3,7 +3,7 @@ import os.path
 import string
 from urllib import quote_plus
 
-import inpho.helpers
+from inpho.helpers import ExtJsonEncoder
 
 from sqlalchemy.ext.associationproxy import association_proxy
 import inflect
