@@ -38,7 +38,7 @@ entity_table = Table('entity', metadata,
 
 searchpatterns_table = Table('searchpatterns', metadata,
     Column('searchpattern', Unicode, primary_key=True),
-    Column('target_id', ForeignKey('entity.ID'), primary_key=True),
+    Column('target_id', ForeignKey('entity.ID', ondelete='CASCADE'), primary_key=True),
     autoload=True, autoload_with=engine)
 
 #define idea tables
@@ -137,7 +137,7 @@ thinker_teacher_of_evaluation_table = Table('thinker_teacher_of_evaluation', met
     autoload=True, autoload_with=engine)
 
 date_table = Table('date', metadata,
-    Column('entity_id', ForeignKey('entity.ID'), primary_key=True),
+    Column('entity_id', ForeignKey('entity.ID', ondelete='CASCADE'), primary_key=True),
     autoload=True, autoload_with=engine, useexisting=True)
 
 # Journal tables
@@ -216,11 +216,13 @@ mapper(Entity, entity_table,
            'alias':relation(Alias),
            'dates':relation(Date, backref='entity'),
            #'spatterns':relation(Searchpattern),
-           #'_spatterns':relation(Searchpattern, backref='entity', cascade="all,delete-orphan")
+           '_spatterns':relation(Searchpattern, backref='entity',
+               cascade="all,delete-orphan", passive_deletes=True)
       })
 mapper(Searchpattern, searchpatterns_table,
        properties={
-           'entity':relation(Entity, backref="_spatterns", uselist=False)
+           #'entity':relation(Entity, backref="_spatterns", uselist=False,
+           #cascade="all,delete-orphan", single_parent=True, passive_deletes=True)
         })
 mapper(Alias, alias_table)
 mapper(Date, date_table)
@@ -453,9 +455,11 @@ mapper(Thinker, thinker_table,
         order_by=thinker_graph_edges_table.c.jweight.desc()
         ),
     'birth_dates':relation(Date,
-        primaryjoin=and_(entity_table.c.ID==date_table.c.entity_id, date_table.c.relation_id == 1)),
+        primaryjoin=and_(entity_table.c.ID==date_table.c.entity_id, date_table.c.relation_id == 1),
+        cascade="all,delete-orphan", passive_deletes=True),
     'death_dates':relation(Date,
-        primaryjoin=and_(entity_table.c.ID==date_table.c.entity_id, date_table.c.relation_id == 2))
+        primaryjoin=and_(entity_table.c.ID==date_table.c.entity_id, date_table.c.relation_id == 2),
+        cascade="all,delete-orphan", passive_deletes=True),
 })
 """    'birth':composite(SplitDate, thinker_table.c.birth_year,
                                  thinker_table.c.birth_month,
