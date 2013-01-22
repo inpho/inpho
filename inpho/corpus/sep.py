@@ -80,6 +80,22 @@ def get_titles():
 
     return titles
 
+def get_categories():
+    """
+    Returns a dictionary of { sep_dir : title } pairs.
+    """
+    entries = os.path.join(config.get('corpus', 'db_path'), 'entries.txt')
+    
+    categories = {}
+    with open(entries) as f:
+        for line in f:
+            sep_dir, rest = line.split('::', 1)
+            category = line.split('::')[-3]
+            category = category.replace(r"\'", "'")
+            categories[sep_dir] = category
+
+    return categories 
+
 def get_title(sep_dir):
     """
     Returns the title for the given sep_dir
@@ -449,6 +465,11 @@ if __name__ == "__main__":
                         dest='mode',
                         const='new_entries',
                         help="print a list of new entries")
+    parser.add_argument("--categories",
+                        action="store_const",
+                        dest='mode',
+                        const='categories',
+                        help="print a list of categories")
     parser.add_argument("--entry",
                         dest='article',
                         help="process a single article")
@@ -490,3 +511,6 @@ if __name__ == "__main__":
         process_articles(entity_type, occur_filename, corpus_root=corpus_root)
     elif options.mode == 'new_entries':
         fuzzymatch_new()
+    elif options.mode == 'categories':
+        for article, category in get_categories().iteritems():
+            print "%s::%s" % (article, category)
