@@ -149,7 +149,10 @@ def new_entries():
                 continue
 
     # remove the sample entry
-    new_sep_dirs.remove('sample')
+    try:
+        new_sep_dirs.remove('sample')
+    except ValueError:
+        pass
 
     return new_sep_dirs
 
