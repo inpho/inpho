@@ -52,6 +52,19 @@ def published(sep_dir, log_root=None):
     """
     Checks if the given article is published.
     """
+    return get_status_code(sep_dir, 'eP', log_root);
+
+
+def copy_edit(sep_dir, log_root=None):
+    """
+    Checks if the given article is in copy edit mode.
+    """
+    return get_status_code(sep_dir, 'eq', log_root);
+
+def get_status_code(sep_dir, code, log_root=None):
+    """
+    Checks if the given article has the given status code.
+    """
     if log_root is None:
         log_root = config.get('corpus', 'log_path')
 
@@ -60,7 +73,7 @@ def published(sep_dir, log_root=None):
         with open(log_path) as log:
             for line in log:
                 #use the published flag 
-                if '::eP' in line:
+                if ('::' + code) in line:
                     return True
 
     return False
@@ -112,7 +125,7 @@ def new_entries():
         for line in f:
             sep_dir = line.split('::', 1)[0]
             try:
-                if sep_dir not in sep_dirs and published(sep_dir):
+                if sep_dir not in sep_dirs and copy_edit(sep_dir):
                     # published entry not in database, add to list of entries
                     new_sep_dirs.append(sep_dir)
             except IOError:
