@@ -28,7 +28,8 @@ setup(
         "mysql-python>=1.2",
         "SQLAlchemy>=0.6.0,<=0.6.99",
         "inflect>=0.2.0,<=0.2.99",
-        "BeautifulSoup>=3.2.0,<=3.2.99"
+        "BeautifulSoup>=3.2.0,<=3.2.99",
+        "rdflib>=3.2.0,<=3.2.99"
     ],
 
     long_description = """\

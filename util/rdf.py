@@ -55,12 +55,26 @@ def make_graph():
     g.add((inpho['thinker'], rdf['type'], foaf['person']))
     g.add((inpho['thinker'], rdfs['subClassOf'], inpho['entity']))
     for thinker in thinkers:
-        g.add((t['t' + str(thinker.ID)], rdf['type'], inpho['thinker']))
-        g.add((t['t' + str(thinker.ID)], foaf['name'], Literal(thinker.label)))
-        g.add((t['t' + str(thinker.ID)], owl['sameAs'], e['e' + str(thinker.ID)]))
+        g.add((t[str(thinker.ID)], rdf['type'], inpho['thinker']))
+        g.add((t[str(thinker.ID)], foaf['name'], Literal(thinker.label)))
+        g.add((t[str(thinker.ID)], owl['sameAs'], e[str(thinker.ID)]))
+
         if thinker.wiki:
-            g.add((t['t' + str(thinker.ID)], owl['sameAs'], db[thinker.wiki]))
-        
+            g.add((t[str(thinker.ID)], owl['sameAs'], db[thinker.wiki.decode('utf-8')]))
+
+        for birth in thinker.birth_dates:
+            g.add((t[str(thinker.ID)], inpho['birth_date'], Literal(repr(birth))))
+        for death in thinker.death_dates:
+            g.add((t[str(thinker.ID)], inpho['death_date'], Literal(repr(death))))
+            
+        for student in thinker.students:
+            g.add((t[str(student.ID)], inpho['student'], t[str(thinker.ID)]))
+        for teacher in thinker.teachers:
+            g.add((t[str(teacher.ID)], inpho['teacher'], t[str(thinker.ID)]))
+        for influence in thinker.influenced:
+            g.add((t[str(influence.ID)], inpho['influenced'], t[str(thinker.ID)]))
+        for influence in thinker.influenced_by:
+            g.add((t[str(influence.ID)], inpho['influenced_by'], t[str(thinker.ID)]))
 
     # Select all ConceptSchemes
     g.add((skos['conceptscheme'], skos['hasTopConcept'], inpho['idea']))
@@ -72,13 +86,13 @@ def make_graph():
     g.add((inpho['idea'], rdfs['subClassOf'], skos['Concept']))
     g.add((inpho['idea'], skos['exactMatch'], db['concept'])) 
     for idea in ideas:
-        g.add((i['idea' + str(idea.ID)], rdf['type'], inpho['idea']))
-        g.add((t['t' + str(thinker.ID)], owl['sameAs'], e['e' + str(thinker.ID)]))
+        g.add((i[str(idea.ID)], rdf['type'], inpho['idea']))
+        g.add((i[str(thinker.ID)], owl['sameAs'], e[str(thinker.ID)]))
         for instance in idea.instances:
-            g.add((i['idea' + str(idea.ID)], skos['broader'], i['idea' + str(instance.ID)]))
+            g.add((i[str(idea.ID)], skos['broader'], i[str(instance.ID)]))
         for node in idea.nodes:
             for child in node.children:
-                g.add((i['idea' + str(idea.ID)], skos['broader'], i['idea' + str(child.idea.ID)]))
+                g.add((i[str(idea.ID)], skos['broader'], i[str(child.idea.ID)]))
 
     # Never create an instance of an inpho:user, used to tag provenance of evaluations
     # Select all Users
@@ -94,15 +108,16 @@ def make_graph():
     entities = Session.query(Entity).all()
     g.add((inpho['entity'], rdf['type'], owl['Thing']))
     for entity in entities:
-        g.add((e['e' + str(entity.ID)], rdf['type'], inpho['entity']))
-        g.add((e['e' + str(entity.ID)], skos['prefLabel'], Literal(entity.label)))
-        g.add((e['e' + str(entity.ID)], inpho['provenance'], Literal(entity.created_by)))
-        g.add((e['e' + str(entity.ID)], dc['creator'], Literal(entity.created_by)))
-        g.add((e['e' + str(entity.ID)], dc['created'], Literal(entity.created)))
-        # g.add((e['e' + str(entity.ID)], skos['alt'], Literal(entity.alias)))
+        g.add((e[str(entity.ID)], rdf['type'], inpho['entity']))
+        g.add((e[str(entity.ID)], skos['prefLabel'], Literal(entity.label)))
+        g.add((e[str(entity.ID)], inpho['provenance'], Literal(entity.created_by)))
+        g.add((e[str(entity.ID)], dc['creator'], Literal(entity.created_by)))
+        g.add((e[str(entity.ID)], dc['created'], Literal(entity.created)))
+        for searchpattern in entity.searchpatterns:
+            g.add((e[str(entity.ID)], skos['altLabel'], Literal(entity.label)))
             
     # OWL disjoints
-    disjoint_objects = ["thinker", "journal", "idea"]
+    disjoint_objects = ["thinker", "journal", "idea", "user"]
     for a, b in combinations(disjoint_objects, 2):
         g.add((inpho[a], owl['disjointWith'], inpho[b]))
  

@@ -4,10 +4,19 @@ import string
 from urllib import quote_plus
 
 import inpho.helpers
+from inpho.helpers import ExtJsonEncoder
 
 from sqlalchemy.ext.associationproxy import association_proxy
 import inflect
 p = inflect.engine()
+
+class Searchpattern(object):
+    def __init__(self, id, searchpattern):
+        self.target_id = id
+        self.searchpattern = searchpattern
+
+def create_searchpattern(searchpattern):
+    return Searchpattern(None, searchpattern)
 
 class Entity(object):
     def url(self, filetype='html', action='view', id2=None):
@@ -50,7 +59,7 @@ class Entity(object):
 
         return filename
     
-    searchpatterns = association_proxy('_spatterns', 'searchpattern')
+    searchpatterns = association_proxy('_spatterns', 'searchpattern', creator=create_searchpattern)
     
     @property
     def patterns(self):
@@ -314,11 +323,6 @@ class Entity(object):
                         
 
         return search_string_list
-
-class Searchpattern(object):
-    def __init__(self, id, searchpattern):
-        self.target_id = id
-        self.searchpattern = searchpattern
 
 class Alias(object):
     pass

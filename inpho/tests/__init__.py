@@ -31,7 +31,6 @@ class Autotest(unittest2.TestCase):
         """
         SEP Cross-References
         Verify that SEP Cross-Reference at http://plato.stanford.edu/~inpho/crossref.php still works
-        http://plato.stanford.edu/~inpho/crossref.php
         """
         self.conn = httplib.HTTPConnection("plato.stanford.edu")
         self.conn.request("GET", "/~inpho/crossref.php")
@@ -42,17 +41,15 @@ class Autotest(unittest2.TestCase):
         """
         Entity JSON
         Verify that /entity.json returns HTTP 200
-        /entity.json
         """
         self.conn.request("GET", "/entity.json")
         result = self.conn.getresponse()
         self.assertLessEqual(result.status, 400)
-
+    
     def test_idea_json(self):
         """
         Idea JSON
         Verify that /idea.json returns HTTP 200
-        /idea.json
         """
         self.conn.request("GET", "/idea.json")
         result = self.conn.getresponse()
@@ -107,9 +104,53 @@ class Autotest(unittest2.TestCase):
         """
         Thinker JSON
         Verify that /thinker.json returns HTTP 200
-        /thinker.json
         """
         self.conn.request("GET", "/thinker.json")
+        result = self.conn.getresponse()
+        self.assertLessEqual(result.status, 400)
+
+    def test_specific_entity_json(self):
+        """
+        Specific Entity JSON
+        Verify that /entity/646.json returns HTTP 200
+        """
+        self.conn.request("GET", "/entity/646.json")
+        result = self.conn.getresponse()
+        self.assertLessEqual(result.status, 400)
+
+    def test_specific_thinker_json(self):
+        """
+        Specific Thinker JSON
+        Verify that /thinker/3724.json returns HTTP 200
+        """
+        self.conn.request("GET", "/thinker/3724.json")
+        result = self.conn.getresponse()
+        self.assertLessEqual(result.status, 400)
+
+    def test_specific_idea_json(self):
+        """
+        Specific Idea JSON
+        Verify that /idea/646.json returns HTTP 200
+        """
+        self.conn.request("GET", "/idea/646.json")
+        result = self.conn.getresponse()
+        self.assertLessEqual(result.status, 400)
+
+    def test_specific_school_of_thought_json(self):
+        """
+        Specific School of Thought JSON
+        Verify that /school_of_thought/5433.json returns HTTP 200
+        """
+        self.conn.request("GET", "/school_of_thought/5433.json")
+        result = self.conn.getresponse()
+        self.assertLessEqual(result.status, 400)
+
+    def test_specific_work_json(self):
+        """
+        Specific Work JSON
+        Verify that /work/5416.json returns HTTP 200
+        """
+        self.conn.request("GET", "/work/5416.json")
         result = self.conn.getresponse()
         self.assertLessEqual(result.status, 400)
 
@@ -117,7 +158,6 @@ class Autotest(unittest2.TestCase):
         """
         Journal JSON
         Verify that /journal.json returns HTTP 200
-        /journal.json
         """
         self.conn.request("GET", "/journal.json")
         result = self.conn.getresponse()
@@ -127,7 +167,6 @@ class Autotest(unittest2.TestCase):
         """
         Taxonomy JSON
         Verify that /taxonomy.json returns HTTP 200
-        /taxonomy.json
         """
         self.conn.request("GET", "/taxonomy.json")
         result = self.conn.getresponse()
@@ -136,8 +175,7 @@ class Autotest(unittest2.TestCase):
     def test_search_box(self):
         """
         Search Box
-        Verify autocomplete works. Easy test: "time"
-        /entity.json?q=time
+        Verify autocomplete works. Easy test: "time" at /entity.json?q=time
         """
         self.conn.request("GET", "/entity.json?q=time")
         result = self.conn.getresponse()
@@ -149,8 +187,7 @@ class Autotest(unittest2.TestCase):
     def test_owl(self):
         """
         OWL
-        Verify log-generating script works
-        /owl
+        Verify log-generating script works at /owl
         """
         #OWL script
         node_q = Session.query(Node)
@@ -173,8 +210,7 @@ class Autotest(unittest2.TestCase):
     def test_ui_eval(self):
         """
         Evaluation UI
-        Verify user is able to Enable evaluations, choose an item, choose a setting, and submit an evaluation.
-        /idea/1488
+        Verify user is able to Enable evaluations, choose an item, choose a setting, and submit an evaluation to /idea/1488
         """
         #make user eval using POST
         #look for develper tools (use google chrome or new firefox)
@@ -188,8 +224,7 @@ class Autotest(unittest2.TestCase):
     def test_database_eval(self):
         """
         Evaluation Database
-        Verify evaluation submissions append to database
-        /idea/1488
+        Verify evaluation submissions append to database at /idea/1488
         """
         #being able to delete user eval
         self.conn.request("GET", "/idea/1488/relatedness/1793?_method=DELETE")
@@ -203,8 +238,7 @@ class Autotest(unittest2.TestCase):
     def test_sep_publishing_list(self):
         """
         SEP Publishing list
-        Verify items are not already in database. Check sep_dir fields.
-        /admin
+        Verify items are not already in database. Check sep_dir fields at /admin
         """
         new = sep.new_entries()
         entries_in_db = 0
