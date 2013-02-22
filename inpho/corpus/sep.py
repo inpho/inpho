@@ -48,6 +48,19 @@ def extract_article_body(filename):
 
         return ''
 
+def article_path(sep_dir):
+    if published(sep_dir):
+        corpus_root = config.get('corpus', 'path')
+        path = os.path.join(corpus_root, sep_dir, 'index.html')
+    elif copy_edit(sep_dir):
+        corpus_root = config.get('corpus', 'edit_path')
+        path = os.path.join(corpus_root, sep_dir, 'index.html')
+        logging.info('Processing unpublished article ' + sep_dir)
+    else:
+        path = ''
+
+    return path
+
 def published(sep_dir, log_root=None):
     """
     Checks if the given article is published.
@@ -195,7 +208,7 @@ def process_article(article, terms=None, entity_type=Idea, output_filename=None,
 
     lines = []
 
-    filename = os.path.join(corpus_root, article, 'index.html')
+    filename = article_path(article)
     article_terms = Session.query(entity_type)
     article_terms = article_terms.filter(entity_type.sep_dir==article)
     article_terms = article_terms.all()
