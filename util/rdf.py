@@ -9,56 +9,60 @@ from inpho.model import *
 
 from itertools import *
 
+inpho = Namespace("http://inpho.cogs.indiana.edu/")
+t = Namespace("http://inpho.cogs.indiana.edu/thinker/")
+j = Namespace("http://inpho.cogs.indiana.edu/journal/")
+u = Namespace("http://inpho.cogs.indiana.edu/user/")
+foaf = Namespace("http://xmlns.com/foaf/0.1/")
+rdf = Namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#")
+rdfs = Namespace("http://www.w3.org/TR/rdf-schema/#")
+owl = Namespace("http://www.w3.org/2002/07/owl#")
+i = Namespace("http://inpho.cogs.indiana.edu/idea/")
+skos = Namespace("http://www.w3.org/2004/02/skos/core#")
+db = Namespace("http://dbpedia.org/")
+dc = Namespace("http://purl.org/dc/elements/1.1/")
+
 def make_graph():
     g = Graph()
 
     # add namespaces
-    inpho = Namespace("http://inpho.cogs.indiana.edu/")
     g.bind("inpho", "http://inpho.cogs.indiana.edu/")
-
-    t = Namespace("http://inpho.cogs.indiana.edu/thinker/")
     g.bind("thinker", "http://inpho.cogs.indiana.edu/thinker/")
-
+    g.bind("journal", "http://inpho.cogs.indiana.edu/journal/")
+    g.bind("foaf", "http://xmlns.com/foaf/0.1/")
+    g.bind("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#")
+    g.bind("rdfs", "http://www.w3.org/TR/rdf-schema/#")
+    g.bind("owl", "http://www.w3.org/2002/07/owl#")
+    g.bind("idea", "http://inpho.cogs.indiana.edu/idea/")
+    g.bind("skos", "http://www.w3.org/2004/02/skos/core#")
+    g.bind ("db", "http://dbpedia.org/")
+    g.bind ("dc", "http://purl.org/dc/elements/1.1/")
+    
     # user namespace currently doesn't exist?
-    u = Namespace("http://inpho.cogs.indiana.edu/user/")
     g.bind("user", "http://inpho.cogs.indiana.edu/user/")
 
-    e = Namespace("http://inpho.cogs.indiana.edu/entity/")
-    g.bind("entity", "http://inpho.cogs.indiana.edu/entity/")
+    # OWL disjoints
+    disjoint_objects = ["thinker", "journal", "idea", "user"]
+    for a, b in combinations(disjoint_objects, 2):
+        g.add((inpho[a], owl['disjointWith'], inpho[b]))
+ 
+    g = populate_thinkers(g)
+    g = populate_ideas(g)
+    g = populate_journals(g)
 
-    foaf = Namespace("http://xmlns.com/foaf/0.1/")
-    g.bind("foaf", "http://xmlns.com/foaf/0.1/")
+    return g
 
-    rdf = Namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#")
-    g.bind("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#")
-
-    rdfs = Namespace("http://www.w3.org/TR/rdf-schema/#")
-    g.bind("rdfs", "http://www.w3.org/TR/rdf-schema/#")
-
-    owl = Namespace("http://www.w3.org/2002/07/owl#")
-    g.bind("owl", "http://www.w3.org/2002/07/owl#")
-
-    i = Namespace("http://inpho.cogs.indiana.edu/idea/")
-    g.bind("idea", "http://inpho.cogs.indiana.edu/idea/")
-
-    skos = Namespace("http://www.w3.org/2004/02/skos/core#")
-    g.bind("skos", "http://www.w3.org/2004/02/skos/core#")
-
-    db = Namespace("http://dbpedia.org/")
-    g.bind ("db", "http://dbpedia.org/")
-
-    dc = Namespace("http://purl.org/dc/elements/1.1/")
-    g.bind ("dc", "http://purl.org/dc/elements/1.1/")
-
+def populate_thinkers(g):
     # Select all Thinkers
     thinkers = Session.query(Thinker).all()
     g.add((inpho['thinker'], rdf['type'], foaf['person']))
-    g.add((inpho['thinker'], rdfs['subClassOf'], inpho['entity']))
+    
     for thinker in thinkers:
         g.add((t[str(thinker.ID)], rdf['type'], inpho['thinker']))
         g.add((t[str(thinker.ID)], foaf['name'], Literal(thinker.label)))
-        g.add((t[str(thinker.ID)], owl['sameAs'], e[str(thinker.ID)]))
-
+        
+        g = populate_entity(g, thinker, t)
+        
         if thinker.wiki:
             g.add((t[str(thinker.ID)], owl['sameAs'], db[thinker.wiki.decode('utf-8')]))
 
@@ -76,26 +80,29 @@ def make_graph():
         for influence in thinker.influenced_by:
             g.add((t[str(influence.ID)], inpho['influenced_by'], t[str(thinker.ID)]))
 
+    return g
+
+def populate_ideas(g):
     # Select all ConceptSchemes
     g.add((skos['conceptscheme'], skos['hasTopConcept'], inpho['idea']))
-    g.add((inpho['idea'], rdfs['subClassOf'], inpho['entity']))
 
     #Select all Ideas
     ideas = Session.query(Idea).all()
-    g.add((inpho['idea'], rdfs['subClassOf'], inpho['entity']))
     g.add((inpho['idea'], rdfs['subClassOf'], skos['Concept']))
     g.add((inpho['idea'], skos['exactMatch'], db['concept'])) 
+
     for idea in ideas:
+        g = populate_entity(g, idea, i)
         g.add((i[str(idea.ID)], rdf['type'], inpho['idea']))
-        g.add((i[str(thinker.ID)], owl['sameAs'], e[str(thinker.ID)]))
         for instance in idea.instances:
             g.add((i[str(idea.ID)], skos['broader'], i[str(instance.ID)]))
         for node in idea.nodes:
             for child in node.children:
                 g.add((i[str(idea.ID)], skos['broader'], i[str(child.idea.ID)]))
 
-    # Never create an instance of an inpho:user, used to tag provenance of evaluations
-    # Select all Users
+    return g
+
+def populate_users(g):
     users = Session.query(User).all()
     g.add((inpho['user'], rdf['type'], foaf['Person']))
     g.add((inpho['expert_user'], rdfs['subClassOf'], inpho['user']))
@@ -104,23 +111,49 @@ def make_graph():
     for user in users:
         g.add((u['u' + str(user.ID)], rdf['type'], inpho['user']))
 
+    return g
+
+def populate_journals(g):
+    # Select all Journals
+    journals = Session.query(Journal).all()
+    for journal in journals:
+        g.add((j[str(journal.ID)], rdf['type'], inpho['journal']))
+        g = populate_entity(g, journal, j)
+
+        if journal.URL:
+            g.add((j[str(journal.ID)], rdf['about'], Literal(journal.URL)))
+        if journal.language:
+            g.add((j[str(journal.ID)], dc['language'], Literal(journal.language)))
+
+    return g
+
+def populate_entities(g):
     # Select all Entities
     entities = Session.query(Entity).all()
     g.add((inpho['entity'], rdf['type'], owl['Thing']))
     for entity in entities:
         g.add((e[str(entity.ID)], rdf['type'], inpho['entity']))
         g.add((e[str(entity.ID)], skos['prefLabel'], Literal(entity.label)))
-        g.add((e[str(entity.ID)], inpho['provenance'], Literal(entity.created_by)))
-        g.add((e[str(entity.ID)], dc['creator'], Literal(entity.created_by)))
-        g.add((e[str(entity.ID)], dc['created'], Literal(entity.created)))
+        if entity.created_by:
+            g.add((e[str(entity.ID)], inpho['provenance'], Literal(entity.created_by)))
+            g.add((e[str(entity.ID)], dc['creator'], Literal(entity.created_by)))
+        if entity.created:
+            g.add((e[str(entity.ID)], dc['created'], Literal(entity.created)))
         for searchpattern in entity.searchpatterns:
             g.add((e[str(entity.ID)], skos['altLabel'], Literal(entity.label)))
-            
-    # OWL disjoints
-    disjoint_objects = ["thinker", "journal", "idea", "user"]
-    for a, b in combinations(disjoint_objects, 2):
-        g.add((inpho[a], owl['disjointWith'], inpho[b]))
- 
+    
+    return g
+
+def populate_entity(g, entity, type):
+    g.add((type[str(entity.ID)], skos['prefLabel'], Literal(entity.label)))
+    if entity.created_by:
+        g.add((type[str(entity.ID)], inpho['provenance'], Literal(entity.created_by)))
+        g.add((type[str(entity.ID)], dc['creator'], Literal(entity.created_by)))
+    if entity.created:
+        g.add((type[str(entity.ID)], dc['created'], Literal(entity.created)))
+    for searchpattern in entity.searchpatterns:
+        g.add((type[str(entity.ID)], skos['altLabel'], Literal(entity.label)))
+
     return g
 
 # serialization format argument parser
