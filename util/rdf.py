@@ -122,6 +122,7 @@ def populate_journals(g):
 
         if journal.URL:
             g.add((j[str(journal.ID)], rdf['about'], Literal(journal.URL)))
+            g.add((j[str(journal.ID)], foaf['homepage'], Literal(journal.URL)))
         if journal.language:
             g.add((j[str(journal.ID)], dc['language'], Literal(journal.language)))
 
@@ -146,6 +147,8 @@ def populate_entities(g):
 
 def populate_entity(g, entity, type):
     g.add((type[str(entity.ID)], skos['prefLabel'], Literal(entity.label)))
+    g.add((type[str(entity.ID)], rdfs['label'], Literal(entity.label)))
+    g.add((type[str(entity.ID)], foaf['name'], Literal(entity.label)))
     if entity.created_by:
         g.add((type[str(entity.ID)], inpho['provenance'], Literal(entity.created_by)))
         g.add((type[str(entity.ID)], dc['creator'], Literal(entity.created_by)))
