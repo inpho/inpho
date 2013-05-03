@@ -214,7 +214,8 @@ mapper(Entity, entity_table,
        polymorphic_on=entity_table.c.typeID, polymorphic_identity=0,
        properties={
            'alias':relation(Alias),
-           'dates':relation(Date, backref='entity'),
+           'dates':relation(Date, backref='entity',
+               cascade="all,delete-orphan", passive_deletes=True),
            #'spatterns':relation(Searchpattern),
            '_spatterns':relation(Searchpattern, backref='entity',
                cascade="all,delete-orphan", passive_deletes=True)
