@@ -424,6 +424,12 @@ mapper(Thinker, thinker_table,
         secondaryjoin=(thinker_graph_edges_table.c.cons_id == thinker_table.c.ID),
         order_by=thinker_graph_edges_table.c.jweight.desc()
         ),
+    'related_thinkers':relation(Thinker, secondary=thinker_graph_edges_table,
+        lazy='dynamic', viewonly=True,
+        primaryjoin=(thinker_table.c.ID == thinker_graph_edges_table.c.ante_id),
+        secondaryjoin=(thinker_graph_edges_table.c.cons_id == thinker_table.c.ID),
+        order_by=thinker_graph_edges_table.c.jweight.desc()
+        ),
     'related_ideas':relation(Idea, secondary=idea_thinker_graph_edges_table,
         lazy='dynamic', viewonly=True,
         primaryjoin=and_(entity_table.c.ID ==idea_thinker_graph_edges_table.c.ante_id,

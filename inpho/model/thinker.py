@@ -80,9 +80,14 @@ class Thinker(Entity):
                 struct.update({
                     'related_ideas' : [i.ID for i in
                             self.related_ideas.filter(Idea.sep_dir != '')[:limit-1]]})
+                struct.update({
+                    'related_thinkers' : [t.ID for t in
+                            self.related_thinkers.filter(Thinker.sep_dir != '')[:limit-1]]})
             else:
                 struct.update({
                     'related_ideas' : [i.ID for i in self.related_ideas[:limit-1]]})
+                struct.update({
+                    'related_thinkers' : [t.ID for t in self.related_thinkers[:limit-1]]})
 
 
         if graph:
