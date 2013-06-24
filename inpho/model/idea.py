@@ -60,10 +60,7 @@ class Idea(Entity):
                   'url' : self.url()}
         if extended:
             struct.update({
-                  'nodes' : [node.ID for node in self.nodes],
                   'instances' : [ins.ID for ins in self.instances],
-                  'classes' : [child.idea.ID for ins in self.nodes 
-                                             for child in ins.children],
                   'links' : [ins.ID for ins in self.links]})
             if sep_filter:
                 struct.update({
@@ -116,36 +113,24 @@ class Idea(Entity):
     
     def path_to_root(self):
         """Returns the shortest direct path to the root node."""
-        nodes = self.nodes[:]
-        if nodes:
-            paths = map(lambda x: x.path_to_root(), nodes)
-            best = min(paths, key=lambda x: len(x))
-            return best
-
-        # otherwise look at the instances
-        nodes = []
-        for i in self.instance_of:
-            nodes.extend(i.nodes[:])
-
-        if nodes:
-            paths = map(lambda x: x.path_to_root(), nodes)
-            best = min(paths, key=lambda x: len(x))
-            return best
-
-        raise Exception("Idea is not an instance or node")
+        return min(self.paths_to_root(), key=len)
         
     def paths_to_root(self,max=False):
         """Returns a list of paths and alternate paths to root using links"""
-        nodes = self.nodes[:]
-        for i in self.instance_of:
-            nodes.extend(i.nodes[:])
         
-        paths = [self.path_to_root()]
-        npaths = map(lambda x: x.paths_to_root(), nodes)
-        for n in npaths:
-            if (not max or len(n) <= max) and n not in paths:
-                paths.extend(n)
-        return paths
+        if not self.instance_of:
+            # terminate recursion
+            return [[self]]
+        else:
+            paths = []
+            for parent in self.instance_of:
+                paths.extend(parent.paths_to_root())
+            # TODO: Insert links as well
+            for path in paths:
+                path.insert(0, self)
+            return paths
+
+        # TODO: Handle cases with 0 paths to root
 	
     
     @staticmethod
@@ -182,15 +167,15 @@ class Idea(Entity):
 
         raise Exception("Path not found")
     
-    def shortest_path(self, node, alt_paths=True):
-        path = self.path(self.path_to_root(), node.path_to_root())
+    def shortest_path(self, other, alt_paths=True):
+        path = self.path(self.path_to_root(), other.path_to_root())
         if not alt_paths:
             return path
 
         best = path
         for s in self.paths_to_root(len(best)):
-            for n in node.paths_to_root(len(best)):
-                path = self.path(s, n, len(best))
+            for o in other.paths_to_root(len(best)):
+                path = self.path(s, o, len(best))
                 if path and len(path) < len(best):
                     best = path
         

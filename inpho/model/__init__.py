@@ -73,14 +73,6 @@ thinker_graph_edges_table = Table('thinker_graph_edges', metadata,
     Column('cons_id', ForeignKey('thinker.ID'), primary_key=True),
     autoload=True, autoload_with=engine)
 
-ontotree_table = Table('ontotree', metadata,
-    Column('ID', ForeignKey('entity.ID'), primary_key=True),
-    Column('concept_id', ForeignKey('idea.ID')),
-    Column('area_id', ForeignKey('idea.ID')),
-    Column('parent_concept_id', ForeignKey('idea.ID')),
-    Column('parent_id', ForeignKey('ontotree.ID')), 
-    autoload=True, autoload_with=engine)
-
 # note - when moving to new schema, will need to change this table's ORM
 idea_evaluation_table = Table('idea_evaluation', metadata,
     Column('ID', Integer, primary_key=True),
@@ -247,14 +239,7 @@ mapper(Idea, idea_table, inherits=Entity,
         backref=backref('instance_of', order_by=idea_table.c.entropy.desc()),
         cascade="all, delete"
         ),
-    'nodes':relation(Node, secondary=ontotree_table, viewonly=True,
-        primaryjoin=(idea_table.c.ID == ontotree_table.c.concept_id),
-        secondaryjoin=(ontotree_table.c.concept_id == idea_table.c.ID),
-        order_by=idea_table.c.entropy.desc(),
-        #backref=backref('idea'),
-        cascade="all, delete"
-        ),
-    'evaluations':relation(Node, secondary=idea_evaluation_table,
+    'evaluations':relation(Idea, secondary=idea_evaluation_table,
         primaryjoin=(idea_table.c.ID == idea_evaluation_table.c.ante_id),
         secondaryjoin=(idea_evaluation_table.c.ante_id == idea_table.c.ID),
         order_by=idea_evaluation_table.c.relatedness.desc(),
@@ -355,19 +340,6 @@ mapper(IdeaThinkerGraphEdge, idea_thinker_graph_edges_table, properties={
 
 
 # Taxonomy mappers
-mapper(Node, ontotree_table, inherits=Entity, 
-    polymorphic_identity=2, polymorphic_on=entity_table.c.typeID,
-    properties={
-    'children':relation(Node, lazy='joined', 
-        primaryjoin=ontotree_table.c.ID==ontotree_table.c.parent_id,
-        backref=backref('parent', remote_side=[ontotree_table.c.ID])), 
-    'idea':relation(Idea, uselist=False, secondary=idea_table, lazy=False,
-        primaryjoin=(idea_table.c.ID == ontotree_table.c.concept_id),
-        secondaryjoin=(ontotree_table.c.concept_id == idea_table.c.ID),
-        foreign_keys=[idea_table.c.ID]
-        ), #uselist=False allows for 1:1 relation
-})
-
 mapper(Instance, idea_instance_of_table, properties={
     'class_idea':relation(Idea, uselist=False, secondary=idea_table,
         primaryjoin=(idea_table.c.ID == idea_instance_of_table.c.class_id),
