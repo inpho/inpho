@@ -20,7 +20,9 @@ def print_taxonomy():
     appearances = set()
     
     # Select concept_id and parent_concept_id pairs
-    ids = Session.query(Node.concept_id, Node.parent_concept_id).all()
+    ids = Session.query(idea_instance_of_table.c.instance_id,
+                        idea_instance_of_table.c.class_id)
+    ids = ids.filter(idea_instance_of_table.c.backbone==1).all()
 
     # Build up atoms for hand-built taxonomy
     for concept_id, parent_concept_id in ids:
