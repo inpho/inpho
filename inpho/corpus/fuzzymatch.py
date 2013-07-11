@@ -43,7 +43,6 @@ def fuzzymatch_all(string1):
     """
     # construct Entity query  
     entities = Session.query(Entity)
-    entities = entities.filter(Entity.typeID != 2) # exclude nodes
     entities = entities.filter(Entity.typeID != 4) # exclude journals
 
     # initialize result object

@@ -192,8 +192,8 @@ def select_terms(entity_type=Idea):
     # process entities
     ideas = Session.query(entity_type)
     ideas = ideas.options(subqueryload('_spatterns'))
-    # do not process Nodes or Journals
-    ideas = ideas.filter(and_(Entity.typeID!=2, Entity.typeID!=4))
+    # do not process Journals
+    ideas = ideas.filter(Entity.typeID!=4)
     return ideas.all()
      
 
