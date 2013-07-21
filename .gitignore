@@ -6,6 +6,7 @@ docs/_build
 sandbox
 
 *.log
+log
 
 backup
 cache
