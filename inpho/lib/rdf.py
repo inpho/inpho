@@ -2,8 +2,6 @@ import rdflib
 from rdflib import Literal, Namespace
 from rdflib.graph import ConjunctiveGraph as Graph
 
-from inpho.model import *
-
 from itertools import *
 
 # add namespaces
