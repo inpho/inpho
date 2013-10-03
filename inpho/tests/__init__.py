@@ -9,12 +9,11 @@ __all__ = ["Autotest"]
 class Autotest(unittest2.TestCase):
     # Each test function's docstring should be written in this format:
     # TITLE
-    # DESCRIPTION 
-    # URL* being tested
+    # DESCRIPTION (including URL that is being tested) 
     #
-    # * The url should only be complete if it is not on the server. Otherwise,
+    # * The url should only be complete if it is not on the local server (your test server). Otherwise,
     # it should just be the path after the server host in the url.
-    def __init__(self, methodName='runTest', host='https://inpho.cogs.indiana.edu/'):
+    def __init__(self, methodName='runTest', host='inphodev.cogs.indiana.edu:8087'):
         """
         Override of init to allow for a parameter for the inpho host.
         """
@@ -248,7 +247,21 @@ class Autotest(unittest2.TestCase):
                 print entry
         self.assertEqual(entries_in_db, 0)
 
+    def test_entity_creation(self):
+        """
+        Entity Creation
+        Verify a new entity can be created. Check /entity/new
+        """
+        self.conn.request("POST", "/idea?_method=POST&label=test")
+        result = self.conn.getresponse()
+        self.assertLessEqual(result.status, 400)
+
+#### NEED TO ACCESS THE NUMBER IN THE URL FOR THE 'Test' entity in order to delete it
+   # def test_entity_delete(self):
+   #     self.conn.request("POST", "/idea?_method=POST&label=test")
+   #     result = self.conn.getresponse()
+   #     self.assertLessEqual(result.status, 400)
+   #     result.
+
 if __name__ == '__main__':
-   suite = unittest2.TestLoader().loadTestsFromTestCase(Autotest)
-   suite.setUp(server='https://inpho.cogs.indiana.edu')
-   unittest2.TextTestRunner(verbosity=2).run(suite)
+   unittest2.main()
