@@ -1,5 +1,7 @@
 import unittest2
 import httplib
+import base64
+import inpoh.config
 import inpho.corpus.sep as sep
 from inpho.model import *
 import sqlalchemy
@@ -250,18 +252,26 @@ class Autotest(unittest2.TestCase):
     def test_entity_creation(self):
         """
         Entity Creation
-        Verify a new entity can be created. Check /entity/new
+        Verify a new entity can be created. Check /idea?_method=POST&label=test
         """
         self.conn.request("POST", "/idea?_method=POST&label=test")
         result = self.conn.getresponse()
         self.assertLessEqual(result.status, 400)
 
 #### NEED TO ACCESS THE NUMBER IN THE URL FOR THE 'Test' entity in order to delete it
-   # def test_entity_delete(self):
-   #     self.conn.request("POST", "/idea?_method=POST&label=test")
-   #     result = self.conn.getresponse()
-   #     self.assertLessEqual(result.status, 400)
-   #     result.
-
+    ''' def test_entity_delete(self):
+        """
+        Entity Deletion
+        Verify an entity can be deleted. 
+        """
+        user = inpho.config.get("authorization", "user")
+        password = inpho.config.get("authorization", "password")
+        auth = "Basic " + base64.b64encode(user + ":" + password)
+        self.conn.request("POST", "/idea?_method=POST&label=test", headers={"Authorization": auth})
+        result = self.conn.getresponse()
+        body = result.read() #get url from here to obtain location of test entity so we can delete it!
+        self.assertLessEqual(result.status, 400)
+        result.
+        '''
 if __name__ == '__main__':
    unittest2.main()
