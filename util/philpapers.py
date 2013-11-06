@@ -3,6 +3,7 @@ import json
 import os
 import os.path
 import sys
+import tarfile
 from time import strftime, sleep
 
 from inpho import config
@@ -10,7 +11,8 @@ from inpho import config
 #run as this on command line:
 # >> nohup python philpapers.py
 
-def pull_from_date(start_date, offset=0, data_path=None, log_path=None): 
+def pull_from_date(start_date, offset=0, data_path=None, log_path=None,
+                   backup_path=None): 
     """
     Pulls and pickles all new or changed paper abstracts
     from start_date until there are no more and then records
@@ -29,6 +31,9 @@ def pull_from_date(start_date, offset=0, data_path=None, log_path=None):
     
     rundate = strftime("%Y-%m-%d")
     sys.stderr.write('Starting at ' + str(rundate) + ' with ' + start_date + '\n')
+
+    if backup_path is not None:
+        backup(data_path, backup_path, rundate)
     
     conn = httplib.HTTPConnection("philpapers.org")
     
@@ -70,13 +75,26 @@ def pull_from_date(start_date, offset=0, data_path=None, log_path=None):
     with open(log_path, 'a+') as log:
         log.write('Pulled: ' + str(rundate) + '\n')
     
-       
+def backup(data_path, backup_path, rundate):
+    backup_path = os.path.join(backup_path, rundate + '.tar.gz')
+    tar = tarfile.open(backup_path, 'w:gz')
+    tar.add(data_path, arcname=os.path.basename(data_path))
+    tar.close()
+        
+    
 
 #start date 1970-01-01 for the first pull
 #currently incremented manually for subsequent pulls, but should read log file
 if __name__ == '__main__':
+    import sys
+
     log_path = config.get('general', 'log_path')
     philpapers_log = os.path.join(log_path, 'philpapers')
+
+    backup_path = config.get('general', 'backup_path')
+    philpapers_backup_path = os.path.join(backup_path, 'philpapers')
+    if not os.path.exists(philpapers_backup_path):
+        os.mkdir(philpapers_backup_path)
 
     if os.path.exists(philpapers_log):
         with open(philpapers_log, 'r') as f:
@@ -86,10 +104,17 @@ if __name__ == '__main__':
     else:
         start_date = "1970-01-01"
 
-    data_path = config.get('general', 'data_path')
-    philpapers_data_path = os.path.join(data_path, 'philpapers')
+    if sys.argv[-1] != 'philpapers.py':
+        philpapers_data_path = sys.argv[-1]
+    else:
+        data_path = config.get('general', 'data_path')
+        philpapers_data_path = os.path.join(data_path, 'philpapers')
 
-    pull_from_date(start_date, data_path=philpapers_data_path, log_path=philpapers_log)
-
-
+    print "DATA:", philpapers_data_path
+    print "LOG:", philpapers_log
+    print "BACKUP:", philpapers_backup_path
+    pull_from_date("2013-05-22", 
+                   data_path=philpapers_data_path,
+                   log_path=philpapers_log, 
+                   backup_path=philpapers_backup_path)
 
