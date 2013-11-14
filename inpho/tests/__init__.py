@@ -38,7 +38,7 @@ class Autotest(unittest2.TestCase):
         result = self.conn.getresponse()
         self.assertLessEqual(result.status, 200)
         
-    def test_entity_json(self):
+    def test_json_entity(self):
         """
         Entity JSON
         Verify that /entity.json returns HTTP 200
@@ -47,7 +47,7 @@ class Autotest(unittest2.TestCase):
         result = self.conn.getresponse()
         self.assertLessEqual(result.status, 400)
     
-    def test_idea_json(self):
+    def test_json_idea(self):
         """
         Idea JSON
         Verify that /idea.json returns HTTP 200
@@ -101,7 +101,7 @@ class Autotest(unittest2.TestCase):
         result = self.conn.getresponse()
         self.assertLessEqual(result.status, 400)
 
-    def test_thinker_json(self):
+    def test_json_thinker(self):
         """
         Thinker JSON
         Verify that /thinker.json returns HTTP 200
@@ -155,7 +155,7 @@ class Autotest(unittest2.TestCase):
         result = self.conn.getresponse()
         self.assertLessEqual(result.status, 400)
 
-    def test_journal_json(self):
+    def test_json_journal(self):
         """
         Journal JSON
         Verify that /journal.json returns HTTP 200
@@ -164,7 +164,7 @@ class Autotest(unittest2.TestCase):
         result = self.conn.getresponse()
         self.assertLessEqual(result.status, 400)
 
-    def test_taxonomy_json(self):
+    def test_json_taxonomy(self):
         """
         Taxonomy JSON
         Verify that /taxonomy.json returns HTTP 200
@@ -207,24 +207,26 @@ class Autotest(unittest2.TestCase):
         self.assertGreaterEqual(len(professions), 906)
         self.assertGreaterEqual(len(nationalities), 86)
 
-
-    def test_ui_eval(self):
+    def test_eval_anon(self):
         """
-        Evaluation UI
+        Create Evaluation
         Verify user is able to Enable evaluations, choose an item, choose a setting, and submit an evaluation to /idea/1488
         """
         #make user eval using POST
         #look for develper tools (use google chrome or new firefox)
-        self.conn.request("POST", "/idea/1488/relatedness/1793")
+        self.conn.request("POST", "/idea/1488/relatedness/2166", "degree=1")
         r_result = self.conn.getresponse()
-        self.conn.request("POST", "/idea/1488/generality/1793")
+        self.conn.request("POST", "/idea/1488/generality/2166", "degree=1")
         g_result = self.conn.getresponse()
-        self.assertLessEqual(r_result.status, 400)
+        self.conn.request("GET", "/idea/1488/evaluation/2166?edit=&relatedness=0&generality=-1&alert=")
+        r = self.conn.getresponse()
+        self.assertLessEqual(r, 400)
         self.assertLessEqual(g_result.status, 400)
+        self.assertLessEqual(r_result.status, 400)
 
-    def test_database_eval(self):
+    def test_eval_anon_delete(self):
         """
-        Evaluation Database
+        Delete Evaluation
         Verify evaluation submissions append to database at /idea/1488
         """
         #being able to delete user eval
