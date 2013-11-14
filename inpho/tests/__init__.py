@@ -38,7 +38,7 @@ class Autotest(unittest2.TestCase):
         result = self.conn.getresponse()
         self.assertLessEqual(result.status, 200)
         
-    def test_entity_json(self):
+    def test_json_entity(self):
         """
         Entity JSON
         Verify that /entity.json returns HTTP 200
@@ -47,7 +47,7 @@ class Autotest(unittest2.TestCase):
         result = self.conn.getresponse()
         self.assertLessEqual(result.status, 400)
     
-    def test_idea_json(self):
+    def test_json_idea(self):
         """
         Idea JSON
         Verify that /idea.json returns HTTP 200
@@ -101,7 +101,7 @@ class Autotest(unittest2.TestCase):
         result = self.conn.getresponse()
         self.assertLessEqual(result.status, 400)
 
-    def test_thinker_json(self):
+    def test_json_thinker(self):
         """
         Thinker JSON
         Verify that /thinker.json returns HTTP 200
@@ -155,7 +155,7 @@ class Autotest(unittest2.TestCase):
         result = self.conn.getresponse()
         self.assertLessEqual(result.status, 400)
 
-    def test_journal_json(self):
+    def test_json_journal(self):
         """
         Journal JSON
         Verify that /journal.json returns HTTP 200
@@ -164,7 +164,7 @@ class Autotest(unittest2.TestCase):
         result = self.conn.getresponse()
         self.assertLessEqual(result.status, 400)
 
-    def test_taxonomy_json(self):
+    def test_json_taxonomy(self):
         """
         Taxonomy JSON
         Verify that /taxonomy.json returns HTTP 200
@@ -207,7 +207,7 @@ class Autotest(unittest2.TestCase):
         self.assertGreaterEqual(len(professions), 906)
         self.assertGreaterEqual(len(nationalities), 86)
 
-    def test_anon_eval(self):
+    def test_eval_anon(self):
         """
         Create Evaluation
         Verify user is able to Enable evaluations, choose an item, choose a setting, and submit an evaluation to /idea/1488
@@ -224,7 +224,7 @@ class Autotest(unittest2.TestCase):
         self.assertLessEqual(g_result.status, 400)
         self.assertLessEqual(r_result.status, 400)
 
-    def test_anon_delete_eval(self):
+    def test_eval_anon_delete(self):
         """
         Delete Evaluation
         Verify evaluation submissions append to database at /idea/1488
