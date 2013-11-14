@@ -207,24 +207,26 @@ class Autotest(unittest2.TestCase):
         self.assertGreaterEqual(len(professions), 906)
         self.assertGreaterEqual(len(nationalities), 86)
 
-
-    def test_ui_eval(self):
+    def test_anon_eval(self):
         """
-        Evaluation UI
+        Create Evaluation
         Verify user is able to Enable evaluations, choose an item, choose a setting, and submit an evaluation to /idea/1488
         """
         #make user eval using POST
         #look for develper tools (use google chrome or new firefox)
-        self.conn.request("POST", "/idea/1488/relatedness/1793")
+        self.conn.request("POST", "/idea/1488/relatedness/2166", "degree=1")
         r_result = self.conn.getresponse()
-        self.conn.request("POST", "/idea/1488/generality/1793")
+        self.conn.request("POST", "/idea/1488/generality/2166", "degree=1")
         g_result = self.conn.getresponse()
-        self.assertLessEqual(r_result.status, 400)
+        self.conn.request("GET", "/idea/1488/evaluation/2166?edit=&relatedness=0&generality=-1&alert=")
+        r = self.conn.getresponse()
+        self.assertLessEqual(r, 400)
         self.assertLessEqual(g_result.status, 400)
+        self.assertLessEqual(r_result.status, 400)
 
-    def test_database_eval(self):
+    def test_anon_delete_eval(self):
         """
-        Evaluation Database
+        Delete Evaluation
         Verify evaluation submissions append to database at /idea/1488
         """
         #being able to delete user eval
