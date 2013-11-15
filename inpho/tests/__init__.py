@@ -263,7 +263,7 @@ class Autotest(unittest2.TestCase):
     def test_entity_delete(self):
         """
         Entity Deletion
-        Verify an entity can be deleted. 
+        Verify an entity can be deleted. Check if 'test' is returned in /idea?q=test 
         """
         user = inpho.config.get("authorization", "user")
         password = inpho.config.get("authorization", "password")
