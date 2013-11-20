@@ -1,9 +1,13 @@
-import unittest2
-import httplib
 import base64
+import httplib
+import time
+import unittest2
+from urlparse import urlparse
+
 import inpho.config
 import inpho.corpus.sep as sep
 from inpho.model import *
+
 import sqlalchemy
 
 __all__ = ["Autotest"]
@@ -216,10 +220,13 @@ class Autotest(unittest2.TestCase):
         #look for develper tools (use google chrome or new firefox)
         self.conn.request("POST", "/idea/1488/relatedness/2166", "degree=1")
         r_result = self.conn.getresponse()
+        r_result.read()
         self.conn.request("POST", "/idea/1488/generality/2166", "degree=1")
         g_result = self.conn.getresponse()
+        g_result.read()
         self.conn.request("GET", "/idea/1488/evaluation/2166?edit=&relatedness=0&generality=-1&alert=")
         r = self.conn.getresponse()
+        r.read()
         self.assertLess(r, 400)
         self.assertLess(g_result.status, 400)
         self.assertLess(r_result.status, 400)
@@ -232,8 +239,10 @@ class Autotest(unittest2.TestCase):
         #being able to delete user eval
         self.conn.request("GET", "/idea/1488/relatedness/1793?_method=DELETE")
         r_result = self.conn.getresponse()
+        r_result.read()
         self.conn.request("GET", "/idea/1488/generality/1793?_method=DELETE")
         g_result = self.conn.getresponse()
+        g_result.read()
         #FAILING because both status variables return 302 'FOUND', NOT 400
         self.assertLess(r_result.status, 400)
         self.assertLess(g_result.status, 400)
@@ -272,14 +281,19 @@ class Autotest(unittest2.TestCase):
         # Create or Find the test entity to be deleted
         self.conn.request("POST", "/idea?_method=POST&label=test", headers={"Authorization": auth})
         result = self.conn.getresponse()
+        result.read()
         self.assertLess(result.status, 400)
 
+        # delay to allow change to propogate
+        time.sleep(5)
+
         # Delete the newly created test entity
-        url = result.getheader('location')
-        location = url[-20:-10] 
+        url = urlparse(result.getheader('location'))
+        location = url.path.replace('/view.html', '')+"?_method=DELETE"
         self.conn = httplib.HTTPConnection(self.host)
-        self.conn.request("POST", location+"?_method=DELETE", headers={"Authorization": auth})
+        self.conn.request("GET", location, headers={"Authorization": auth})
         result2 = self.conn.getresponse()
+        result2.read()
         self.assertLess(result2.status, 400)
         
 if __name__ == '__main__':
