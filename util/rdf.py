@@ -80,6 +80,12 @@ def populate_thinkers(g):
         for influence in thinker.influenced_by:
             g.add((t[str(influence.ID)], inpho['influenced_by'], t[str(thinker.ID)]))
 
+        for nationality in thinker.nationalities:
+            g.add((t[str(thinker.ID)], inpho['nationality'], Literal(nationality)))
+        for profession in thinker.professions:
+            g.add((t[str(thinker.ID)], inpho['profession'], Literal(profession)))
+
+
     return g
 
 def populate_ideas(g):

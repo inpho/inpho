@@ -1,9 +1,13 @@
-import unittest2
-import httplib
 import base64
+import httplib
+import time
+import unittest2
+from urlparse import urlparse
+
 import inpho.config
 import inpho.corpus.sep as sep
 from inpho.model import *
+
 import sqlalchemy
 
 __all__ = ["Autotest"]
@@ -38,23 +42,23 @@ class Autotest(unittest2.TestCase):
         result = self.conn.getresponse()
         self.assertLessEqual(result.status, 200)
         
-    def test_entity_json(self):
+    def test_json_entity(self):
         """
         Entity JSON
         Verify that /entity.json returns HTTP 200
         """
         self.conn.request("GET", "/entity.json")
         result = self.conn.getresponse()
-        self.assertLessEqual(result.status, 400)
+        self.assertLess(result.status, 400)
     
-    def test_idea_json(self):
+    def test_json_idea(self):
         """
         Idea JSON
         Verify that /idea.json returns HTTP 200
         """
         self.conn.request("GET", "/idea.json")
         result = self.conn.getresponse()
-        self.assertLessEqual(result.status, 400)
+        self.assertLess(result.status, 400)
     
     def test_idea_first_order_json(self):
         """
@@ -63,7 +67,7 @@ class Autotest(unittest2.TestCase):
         """
         self.conn.request("GET", "/idea/646/first_order.json")
         result = self.conn.getresponse()
-        self.assertLessEqual(result.status, 400)
+        self.assertLess(result.status, 400)
     
     def test_idea_occurrences_json(self):
         """
@@ -72,7 +76,7 @@ class Autotest(unittest2.TestCase):
         """
         self.conn.request("GET", "/idea/646/occurrences.json")
         result = self.conn.getresponse()
-        self.assertLessEqual(result.status, 400)
+        self.assertLess(result.status, 400)
     
     def test_idea_related_json(self):
         """
@@ -81,7 +85,7 @@ class Autotest(unittest2.TestCase):
         """
         self.conn.request("GET", "/idea/646/related.json")
         result = self.conn.getresponse()
-        self.assertLessEqual(result.status, 400)
+        self.assertLess(result.status, 400)
     
     def test_idea_hyponyms_json(self):
         """
@@ -90,7 +94,7 @@ class Autotest(unittest2.TestCase):
         """
         self.conn.request("GET", "/idea/646/hyponyms.json")
         result = self.conn.getresponse()
-        self.assertLessEqual(result.status, 400)
+        self.assertLess(result.status, 400)
     
     def test_idea_evaluated_json(self):
         """
@@ -99,16 +103,16 @@ class Autotest(unittest2.TestCase):
         """
         self.conn.request("GET", "/idea/646/evaluated.json")
         result = self.conn.getresponse()
-        self.assertLessEqual(result.status, 400)
+        self.assertLess(result.status, 400)
 
-    def test_thinker_json(self):
+    def test_json_thinker(self):
         """
         Thinker JSON
         Verify that /thinker.json returns HTTP 200
         """
         self.conn.request("GET", "/thinker.json")
         result = self.conn.getresponse()
-        self.assertLessEqual(result.status, 400)
+        self.assertLess(result.status, 400)
 
     def test_specific_entity_json(self):
         """
@@ -117,7 +121,7 @@ class Autotest(unittest2.TestCase):
         """
         self.conn.request("GET", "/entity/646.json")
         result = self.conn.getresponse()
-        self.assertLessEqual(result.status, 400)
+        self.assertLess(result.status, 400)
 
     def test_specific_thinker_json(self):
         """
@@ -126,7 +130,7 @@ class Autotest(unittest2.TestCase):
         """
         self.conn.request("GET", "/thinker/3724.json")
         result = self.conn.getresponse()
-        self.assertLessEqual(result.status, 400)
+        self.assertLess(result.status, 400)
 
     def test_specific_idea_json(self):
         """
@@ -135,7 +139,7 @@ class Autotest(unittest2.TestCase):
         """
         self.conn.request("GET", "/idea/646.json")
         result = self.conn.getresponse()
-        self.assertLessEqual(result.status, 400)
+        self.assertLess(result.status, 400)
 
     def test_specific_school_of_thought_json(self):
         """
@@ -144,7 +148,7 @@ class Autotest(unittest2.TestCase):
         """
         self.conn.request("GET", "/school_of_thought/5433.json")
         result = self.conn.getresponse()
-        self.assertLessEqual(result.status, 400)
+        self.assertLess(result.status, 400)
 
     def test_specific_work_json(self):
         """
@@ -153,25 +157,25 @@ class Autotest(unittest2.TestCase):
         """
         self.conn.request("GET", "/work/5416.json")
         result = self.conn.getresponse()
-        self.assertLessEqual(result.status, 400)
+        self.assertLess(result.status, 400)
 
-    def test_journal_json(self):
+    def test_json_journal(self):
         """
         Journal JSON
         Verify that /journal.json returns HTTP 200
         """
         self.conn.request("GET", "/journal.json")
         result = self.conn.getresponse()
-        self.assertLessEqual(result.status, 400)
+        self.assertLess(result.status, 400)
 
-    def test_taxonomy_json(self):
+    def test_json_taxonomy(self):
         """
         Taxonomy JSON
         Verify that /taxonomy.json returns HTTP 200
         """
         self.conn.request("GET", "/taxonomy.json")
         result = self.conn.getresponse()
-        self.assertLessEqual(result.status, 400)
+        self.assertLess(result.status, 400)
 
     def test_search_box(self):
         """
@@ -207,34 +211,41 @@ class Autotest(unittest2.TestCase):
         self.assertGreaterEqual(len(professions), 906)
         self.assertGreaterEqual(len(nationalities), 86)
 
-
-    def test_ui_eval(self):
+    def test_eval_anon(self):
         """
-        Evaluation UI
+        Create Evaluation
         Verify user is able to Enable evaluations, choose an item, choose a setting, and submit an evaluation to /idea/1488
         """
         #make user eval using POST
         #look for develper tools (use google chrome or new firefox)
-        self.conn.request("POST", "/idea/1488/relatedness/1793")
+        self.conn.request("POST", "/idea/1488/relatedness/2166", "degree=1")
         r_result = self.conn.getresponse()
-        self.conn.request("POST", "/idea/1488/generality/1793")
+        r_result.read()
+        self.conn.request("POST", "/idea/1488/generality/2166", "degree=1")
         g_result = self.conn.getresponse()
-        self.assertLessEqual(r_result.status, 400)
-        self.assertLessEqual(g_result.status, 400)
+        g_result.read()
+        self.conn.request("GET", "/idea/1488/evaluation/2166?edit=&relatedness=0&generality=-1&alert=")
+        r = self.conn.getresponse()
+        r.read()
+        self.assertLess(r, 400)
+        self.assertLess(g_result.status, 400)
+        self.assertLess(r_result.status, 400)
 
-    def test_database_eval(self):
+    def test_eval_anon_delete(self):
         """
-        Evaluation Database
+        Delete Evaluation
         Verify evaluation submissions append to database at /idea/1488
         """
         #being able to delete user eval
         self.conn.request("GET", "/idea/1488/relatedness/1793?_method=DELETE")
         r_result = self.conn.getresponse()
+        r_result.read()
         self.conn.request("GET", "/idea/1488/generality/1793?_method=DELETE")
         g_result = self.conn.getresponse()
+        g_result.read()
         #FAILING because both status variables return 302 'FOUND', NOT 400
-        self.assertLessEqual(r_result.status, 400)
-        self.assertLessEqual(g_result.status, 400)
+        self.assertLess(r_result.status, 400)
+        self.assertLess(g_result.status, 400)
         
     def test_sep_publishing_list(self):
         """
@@ -256,12 +267,12 @@ class Autotest(unittest2.TestCase):
         """
         self.conn.request("POST", "/idea?_method=POST&label=test")
         result = self.conn.getresponse()
-        self.assertLessEqual(result.status, 400)
+        self.assertLess(result.status, 400)
 
     def test_entity_delete(self):
         """
         Entity Deletion
-        Verify an entity can be deleted. 
+        Verify an entity can be deleted. Check if 'test' is returned in /idea?q=test 
         """
         user = inpho.config.get("authorization", "user")
         password = inpho.config.get("authorization", "password")
@@ -270,15 +281,20 @@ class Autotest(unittest2.TestCase):
         # Create or Find the test entity to be deleted
         self.conn.request("POST", "/idea?_method=POST&label=test", headers={"Authorization": auth})
         result = self.conn.getresponse()
-        self.assertLessEqual(result.status, 400)
+        result.read()
+        self.assertLess(result.status, 400)
+
+        # delay to allow change to propogate
+        time.sleep(5)
 
         # Delete the newly created test entity
-        url = result.getheader('location')
-        location = url[-20:-10] 
+        url = urlparse(result.getheader('location'))
+        location = url.path.replace('/view.html', '')+"?_method=DELETE"
         self.conn = httplib.HTTPConnection(self.host)
-        self.conn.request("POST", location+"?_method=DELETE", headers={"Authorization": auth})
+        self.conn.request("GET", location, headers={"Authorization": auth})
         result2 = self.conn.getresponse()
-        self.assertLessEqual(result2.status, 400)
+        result2.read()
+        self.assertLess(result2.status, 400)
         
 if __name__ == '__main__':
    unittest2.main()
