@@ -19,9 +19,11 @@ from zipfile import ZipFile  ## used to decompress requested zip archives.
 from inpho import config
 
 ## Some Fields or something.
-host = "silvermaple.pti.indiana.edu" # use over HTTPS
+#host = "silvermaple.pti.indiana.edu" # use over HTTPS
+host = "sandbox.htrc.illinois.edu"
 port = 25443
-oauth2EPRurl = "/oauth2/token?grant_type=client_credentials"
+oauth2EPRurl = "/oauth2endpoints/token"
+oauth2port = 9443
 dataapiEPR = "/data-api/"
 
 
@@ -101,16 +103,20 @@ def obtainOAuth2Token(username, password):
     url = None
     httpsConnection = None
     
-    httpsConnection = httplib.HTTPSConnection(host, port)
+    httpsConnection = httplib.HTTPSConnection(host, oauth2port)
 
-    url = oauth2EPRurl + "&client_secret=" + password
-    url = url + "&client_id=" + username
-
+    url = oauth2EPRurl
     ## make sure to set the request content-type as application/x-www-form-urlencoded
     headers = {"Content-type": "application/x-www-form-urlencoded"}
+    data = {
+        "grant_type" : "client_credentials",
+        "client_secret" : password,
+        "client_id" : username
+        }
+    data = urllib.urlencode(data)
 
     ## make sure the request method is POST
-    httpsConnection.request("POST", url, '', headers)
+    httpsConnection.request("POST", url, data, headers)
 
     response = httpsConnection.getresponse()
 
@@ -129,6 +135,7 @@ def obtainOAuth2Token(username, password):
         print "Unable to get token"
         print "Response Code: ", response.status
         print "Response: ", response.reason
+        print response.read()
 
     if httpsConnection is not None:
         httpsConnection.close()
