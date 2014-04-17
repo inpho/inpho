@@ -19,8 +19,8 @@ from zipfile import ZipFile  ## used to decompress requested zip archives.
 from inpho import config
 
 ## Some Fields or something.
-#host = "silvermaple.pti.indiana.edu" # use over HTTPS
-host = "sandbox.htrc.illinois.edu"
+host = "silvermaple.pti.indiana.edu" # use over HTTPS
+#host = "sandbox.htrc.illinois.edu"
 port = 25443
 oauth2EPRurl = "/oauth2endpoints/token"
 oauth2port = 9443
@@ -39,12 +39,9 @@ def getVolumesFromDataAPI(token, volumeIDs, concat=False):
     if concat:
         data['concat'] = 'true'
 
-    print data['volumeIDs']
-    return None
-
     headers = {"Authorization" : "Bearer " + token,
                "Content-type" : "application/x-www-form-urlencoded"}
-    
+
     httpsConnection = httplib.HTTPSConnection(host, port)
     httpsConnection.request("POST", url, urllib.urlencode(data), headers)
 
@@ -114,9 +111,10 @@ def obtainOAuth2Token(username, password):
         "client_id" : username
         }
     data = urllib.urlencode(data)
+    print data 
 
     ## make sure the request method is POST
-    httpsConnection.request("POST", url, data, headers)
+    httpsConnection.request("POST", url + "?" + data, "", headers)
 
     response = httpsConnection.getresponse()
 
@@ -146,13 +144,15 @@ def obtainOAuth2Token(username, password):
 
 def printZipStream(data):
     # create a zipfile from the data stream
-    with ZipFile(StringIO(data)) as myzip:
+    myzip = ZipFile(StringIO(data))
 
-        #iterate over all items in the data stream
-        for name in myzip.namelist():
-            print "Zip Entry: ", name
-            # print the file contents
-            print myzip.read(name)
+    #iterate over all items in the data stream
+    for name in myzip.namelist():
+        print "Zip Entry: ", name
+        # print the file contents
+        print myzip.read(name)
+
+    myzip.close()
 
 
 ###   MAIN METHOD   ###
@@ -197,8 +197,9 @@ if __name__ == '__main__':
         ## to get pages, uncomment next line
         #data = getPagesFromDataAPI(token, pageIDs, False) 
 
-        with ZipFile(StringIO(data)) as myzip:
-            myzip.extractall(args.output)
+        myzip = ZipFile(StringIO(data))
+        myzip.extractall(args.output)
+        myzip.close()
     else:
         print "Failed to obtain oauth token."
         sys.exit(1)
