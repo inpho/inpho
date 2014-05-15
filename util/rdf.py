@@ -19,7 +19,7 @@ rdfs = Namespace("http://www.w3.org/TR/rdf-schema/#")
 owl = Namespace("http://www.w3.org/2002/07/owl#")
 i = Namespace("http://inpho.cogs.indiana.edu/idea/")
 skos = Namespace("http://www.w3.org/2004/02/skos/core#")
-db = Namespace("http://dbpedia.org/")
+db = Namespace("http://dbpedia.org/resource/")
 dc = Namespace("http://purl.org/dc/elements/1.1/")
 
 def make_graph():
