@@ -1,0 +1,8 @@
+inpho:influenced_by	dbpprop:influencedBy
+inpho:birth_date	dbpprop:birthDate
+inpho:death_date	dbpprop:deathDate
+inpho:student	dbpprop:doctoralStudent	
+inpho:teacher	dbpprop:doctoralAdvisor
+inpho:influenced	dbpprop:influenced
+inpho:nationality	dbpprop:nationality
+inpho:profession	dbpprop:occupation
