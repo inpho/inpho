@@ -141,6 +141,21 @@ def get_categories():
 
     return categories 
 
+def get_related():
+    """
+    Returns a dictionary of { sep_dir : related } pairs.
+    """
+    entries = os.path.join(config.get('corpus', 'db_path'), 'related_entries.txt')
+    
+    related = {}
+    with open(entries) as f:
+        f.readline()
+        for line in f:
+            sep_dir, rest = line.split('::', 1)
+            related[sep_dir] = rest.split('|')
+
+    return related
+
 def get_title(sep_dir):
     """
     Returns the title for the given sep_dir
