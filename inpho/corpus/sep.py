@@ -49,7 +49,10 @@ def extract_article_body(filename):
         return ''
 
 def article_path(sep_dir):
-    if published(sep_dir):
+    if pending(sep_dir):
+        corpus_root = config.get('corpus', 'edit_path')
+        path = os.path.join(corpus_root, sep_dir, 'index.html')
+    elif published(sep_dir):
         corpus_root = config.get('corpus', 'path')
         path = os.path.join(corpus_root, sep_dir, 'index.html')
     elif copy_edit(sep_dir):
@@ -73,6 +76,22 @@ def copy_edit(sep_dir, log_root=None):
     Checks if the given article is in copy edit mode.
     """
     return get_status_code(sep_dir, 'eq', log_root);
+
+def pending(sep_dir, db_root=None):
+    """
+    Checks if the given article is in the list of 
+    pending publications.
+    """
+    if db_root is None:
+        db_root = config.get('corpus', 'db_path')
+
+    pubpending = os.path.join(db_root, 'pubpending.txt')
+    with open(pubpending) as db:
+        for line in db:
+            if sep_dir == line.strip():
+                return True
+
+    return False
 
 def get_status_code(sep_dir, code, log_root=None):
     """
