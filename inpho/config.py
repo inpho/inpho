@@ -7,7 +7,8 @@ import os
 import os.path
 
 config_paths = [os.path.abspath("inpho.ini"), 
-                os.path.expanduser("~/.config/inpho/inpho.ini")]
+                os.path.expanduser("~/.config/inpho/inpho.ini"),
+                os.path.abspath("/var/inpho/inpho.ini")]
 
 config_path = None
 for path in config_paths:

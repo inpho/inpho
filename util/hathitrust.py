@@ -11,6 +11,7 @@
 from array import array
 import httplib ## used for making HTTP requests.
 import json   ## used to process HTTP request responses.
+import os.path
 import urllib ## used to encode HTTP request queries.
 from StringIO import StringIO ## used to stream http response into zipfile.
 from zipfile import ZipFile  ## used to decompress requested zip archives.
@@ -19,30 +20,30 @@ from inpho import config
 
 ## Some Fields or something.
 host = "silvermaple.pti.indiana.edu" # use over HTTPS
+#host = "sandbox.htrc.illinois.edu"
 port = 25443
-oauth2EPRurl = "/oauth2/token?grant_type=client_credentials"
+oauth2EPRurl = "/oauth2endpoints/token"
+oauth2port = 9443
 dataapiEPR = "/data-api/"
 
 
 ## getVolumesFromDataAPI : String, String[], boolean ==> inputStream
-def getVolumesFromDataAPI(token, volumeIDs, concat):
+def getVolumesFromDataAPI(token, volumeIDs, concat=False):
     data = None
 
     assert volumeIDs is not None, "volumeIDs is None"
     assert len(volumeIDs) > 0, "volumeIDs is less than one"
     
-    url = dataapiEPR
-    url = url + "volumes?volumeIDs=" + urllib.quote_plus('|'.join(volumeIDs))
+    url = dataapiEPR + "volumes"
+    data = {'volumeIDs' : '|'.join(volumeIDs)}
+    if concat:
+        data['concat'] = 'true'
 
-    if (concat):
-        url = url + "&concat=true"
-
-    print "data api URL: ", url
+    headers = {"Authorization" : "Bearer " + token,
+               "Content-type" : "application/x-www-form-urlencoded"}
 
     httpsConnection = httplib.HTTPSConnection(host, port)
-
-    headers = {"Authorization" : "Bearer " + token}
-    httpsConnection.request("GET", url, headers=headers)
+    httpsConnection.request("POST", url, urllib.urlencode(data), headers)
 
     response = httpsConnection.getresponse()
 
@@ -99,16 +100,21 @@ def obtainOAuth2Token(username, password):
     url = None
     httpsConnection = None
     
-    httpsConnection = httplib.HTTPSConnection(host, port)
+    httpsConnection = httplib.HTTPSConnection(host, oauth2port)
 
-    url = oauth2EPRurl + "&client_secret=" + password
-    url = url + "&client_id=" + username
-
+    url = oauth2EPRurl
     ## make sure to set the request content-type as application/x-www-form-urlencoded
     headers = {"Content-type": "application/x-www-form-urlencoded"}
+    data = {
+        "grant_type" : "client_credentials",
+        "client_secret" : password,
+        "client_id" : username
+        }
+    data = urllib.urlencode(data)
+    print data 
 
     ## make sure the request method is POST
-    httpsConnection.request("POST", url, '', headers)
+    httpsConnection.request("POST", url + "?" + data, "", headers)
 
     response = httpsConnection.getresponse()
 
@@ -127,6 +133,7 @@ def obtainOAuth2Token(username, password):
         print "Unable to get token"
         print "Response Code: ", response.status
         print "Response: ", response.reason
+        print response.read()
 
     if httpsConnection is not None:
         httpsConnection.close()
@@ -135,7 +142,7 @@ def obtainOAuth2Token(username, password):
 
 
 
-def openZipStream(data):
+def printZipStream(data):
     # create a zipfile from the data stream
     myzip = ZipFile(StringIO(data))
 
@@ -145,29 +152,55 @@ def openZipStream(data):
         # print the file contents
         print myzip.read(name)
 
+    myzip.close()
+
 
 ###   MAIN METHOD   ###
 if __name__ == '__main__':
+    from argparse import ArgumentParser
+    import sys
+    parser = ArgumentParser()
+    parser.add_argument("-u", "--username", 
+        help="HTRC username, default in inpho.config")
+    parser.add_argument("-p", "--password", 
+        help="HTRC password, default in inpho.config")
+    parser.add_argument("-v", "--volumes", nargs='+', help="HTRC volume ids")
+    parser.add_argument("--pages", nargs='+', help="HTRC page ids")
+    parser.add_argument("--test", help="test with 2 volumes")
+    parser.add_argument("file", nargs='?', help="input file of ids")
+    parser.add_argument("-o", "--output", required=True, help="output directory")
+    args = parser.parse_args()
+
     username = config.get("hathitrust", "username")
     password = config.get("hathitrust", "password")
+   
+    if args.test: 
+        volumeIDs  = ["uc2.ark:/13960/t2q52tn56",
+                      "uc2.ark:/13960/t2q52xv16"]
+        pageIDs    = ["uc2.ark:/13960/t2q52tn56[1,2,3,4,5]",
+                      "uc2.ark:/13960/t2q52xv16[33,12,3,4,55]"]
+    elif args.file:
+        with open(args.file) as IDfile:
+            volumeIDs = [line.strip() for line in IDfile]
+    else:
+        volumeIDs = args.volumes
     
-    volumeIDs  = ["uc2.ark:/13960/t2q52tn56",
-                  "uc2.ark:/13960/t2q52xv16"]
-    pageIDs    = ["uc2.ark:/13960/t2q52tn56[1,2,3,4,5]",
-                  "uc2.ark:/13960/t2q52xv16[33,12,3,4,55]"]
+    if not os.path.isdir(args.output):
+        os.makedirs(args.output)
 
     token = obtainOAuth2Token(username, password)
-
     if token is not None:
         print "obtained token: %s\n" % token
         ## to get volumes, uncomment next line
         data = getVolumesFromDataAPI(token, volumeIDs, False)
 
         ## to get pages, uncomment next line
-        data = getPagesFromDataAPI(token, pageIDs, False)
+        #data = getPagesFromDataAPI(token, pageIDs, False) 
 
-        if data is not None:
-            print openZipStream(data)
+        myzip = ZipFile(StringIO(data))
+        myzip.extractall(args.output)
+        myzip.close()
     else:
         print "Failed to obtain oauth token."
+        sys.exit(1)
 
