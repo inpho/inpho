@@ -4,10 +4,12 @@ import inpho.helpers
 
 #group classes
 class SchoolOfThought(Entity):
-    def __init__(self, label):
+    def __init__(self, label, **kwargs):
         self.label = label
         self.searchstring = label
         self.searchpattern = '(%s)' % label
+        for k, v in kwargs.iteritems():
+            self.__setattr__(k,v)
 
     def __repr__(self):
         return '<School of Thought %d: %s>' % (self.ID, self.label.encode('utf-8'))
