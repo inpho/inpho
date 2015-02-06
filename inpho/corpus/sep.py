@@ -47,6 +47,20 @@ def extract_article_body(filename):
         logging.error('Could not extract text from %s' % filename)
 
         return ''
+def extract_bibliography(filename):
+	f = open(filename)
+        doc = f.read()
+        soup = BeautifulSoup(doc, convertEntities=["xml", "html"])
+        bibliography = soup.findAll('ul',{"class":"hanging"})
+        bib =[]
+        if bibliography:
+                for ul in bibliography:
+                        for li in ul.findAll('li'):
+                                bib.append(li.text)
+        else:
+                print "No bibliography found"
+
+        return bib
 
 def article_path(sep_dir):
     if pending(sep_dir):
