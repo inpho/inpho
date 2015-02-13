@@ -14,7 +14,20 @@ from inpho import config
 from inpho.corpus.fuzzymatch import fuzzymatch_all as fuzzymatch
 import inpho.corpus.stats as dm
 from inpho.model import Idea, Thinker, Entity, Session 
+import HTMLParser
+import rython
 
+def getStyleBibliography(biblioList):
+        ctx = rython.RubyContext(requires=["rubygems", "anystyle/parser"])
+        ctx("Encoding.default_internal = 'UTF-8'")
+        ctx("Encoding.default_external = 'UTF-8'")
+        anystyle = ctx("Anystyle.parser")
+        anyStyleList = []
+        h =  HTMLParser.HTMLParser()
+        for biblio in biblioList:
+                parsed = anystyle.parse((h.unescape(biblio).encode('utf-8'))
+                anyStyleList.append(parsed)
+        return anyStyleList
 def extract_article_body(filename):
     """
     Extracts the article body from the SEP article at the given filename. Some
