@@ -22,7 +22,7 @@ from inpho import config
 host = "silvermaple.pti.indiana.edu" # use over HTTPS
 #host = "sandbox.htrc.illinois.edu"
 port = 25443
-oauth2EPRurl = "/oauth2endpoints/token"
+oauth2EPRurl = "/oauth2/token"
 oauth2port = 9443
 dataapiEPR = "/data-api/"
 
@@ -111,7 +111,6 @@ def obtainOAuth2Token(username, password):
         "client_id" : username
         }
     data = urllib.urlencode(data)
-    print data 
 
     ## make sure the request method is POST
     httpsConnection.request("POST", url + "?" + data, "", headers)
@@ -130,10 +129,11 @@ def obtainOAuth2Token(username, password):
         
 
     else:
+        print "https://" + host + ":" + str(oauth2port) + "/" + url + "?" +data
         print "Unable to get token"
         print "Response Code: ", response.status
         print "Response: ", response.reason
-        print response.read()
+        print response.msg.__dict__
 
     if httpsConnection is not None:
         httpsConnection.close()
