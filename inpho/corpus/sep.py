@@ -25,8 +25,8 @@ def getStyleBibliography(biblioList):
         anyStyleList = []
         h =  HTMLParser.HTMLParser()
         for biblio in biblioList:
-                parsed = anystyle.parse((h.unescape(biblio).encode('utf-8'))
-                anyStyleList.append(parsed)
+            parsed = anystyle.parse(h.unescape(biblio).encode('utf-8'))
+            anyStyleList.append(parsed)
         return anyStyleList
 def extract_article_body(filename):
     """
