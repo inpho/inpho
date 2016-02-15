@@ -252,7 +252,6 @@ mapper(Idea, idea_table, inherits=Entity,
         secondaryjoin=(ontotree_table.c.concept_id == idea_table.c.ID),
         order_by=idea_table.c.entropy.desc(),
         #backref=backref('idea'),
-        cascade="all, delete"
         ),
     'evaluations':relation(Node, secondary=idea_evaluation_table,
         primaryjoin=(idea_table.c.ID == idea_evaluation_table.c.ante_id),
@@ -366,7 +365,7 @@ mapper(Node, ontotree_table, inherits=Entity,
     'idea':relation(Idea, uselist=False, secondary=idea_table, lazy=False,
         primaryjoin=(idea_table.c.ID == ontotree_table.c.concept_id),
         secondaryjoin=(ontotree_table.c.concept_id == idea_table.c.ID),
-        foreign_keys=[idea_table.c.ID]
+        foreign_keys=[idea_table.c.ID], viewonly=True
         ), #uselist=False allows for 1:1 relation
 })
 
