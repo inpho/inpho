@@ -62,14 +62,20 @@ class Thinker(Entity):
         if extended:
             struct.update({
                   'aliases' : self.aliases,
-                  'birth' : {'year' : self.birth_year,
-                             'month' : self.birth_month,
-                             'day' : self.birth_day},
-                  'birth_string' : self.birth_string,
-                  'death' : {'year' : self.death_year,
-                             'month' : self.death_month,
-                             'day' : self.death_day},
-                  'death_string' : self.death_string,
+                  'birth' : [
+                      {'year' : date.year,
+                       'month' : date.month,
+                       'day' : date.day}
+                       for date in self.birth_dates
+                    ],
+                  'birth_strings' : [str(date) for date in self.birth_dates],
+                  'death' : [
+                      {'year' : date.year,
+                       'month' : date.month,
+                       'day' : date.day}
+                       for date in self.death_dates
+                    ],
+                  'death_strings' : [str(date) for date in self.death_dates],
                   'nationalities' : [n.name for n in self.nationalities] ,
                   'professions' : [p.name for p in self.professions] ,
                   'teachers' : [t.ID for t in self.teachers],
