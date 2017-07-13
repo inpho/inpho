@@ -14,7 +14,20 @@ from inpho import config
 from inpho.corpus.fuzzymatch import fuzzymatch_all as fuzzymatch
 import inpho.corpus.stats as dm
 from inpho.model import Idea, Thinker, Entity, Session 
+import HTMLParser
+import rython
 
+def getStyleBibliography(biblioList):
+        ctx = rython.RubyContext(requires=["rubygems", "anystyle/parser"])
+        ctx("Encoding.default_internal = 'UTF-8'")
+        ctx("Encoding.default_external = 'UTF-8'")
+        anystyle = ctx("Anystyle.parser")
+        anyStyleList = []
+        h =  HTMLParser.HTMLParser()
+        for biblio in biblioList:
+            parsed = anystyle.parse(h.unescape(biblio).encode('utf-8'))
+            anyStyleList.append(parsed)
+        return anyStyleList
 def extract_article_body(filename):
     """
     Extracts the article body from the SEP article at the given filename. Some
@@ -47,6 +60,20 @@ def extract_article_body(filename):
         logging.error('Could not extract text from %s' % filename)
 
         return ''
+def extract_bibliography(filename):
+	f = open(filename)
+        doc = f.read()
+        soup = BeautifulSoup(doc, convertEntities=["xml", "html"])
+        bibliography = soup.findAll('ul',{"class":"hanging"})
+        bib =[]
+        if bibliography:
+                for ul in bibliography:
+                        for li in ul.findAll('li'):
+                                bib.append(li.text)
+        else:
+                print "No bibliography found"
+
+        return bib
 
 def article_path(sep_dir):
     if pending(sep_dir):

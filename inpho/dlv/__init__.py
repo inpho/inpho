@@ -39,7 +39,7 @@ def print_evaluations(type=IdeaEvaluation):
     """
     appearances = set()
 
-    evals = Session.query(type).limit(10).all()
+    evals = Session.query(type).all()
     for eval in evals:
         appearances.update([eval.ante_id, eval.cons_id])
     
