@@ -27,9 +27,14 @@ def get_document_occurrences(document, terms):
         # build list of search patterns starting with label
         for pattern in term.patterns:
             try:
-                if re.search(pattern, document, flags=re.IGNORECASE):
-                    occurrences.append(term)
-                    break
+                if '|' in pattern and '(' in pattern: # true regex
+                    if re.search(pattern, document, flags=re.IGNORECASE):
+                        occurrences.append(term)
+                        break
+                else: # simple pattern:
+                    if pattern.lower() in document:
+                        occurrences.append(term)
+                        break
             except re.error:
                 logging.warning('Term %d (%s) pattern "%s" failed' % 
                                 (term.ID, term.label, pattern))
@@ -60,15 +65,22 @@ def get_sentence_occurrences(document, terms, terms_present=None,
     occurrences = []
     for sentence in sentences:
         sentence_occurrences = [] 
+        sentence = sentence.lower()
 
         for term in terms_present:
             # build list of search patterns starting with label
             for pattern in term.patterns:
                 try:
                     # search for any occurrence of term, stop when found
-                    if re.search(pattern, sentence, flags=re.IGNORECASE):
-                        sentence_occurrences.append(term)
-                        break
+                    if '|' in pattern and '(' in pattern: # true regex
+                        if re.search(pattern, sentence, flags=re.IGNORECASE):
+                            sentence_occurrences.append(term)
+                            break
+                    else: # simple pattern:
+                        if pattern.lower() in sentence:
+                            sentence_occurrences.append(term)
+                            break
+                            
                 except re.error:
                     logging.warning('Term %d (%s) pattern "%s" failed' % 
                                     (term.ID, term.label, pattern))
