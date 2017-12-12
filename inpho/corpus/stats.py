@@ -19,22 +19,22 @@ def get_document_occurrences(document, terms):
 
     Primarily used by :func:`get_sentence_occurrences()`.
     """
-
     occurrences = []
     
+    document = document.lower()
     # iterate over terms to be scanned
     for term in terms:
         # build list of search patterns starting with label
         for pattern in term.patterns:
             try:
-                if '|' in pattern and '(' in pattern: # true regex
-                    if re.search(pattern, document, flags=re.IGNORECASE):
-                        occurrences.append(term)
-                        break
-                else: # simple pattern:
-                    if pattern.lower() in document:
-                        occurrences.append(term)
-                        break
+                if ('|' in pattern or '(' in pattern)\
+                    and re.search(pattern, document, flags=re.IGNORECASE):
+                    occurrences.append(term)
+                    break
+                elif pattern.replace('\\b','').lower() in u' ' + document + u' ':
+                    # in the document level ignore word breaks
+                    occurrences.append(term)
+                    break
             except re.error:
                 logging.warning('Term %d (%s) pattern "%s" failed' % 
                                 (term.ID, term.label, pattern))
@@ -72,15 +72,14 @@ def get_sentence_occurrences(document, terms, terms_present=None,
             for pattern in term.patterns:
                 try:
                     # search for any occurrence of term, stop when found
-                    if '|' in pattern and '(' in pattern: # true regex
-                        if re.search(pattern, sentence, flags=re.IGNORECASE):
-                            sentence_occurrences.append(term)
-                            break
-                    else: # simple pattern:
-                        if pattern.lower() in sentence:
-                            sentence_occurrences.append(term)
-                            break
-                            
+                    if ('|' in pattern or '(' in pattern)\
+                        and re.search(pattern, sentence, flags=re.IGNORECASE):
+                        sentence_occurrences.append(term)
+                        break
+                    elif pattern.replace('\\b',' ').lower() in u' ' + sentence[:-1] + u' ':
+                        # in the sentences case keep spaces
+                        sentence_occurrences.append(term)
+                        break
                 except re.error:
                     logging.warning('Term %d (%s) pattern "%s" failed' % 
                                     (term.ID, term.label, pattern))

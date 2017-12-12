@@ -596,7 +596,7 @@ if __name__ == "__main__":
                      update_occurrences=options.update_occurrences,
                      update_db=options.update_db)
     elif options.mode == 'load':
-        sql_filename = os.path.abspath(corpus_root + "sql-" + filename_root)
+        sql_filename = os.path.abspath("./sql-" + filename_root)
         update_graph(entity_type, sql_filename)
     elif options.mode == 'occur':
         occur_filename = os.path.abspath("./occurrences.txt")
