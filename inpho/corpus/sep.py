@@ -430,7 +430,7 @@ def update_graph(entity_type, sql_filename):
     connection.execute("""
     SET foreign_key_checks=0;
     LOCK TABLES %(table)s WRITE;
-    LOAD DATA INFILE '%(filename)s'
+    LOAD DATA LOCAL INFILE '%(filename)s'
     INTO TABLE %(table)s
     FIELDS TERMINATED BY '::'
     (ante_id, cons_id, confidence, jweight, weight, occurs_in);
