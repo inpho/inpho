@@ -232,6 +232,39 @@ def new_entries():
 
     return new_sep_dirs
 
+
+### FUZZYMATCHING
+
+import xml.parsers.expat
+from unidecode import unidecode 
+
+def unescape(s):
+    want_unicode = False
+    if isinstance(s, unicode):
+        s = s.encode("utf-8")
+        want_unicode = True
+
+    # the rest of this assumes that `s` is UTF-8
+    list = []
+
+    # create and initialize a parser object
+    p = xml.parsers.expat.ParserCreate("utf-8")
+    p.buffer_text = True
+    p.returns_unicode = want_unicode
+    p.CharacterDataHandler = list.append
+
+    # parse the data wrapped in a dummy element
+    # (needed so the "document" is well-formed)
+    p.Parse("<e>", 0)
+    p.Parse(s, 0)
+    p.Parse("</e>", 1)
+
+    # join the extracted strings and return
+    es = ""
+    if want_unicode:
+        es = u""
+    return es.join(list)
+
 def fuzzymatch_new():
     """
     Writes the fuzzymatch data to the cache specified in the config file.
@@ -240,12 +273,31 @@ def fuzzymatch_new():
     titles = get_titles()
     for entry in new_entries():
         print entry
-        matches = fuzzymatch(titles[entry])
+        if '&#' in titles[entry]:
+            print unescape(titles[entry])
+            matches = fuzzymatch(unescape(titles[entry]).decode('utf8'))
+        else:
+            matches = fuzzymatch(titles[entry])
         with open(os.path.join(fuzzy_path, entry), 'wb') as f:
             writer = csv.writer(f)
             for match, prob in matches:
-                writer.writerow([match.ID, match.label, prob])
+                writer.writerow([match.ID, unidecode(match.label), prob])
         
+
+def single_fuzz(entry):
+    fuzzy_path = config.get('corpus', 'fuzzy_path')
+    titles = get_titles()
+    print titles[entry]
+    if '&#' in titles[entry]:
+        print unescape(titles[entry])
+        matches = fuzzymatch(unescape(titles[entry]).decode('utf8'))
+    else:
+        matches = fuzzymatch(titles[entry])
+    with open(os.path.join(fuzzy_path, entry), 'wb') as f:
+        writer = csv.writer(f)
+        for match, prob in matches:
+            writer.writerow([match.ID, unidecode(match.label), prob])
+
 
 def select_terms(entity_type=Idea):
     """
@@ -556,7 +608,8 @@ if __name__ == "__main__":
                         action="store_const",
                         dest='mode',
                         const='new_entries',
-                        help="print a list of new entries")
+                        help="print a list of new entries and fuzzymatch")
+    parser.add_argument("--fuzzy", help="Perform fuzzymatching on a single article")
     parser.add_argument("--categories",
                         action="store_const",
                         dest='mode',
@@ -578,6 +631,8 @@ if __name__ == "__main__":
     # single article parsing?
     if options.article is not None:
         options.mode = 'single'
+    if options.fuzzy is not None:
+        options.mode = 'fuzzy'
 
     # pick the right action
     if options.mode == 'complete':
@@ -603,6 +658,8 @@ if __name__ == "__main__":
         process_articles(entity_type, occur_filename, corpus_root=corpus_root)
     elif options.mode == 'new_entries':
         fuzzymatch_new()
+    elif options.mode == 'fuzzy':
+        single_fuzz(options.fuzzy)
     elif options.mode == 'categories':
         for article, category in get_categories().iteritems():
             print "%s::%s" % (article, category)
