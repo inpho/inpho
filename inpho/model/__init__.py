@@ -33,6 +33,7 @@ from inpho.model.work import *
 entity_table = Table('entity', metadata,
     Column('ID', Integer, primary_key=True),
     Column('label', Unicode),
+    Column('wiki', Unicode),
     Column('searchstring', Unicode),
     autoload=True, autoload_with=engine)
 
