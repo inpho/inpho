@@ -7,7 +7,7 @@ from sqlalchemy.types import *
 # Create the database engine
 import inpho
 url = inpho.config.get('sqlalchemy', 'url')
-engine = create_engine(url, echo=False, pool_recycle=30) 
+engine = create_engine(url, echo=True, pool_recycle=30) 
 
 # configure Session class with desired options.
 Session = scoped_session(sessionmaker())
@@ -125,13 +125,13 @@ alias_table = Table('alias', metadata,
     Column('value', Integer, primary_key=True),
     autoload=True, autoload_with=engine)
 
-thinker_has_influenced_evaluation_table = Table('thinker_has_influenced_evaluation', metadata,
+thinker_has_influenced_table = Table('thinker_has_influenced', metadata,
     Column('thinker1_id', ForeignKey('thinker.ID'), primary_key=True),
     Column('thinker2_id', ForeignKey('thinker.ID'), primary_key=True),
     Column('uid', ForeignKey('inpho_user.ID'), primary_key=True),
     autoload=True, autoload_with=engine)
 
-thinker_teacher_of_evaluation_table = Table('thinker_teacher_of_evaluation', metadata,
+thinker_teacher_of_table = Table('thinker_teacher_of', metadata,
     Column('thinker1_id', ForeignKey('thinker.ID'), primary_key=True),
     Column('thinker2_id', ForeignKey('thinker.ID'), primary_key=True),
     Column('uid', ForeignKey('inpho_user.ID'), primary_key=True),
@@ -389,14 +389,13 @@ mapper(Thinker, thinker_table,
     properties={
     'nationalities':relation(Nationality, secondary=thinker_has_nationality_table),
     'professions':relation(Profession, secondary=thinker_has_profession_table),
-    'influenced':relation(Thinker, secondary=thinker_has_influenced_evaluation_table,
-        primaryjoin=(thinker_table.c.ID == thinker_has_influenced_evaluation_table.c.thinker1_id),
-        secondaryjoin=(thinker_table.c.ID == thinker_has_influenced_evaluation_table.c.thinker2_id),
-        cascade="all, delete",
+    'influenced':relation(Thinker, secondary=thinker_has_influenced_table,
+        primaryjoin=(thinker_table.c.ID == thinker_has_influenced_table.c.thinker1_id),
+        secondaryjoin=(thinker_table.c.ID == thinker_has_influenced_table.c.thinker2_id),
         backref='influenced_by'),
-    'students':relation(Thinker, secondary=thinker_teacher_of_evaluation_table,
-        primaryjoin=(thinker_table.c.ID == thinker_teacher_of_evaluation_table.c.thinker1_id),
-        secondaryjoin=(thinker_table.c.ID == thinker_teacher_of_evaluation_table.c.thinker2_id),
+    'students':relation(Thinker, secondary=thinker_teacher_of_table,
+        primaryjoin=(thinker_table.c.ID == thinker_teacher_of_table.c.thinker1_id),
+        secondaryjoin=(thinker_table.c.ID == thinker_teacher_of_table.c.thinker2_id),
         cascade="all, delete",
         backref='teachers'),
     'occurrences':relation(Thinker, secondary=thinker_graph_edges_table,
@@ -541,36 +540,36 @@ mapper(IdeaEvaluation, idea_evaluation_table, properties={
         secondaryjoin=(user_table.c.ID == idea_evaluation_table.c.uid)
         )
 })
-mapper(ThinkerTeacherEvaluation, thinker_teacher_of_evaluation_table, properties={
+mapper(ThinkerTeacherEvaluation, thinker_teacher_of_table, properties={
     '''
     'thinker1':relation(Thinker, uselist=False, secondary=thinker_table,
-        primaryjoin=(thinker_table.c.ID == thinker_teacher_of_evaluation_table.c.thinker1_id),
-        secondaryjoin=(thinker_table.c.ID == thinker_teacher_of_evaluation_table.c.thinker1_id),
+        primaryjoin=(thinker_table.c.ID == thinker_teacher_of_table.c.thinker1_id),
+        secondaryjoin=(thinker_table.c.ID == thinker_teacher_of_table.c.thinker1_id),
     ),
     'thinker2':relation(Thinker, uselist=False, secondary=thinker_table,
-        primaryjoin=(thinker_table.c.ID == thinker_teacher_of_evaluation_table.c.thinker2_id),
-        secondaryjoin=(thinker_table.c.ID == thinker_teacher_of_evaluation_table.c.thinker2_id),
+        primaryjoin=(thinker_table.c.ID == thinker_teacher_of_table.c.thinker2_id),
+        secondaryjoin=(thinker_table.c.ID == thinker_teacher_of_table.c.thinker2_id),
     ),
     '''
     'user':relation(User),
-    'ante_id':thinker_teacher_of_evaluation_table.c.thinker1_id,
-    'cons_id':thinker_teacher_of_evaluation_table.c.thinker2_id
+    'ante_id':thinker_teacher_of_table.c.thinker1_id,
+    'cons_id':thinker_teacher_of_table.c.thinker2_id
     
 })
-mapper(ThinkerInfluencedEvaluation, thinker_has_influenced_evaluation_table, properties={
+mapper(ThinkerInfluencedEvaluation, thinker_has_influenced_table, properties={
     '''
     'thinker1':relation(Thinker, uselist=False, secondary=thinker_table,
-        primaryjoin=(thinker_table.c.ID == thinker_has_influenced_evaluation_table.c.thinker1_id),
-        secondaryjoin=(thinker_table.c.ID == thinker_has_influenced_evaluation_table.c.thinker1_id),
+        primaryjoin=(thinker_table.c.ID == thinker_has_influenced_table.c.thinker1_id),
+        secondaryjoin=(thinker_table.c.ID == thinker_has_influenced_table.c.thinker1_id),
     ),
     'thinker2':relation(Thinker, uselist=False, secondary=thinker_table,
-        primaryjoin=(thinker_table.c.ID == thinker_has_influenced_evaluation_table.c.thinker2_id),
-        secondaryjoin=(thinker_table.c.ID == thinker_has_influenced_evaluation_table.c.thinker2_id),
+        primaryjoin=(thinker_table.c.ID == thinker_has_influenced_table.c.thinker2_id),
+        secondaryjoin=(thinker_table.c.ID == thinker_has_influenced_table.c.thinker2_id),
     ),
     '''
     'user':relation(User),
-    'ante_id':thinker_has_influenced_evaluation_table.c.thinker1_id,
-    'cons_id':thinker_has_influenced_evaluation_table.c.thinker2_id
+    'ante_id':thinker_has_influenced_table.c.thinker1_id,
+    'cons_id':thinker_has_influenced_table.c.thinker2_id
 })
 
 
