@@ -7,7 +7,7 @@ from sqlalchemy.types import *
 # Create the database engine
 import inpho
 url = inpho.config.get('sqlalchemy', 'url')
-engine = create_engine(url, echo=True, pool_recycle=30) 
+engine = create_engine(url, echo=False, pool_recycle=30) 
 
 # configure Session class with desired options.
 Session = scoped_session(sessionmaker())
