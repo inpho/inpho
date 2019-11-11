@@ -61,23 +61,62 @@ class Idea(Entity):
         if extended:
             struct.update({
                   'nodes' : [node.ID for node in self.nodes],
-                  'instances' : [ins.ID for ins in self.instances],
+									'instances' : [{
+										'label' : ins.label,
+										'ID' : ins.ID,
+										'wiki' : ins.wiki
+									} for ins in self.instances],
                   'classes' : [child.idea.ID for ins in self.nodes 
                                              for child in ins.children],
-                  'links' : [ins.ID for ins in self.links]})
+                  'links' : [{
+										'label' : ins.label,
+										'ID' : ins.ID,
+										'wiki' : ins.wiki
+									} for ins in self.links]})
             if sep_filter:
                 struct.update({
-                  'hyponyms' : [ins.ID for ins in
-                  self.hyponyms.filter(Entity.sep_dir != '')[0:limit-1] ],
-                  'occurrences' : [ins.ID for ins in self.occurrences.filter(Entity.sep_dir != '')[0:limit-1] ],
-                  'related' : [ins.ID for ins in self.related.filter(Entity.sep_dir != '')[0:limit-1] ],
-                  'related_thinkers' : [ins.ID for ins in self.related_thinkers.filter(Entity.sep_dir != '')[0:limit-1] ]})
+                  'hyponyms' : [{
+										'label' : ins.label,
+                    'ID' : ins.ID,
+                    'wiki' : ins.wiki
+                  } for ins in self.hyponyms.filter(Entity.sep_dir != '')[0:limit-1] ],
+                  'occurrences' : [{
+										'label' : ins.label,
+                    'ID' : ins.ID,
+                    'wiki' : ins.wiki
+                  } for ins in self.occurrences.filter(Entity.sep_dir != '')[0:limit-1] ],
+                  'related' : [{
+										'label' : ins.label,
+                    'ID' : ins.ID,
+                    'wiki' : ins.wiki
+                  } for ins in self.related.filter(Entity.sep_dir != '')[0:limit-1] ],
+                  'related_thinkers' : [{
+										'label' : ins.label,
+                    'ID' : ins.ID,
+                    'wiki' : ins.wiki
+                  } for ins in self.related_thinkers.filter(Entity.sep_dir != '')[0:limit-1] ]})
             else:
                 struct.update({
-                  'hyponyms' : [ins.ID for ins in self.hyponyms[0:limit-1] ],
-                  'occurrences' : [ins.ID for ins in self.occurrences[0:limit-1] ],
-                  'related' : [ins.ID for ins in self.related[0:limit-1] ],
-                  'related_thinkers' : [ins.ID for ins in self.related_thinkers[0:limit-1] ]})
+                  'hyponyms' : [{
+										'label' : ins.label,
+                    'ID' : ins.ID,
+                    'wiki' : ins.wiki
+                  } for ins in self.hyponyms[0:limit-1] ],
+                  'occurrences' : [{
+										'label' : ins.label,
+                    'ID' : ins.ID,
+                    'wiki' : ins.wiki
+                  } for ins in self.occurrences[0:limit-1] ],
+                  'related' : [{
+										'label' : ins.label,
+                    'ID' : ins.ID,
+                    'wiki' : ins.wiki
+                  } for ins in self.related[0:limit-1] ],
+                  'related_thinkers' : [{
+										'label' : ins.label,
+                    'ID' : ins.ID,
+                    'wiki' : ins.wiki
+                  } for ins in self.related_thinkers[0:limit-1] ]})
         if graph:
             struct.update({
                 'entropy' : self.entropy,
@@ -90,7 +129,6 @@ class Idea(Entity):
                 'ii_out' : [edge.json_struct() 
                                for edge in self.ii_out_edges[:glimit]],
                 })
-
         return struct
 
     def web_search_string(self):

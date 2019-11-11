@@ -78,22 +78,58 @@ class Thinker(Entity):
                   'death_strings' : [str(date) for date in self.death_dates],
                   'nationalities' : [n.name for n in self.nationalities] ,
                   'professions' : [p.name for p in self.professions] ,
-                  'teachers' : [t.ID for t in self.teachers],
-                  'students' : [s.ID for s in self.students],
-                  'influenced_by' : [i.ID for i in self.influenced_by],
-                  'influenced' : [i.ID for i in self.influenced]})
+									'teachers': [
+										{'label' : t.label,
+                                         'id' : t.ID,
+										 'wiki' : t.wiki}
+										 for t in self.teachers
+									],
+									'students': [
+										{'label' : s.label,
+                                         'id' : s.ID,
+										 'wiki' : s.wiki}
+										 for s in self.students
+									],
+									'influenced_by': [
+										{'label' : i.label,
+                                         'id' : i.ID,
+										 'wiki' : i.wiki}
+										 for i in self.influenced_by
+									],
+									'influenced': [
+										{'label' : i.label,
+                                         'id' : i.ID,
+										 'wiki' : i.wiki}
+										 for i in self.influenced
+									]})
             if sep_filter:
                 struct.update({
-                    'related_ideas' : [i.ID for i in
+                    'related_ideas' : [
+											{'label' : i.label,
+                                             'id' : i.ID,
+											 'wiki' : i.wiki}
+											 for i in
                             self.related_ideas.filter(Idea.sep_dir != '')[:limit-1]]})
                 struct.update({
-                    'related_thinkers' : [t.ID for t in
+                    'related_thinkers' : [
+											{'label' : t.label,
+                                             'id' : t.ID,
+											 'wiki' : t.wiki}
+											 for t in
                             self.related_thinkers.filter(Thinker.sep_dir != '')[:limit-1]]})
             else:
                 struct.update({
-                    'related_ideas' : [i.ID for i in self.related_ideas[:limit-1]]})
+                    'related_ideas' : [
+											{'label' : i.label,
+                                             'id' : i.ID,
+											 'wiki' : i.wiki}
+											 for i in self.related_ideas[:limit-1]]})
                 struct.update({
-                    'related_thinkers' : [t.ID for t in self.related_thinkers[:limit-1]]})
+                    'related_thinkers' : [
+											{'label' : t.label,
+                                             'id' : t.ID,
+											 'wiki' : t.wiki}
+											 for t in self.related_thinkers[:limit-1]]})
 
 
         if graph:
